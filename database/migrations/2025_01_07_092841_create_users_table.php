@@ -65,12 +65,17 @@ return new class extends Migration
 
     public function down(): void
     {
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropForeign(['address_id']); // Drop the foreign key constraint first
+            $table->dropColumn('address_id');
+            $table->dropColumn('user_type');
+        });
         Schema::dropIfExists('client_password_resets');
         Schema::dropIfExists('driver_password_resets');
         Schema::dropIfExists('employee_password_resets');
         Schema::dropIfExists('admin_password_resets');
-        Schema::dropIfExists('addresses');
-        Schema::dropIfExists('cities');
-        Schema::dropIfExists('provinces');
+        Schema::dropIfExists('addresses'); // Then drop addresses
+        Schema::dropIfExists('cities');    // Then drop cities
+        Schema::dropIfExists('provinces'); // Finally drop provinces
     }
 };
