@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
+use App\Models\City;
 use App\Models\Client;
+use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +22,7 @@ class ClientAuthController extends Controller
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'mobile' => 'required|numeric',
             'password' => 'required',
         ]);
 
@@ -30,41 +33,48 @@ class ClientAuthController extends Controller
         }
 
         return back()->withErrors([
-            'email' => 'The provided credentials do not match our records.',
+            'mobile' => __('messages.the_provided_credentials_do_not_match_our_records'),
         ]);
     }
 
     public function showRegistrationForm()
     {
-        return view('auth.client.register');
+        $provinces = Province::all();
+        $cities = City::all();
+        return view('auth.client.register', ['cities' => $cities, 'provinces' => $provinces]);
     }
 
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'nullable|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
-            'mobile' => 'required|string|max:15',
-            'address_id' => 'required|exists:addresses,id'
+            'mobile' => 'required|string|max:15|unique:users',
+            'province_id' => 'required|exists:provinces,id',
+            'city_id' => 'required|exists:cities,id'
         ]);
 
         if ($validator->fails()) {
-            return redirect('register')
+            return redirect('client/register')
                 ->withErrors($validator)
                 ->withInput();
         }
+        $address = Address::create([
+            'province_id' => $request->input('province_id'),
+            'city_id' => $request->input('city_id')
+        ]);
 
         Client::create([
             'name' => $request['name'],
             'email' => $request['email'],
             'password' => Hash::make($request['password']),
             'mobile' => $request['mobile'],
-            'address_id' => $request['address_id'],
+            'address_id' => $address->id,
             'user_type' => 'client',
         ]);
 
-        return redirect()->route('client.login')->with('success', 'Registration successful. Please login.');
+        return redirect()->route('client.login')->with('success', __('messages.registration_successful_please_login'));
     }
 
     public function logout(Request $request)

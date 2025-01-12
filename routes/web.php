@@ -14,9 +14,9 @@ Route::get('/', function () {
 //-----------------------------------------------------------------------------------
 Route::prefix('client')->group(function () {
     Route::get('/login', [ClientAuthController::class, 'showLoginForm'])->name('client.login');
-    Route::post('/login', [ClientAuthController::class, 'login']);
+    Route::post('/login', [ClientAuthController::class, 'login'])->name('client.login.post');;
     Route::get('/register', [ClientAuthController::class, 'showRegistrationForm'])->name('client.register');
-    Route::post('/register', [ClientAuthController::class, 'register']);
+    Route::post('/register', [ClientAuthController::class, 'register'])->name('client.register.post');;
     Route::post('/logout', [ClientAuthController::class, 'logout'])->name('client.logout');
     Route::get('/dashboard', function () {
         return "Client Dashboard";
@@ -26,9 +26,9 @@ Route::prefix('client')->group(function () {
 // Repeat this pattern for driver, employee, and admin routes
 Route::prefix('driver')->group(function () {
     Route::get('/login', [DriverAuthController::class, 'showLoginForm'])->name('driver.login');
-    Route::post('/login', [DriverAuthController::class, 'login']);
+    Route::post('/login', [DriverAuthController::class, 'login'])->name('driver.login.post');
     Route::get('/register', [DriverAuthController::class, 'showRegistrationForm'])->name('driver.register');
-    Route::post('/register', [DriverAuthController::class, 'register']);
+    Route::post('/register', [DriverAuthController::class, 'register'])->name('driver.register.post');
     Route::post('/logout', [DriverAuthController::class, 'logout'])->name('driver.logout');
     Route::get('/dashboard', function () {
         return "driver Dashboard";
@@ -37,9 +37,9 @@ Route::prefix('driver')->group(function () {
 
 Route::prefix('employee')->group(function () {
     Route::get('/login', [EmployeeAuthController::class, 'showLoginForm'])->name('employee.login');
-    Route::post('/login', [EmployeeAuthController::class, 'login']);
+    Route::post('/login', [EmployeeAuthController::class, 'login'])->name('driver.login.post');
     Route::get('/register', [EmployeeAuthController::class, 'showRegistrationForm'])->name('employee.register');
-    Route::post('/register', [EmployeeAuthController::class, 'register']);
+    Route::post('/register', [EmployeeAuthController::class, 'register'])->name('driver.register.post');
     Route::post('/logout', [EmployeeAuthController::class, 'logout'])->name('employee.logout');
     Route::get('/dashboard', function () {
         return "employee Dashboard";
@@ -48,9 +48,9 @@ Route::prefix('employee')->group(function () {
 
 Route::prefix('admin')->group(function () {
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-    Route::post('/login', [AdminAuthController::class, 'login']);
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('driver.login.post');
     Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
-    Route::post('/register', [AdminAuthController::class, 'register']);
+    Route::post('/register', [AdminAuthController::class, 'register'])->name('driver.register.post');
     Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
     Route::get('/dashboard', function () {
         return "admin Dashboard";

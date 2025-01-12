@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'ar'), // Set the default locale to Arabic
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 

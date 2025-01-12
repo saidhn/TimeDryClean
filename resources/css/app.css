@@ -1,3 +1,24 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'bootstrap/dist/css/bootstrap.rtl.min.css';
+
+/* main colors */
+.bg-primary,
+.btn-primary {
+    background-color: #464687 !important;
+    border-color: #464687 !important;
+}
+
+.btn-primary:hover {
+    background-color: #1da58d !important;
+    border-color: #1da58d !important;
+}
+
+/* logo */
+.logo {
+    background-image: url('../images/L5.png');
+}
+
+.logo-white {
+    background-image: url('../images/L5.png');
+    filter: brightness(0) invert(1);
+
+}

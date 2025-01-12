@@ -25,8 +25,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('city_id')->constrained('cities');
             $table->foreignId('province_id')->nullable()->constrained('provinces'); // Optional, but useful
-            $table->string('street');
-            $table->string('building');
+            $table->string('street')->nullable();
+            $table->string('building')->nullable();
             $table->integer('floor')->nullable();
             $table->string('apartment_number')->nullable();
             $table->timestamps();
@@ -41,23 +41,23 @@ return new class extends Migration
 
         // Create separate password resets tables to keep them separate
         Schema::create('client_password_resets', function (Blueprint $table) {
-            $table->string('email')->index();
+            $table->string('mobile')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
         Schema::create('driver_password_resets', function (Blueprint $table) {
-            $table->string('email')->index();
+            $table->string('mobile')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
         Schema::create('employee_password_resets', function (Blueprint $table) {
-            $table->string('email')->index();
+            $table->string('mobile')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
         Schema::create('admin_password_resets', function (Blueprint $table) {
-            $table->string('email')->index();
+            $table->string('mobile')->index();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
