@@ -22,23 +22,22 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     @auth
-                    <li class="nav-item">
-                        <a class="nav-link active" aria-current="page" href="{{ route('home') }}">Home</a>
-                    </li>
-                    @can('manage users')
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('users.index') }}">Users</a>
-                    </li>
-                    @endcan
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                            {{ __('Logout') }}
-                        </a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-                    </li>
+
+
+                    @if (Auth::user()->user_type == 'client')
+                    @include('client.menu')
+                    @elseif (Auth::user()->user_type == 'employee')
+                    @include('employee.menu')
+                    @elseif (Auth::user()->user_type == 'driver')
+                    @include('driver.menu')
+                    @elseif (Auth::user()->user_type == 'admin')
+                    @include('admin.menu')
+                    @endif
+
+
                     @else
+
+
                     @guest
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('client.login') }}">{{__('messages.client_login')}}</a>
@@ -57,15 +56,9 @@
                         <a class="nav-link" href="{{ route('client.register') }}">{{__('messages.client_register')}}</a>
                     </li>
                     @endif
-                    @else
-                    {{-- User is logged in --}}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
-                        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
-                            @csrf
-                        </form>
-                    </li>
                     @endguest
+
+
                     @if (Route::has('register'))
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('register') }}">Register</a>

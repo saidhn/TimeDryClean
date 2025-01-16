@@ -16,6 +16,9 @@ class ClientAuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::guard('client')->check()) { // Check if the client is already authenticated
+            return redirect()->route('client.dashboard'); // Redirect to client dashboard
+        }
         return view('auth.client.login');
     }
 
