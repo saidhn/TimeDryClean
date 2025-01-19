@@ -29,9 +29,24 @@ class User extends Authenticatable
         'mobile_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-
+    /**
+     * address relationship 
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function address()
     {
         return $this->belongsTo(Address::class);
+    }
+    /**
+     * Provide a formatted address that can be used to display user address
+     * @return mixed
+     */
+    public function address_formatted(): mixed
+    {
+        return $this->address->province->name . ', ' . $this->address->city->name;
+    }
+    public function user_type_translated()
+    {
+        return __('messages.' . $this->user_type);
     }
 }

@@ -18,6 +18,12 @@ class ClientAuthController extends Controller
     {
         if (Auth::guard('client')->check()) { // Check if the client is already authenticated
             return redirect()->route('client.dashboard'); // Redirect to client dashboard
+        } else if (Auth::guard('admin')->check()) { // Check if the admin is already authenticated
+            return redirect()->route('admin.dashboard'); // Redirect to admin dashboard
+        } else if (Auth::guard('employee')->check()) { // Check if the employee is already authenticated
+            return redirect()->route('employee.dashboard'); // Redirect to employee dashboard
+        } else if (Auth::guard('driver')->check()) { // Check if the driver is already authenticated
+            return redirect()->route('driver.dashboard'); // Redirect to driver dashboard
         }
         return view('auth.client.login');
     }
@@ -85,7 +91,6 @@ class ClientAuthController extends Controller
         Auth::guard('client')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');

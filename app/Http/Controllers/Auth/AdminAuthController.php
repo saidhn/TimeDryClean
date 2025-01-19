@@ -3,7 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\Address;
 use App\Models\Admin;
+use App\Models\City;
+use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -14,13 +17,16 @@ class AdminAuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::guard('admin')->check()) { // Check if the admin is already authenticated
+            return redirect()->route('admin.dashboard'); // Redirect to admin dashboard
+        }
         return view('auth.admin.login');
     }
 
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'mobile' => 'required|numeric',
             'password' => 'required',
         ]);
 
@@ -30,48 +36,50 @@ class AdminAuthController extends Controller
             return redirect()->intended('/admin/dashboard'); // Redirect to admin dashboard
         }
 
-        return back()->withInput($request->only('email'))->withErrors([
-            'email' => 'These credentials do not match our records.',
+        return back()->withErrors([
+            'mobile' => __('messages.the_provided_credentials_do_not_match_our_records'),
         ]);
     }
 
     public function showRegistrationForm()
     {
-        return view('auth.admin.register');
+        $provinces = Province::all();
+        $cities = City::all();
+        return view('auth.admin.register', ['cities' => $cities, 'provinces' => $provinces]);
     }
 
     public function register(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->where(function ($query) {
-                    return $query->where('user_type', 'admin');
-                }),
-            ],
-            'mobile' => 'required|string|max:15',
+            'email' => 'nullable|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
-            'address_id' => 'required|exists:addresses,id',
+            'mobile' => 'required|string|max:15|unique:users',
+            'province_id' => 'required|exists:provinces,id',
+            'city_id' => 'required|exists:cities,id'
         ]);
 
         if ($validator->fails()) {
-            return back()->withErrors($validator)->withInput();
+            return redirect('admin/register')
+                ->withErrors($validator)
+                ->withInput();
         }
+        $address = Address::create([
+            'province_id' => $request->input('province_id'),
+            'city_id' => $request->input('city_id')
+        ]);
 
         Admin::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'mobile' => $request->mobile,
-            'password' => Hash::make($request->password),
-            'address_id' => $request->address_id,
+            'name' => $request['name'],
+            'email' => $request['email'],
+            'password' => Hash::make($request['password']),
+            'mobile' => $request['mobile'],
+            'address_id' => $address->id,
             'user_type' => 'admin',
         ]);
 
-        return redirect()->route('admin.login')->with('success', 'Registration successful!');
+        return redirect()->route('admin.login')->with('success', __('messages.registration_successful_please_login'));
+    
     }
 
     public function logout(Request $request)

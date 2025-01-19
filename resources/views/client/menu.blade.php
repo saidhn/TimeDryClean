@@ -9,7 +9,7 @@
 </li>
 <li class="nav-item">
     <a class="nav-link" href="{{ route('client.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-        {{ __('Logout') }}
+        {{ __('messages.logout') }}
     </a>
     <form id="logout-form" action="{{ route('client.logout') }}" method="POST" class="d-none">
         @csrf
