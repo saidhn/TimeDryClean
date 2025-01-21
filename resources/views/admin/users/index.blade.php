@@ -11,7 +11,7 @@
         <p>{{__("messages.no_data_to_display")}}</p>
         @else
         <div class="table-responsive">
-            <table class="table">
+            <table class="table table-bordered table-striped">
                 <thead>
                     <tr>
                         <th>{{__('messages.id')}}</th>
@@ -40,7 +40,7 @@
                 </tbody>
             </table>
         </div>
-        
+        {{ $users->onEachSide(2)->links('vendor.pagination.bootstrap-5') }}
         @endif
 
 
