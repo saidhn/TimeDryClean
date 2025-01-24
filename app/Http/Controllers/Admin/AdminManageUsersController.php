@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Validator;
 class AdminManageUsersController extends Controller
 {
     public function index()
-    { 75
+    {
         $users = User::paginate(10);
         return view('admin.users.index', ["users" => $users]);
     }
