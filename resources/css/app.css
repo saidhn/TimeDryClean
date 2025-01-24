@@ -22,3 +22,35 @@
     filter: brightness(0) invert(1);
 
 }
+
+/* pagination links */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.pagination-link,
+.current,
+.disabled {
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+    margin: 0 5px;
+}
+
+.pagination-link {
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    text-decoration: none;
+}
+
+.current {
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}
+
+.disabled {
+    color: #ccc;
+    pointer-events: none;
+}

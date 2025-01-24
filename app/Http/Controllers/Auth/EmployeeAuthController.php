@@ -24,7 +24,7 @@ class EmployeeAuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::guard('employee')->attempt($credentials)) {
+        if (Auth::guard('employee')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('/employee/dashboard');

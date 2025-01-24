@@ -24,7 +24,7 @@ class DriverAuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::guard('driver')->attempt($credentials)) { // Use the 'driver' guard
+        if (Auth::guard('driver')->attempt($credentials, $request->boolean('remember'))) { // Use the 'driver' guard
             $request->session()->regenerate();
 
             return redirect()->intended('/driver/dashboard'); // Redirect to driver dashboard

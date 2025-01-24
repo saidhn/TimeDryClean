@@ -77,8 +77,8 @@ Route::prefix('client')->middleware('auth:client')->group(function () {
 //-----------------------------------------------------------------------------------
 Route::prefix('admin')->middleware('auth:admin')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    Route::resource('users', AdminManageUsersController::class);
 });
+Route::resource('admin.users', AdminManageUsersController::class)->middleware('auth:admin');
 
 //-----------------------------------------------------------------------------------
 //--------------------------------        END        --------------------------------

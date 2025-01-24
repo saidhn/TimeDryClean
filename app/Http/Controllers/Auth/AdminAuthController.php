@@ -30,7 +30,8 @@ class AdminAuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (Auth::guard('admin')->attempt($credentials)) {
+
+        if (Auth::guard('admin')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('/admin/dashboard'); // Redirect to admin dashboard
@@ -79,7 +80,6 @@ class AdminAuthController extends Controller
         ]);
 
         return redirect()->route('admin.login')->with('success', __('messages.registration_successful_please_login'));
-    
     }
 
     public function logout(Request $request)

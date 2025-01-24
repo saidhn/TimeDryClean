@@ -44,4 +44,6 @@ return [
     'driver' => 'سائق',
     'modify' => 'تعديل',
     'updated_successfully' => 'تم تعديل البيانات بنجاح',
+    'add' => 'اضافة',
+    'delete' => 'حذف'
 ];
