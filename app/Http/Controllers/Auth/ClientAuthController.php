@@ -57,9 +57,9 @@ class ClientAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'nullable|string|email|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'mobile' => 'required|string|max:15|unique:users',
+            'mobile' => 'required|string|max:15|unique:users,mobile',
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id'
         ]);

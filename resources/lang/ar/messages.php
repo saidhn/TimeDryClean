@@ -45,5 +45,7 @@ return [
     'modify' => 'تعديل',
     'updated_successfully' => 'تم تعديل البيانات بنجاح',
     'add' => 'اضافة',
-    'delete' => 'حذف'
+    'delete' => 'حذف',
+    'deleted_successfully' => 'تم الحذف بنجاح',
+    'confirm_deletion' => 'هل انت متاكد انك تريد الحذف'
 ];

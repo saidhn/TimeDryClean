@@ -44,18 +44,11 @@ class DriverAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->where(function ($query) {
-                    return $query->where('user_type', 'driver');
-                }),
-            ],
-            'mobile' => 'required|string|max:15',
+            'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'address_id' => 'required|exists:addresses,id',
+            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'province_id' => 'required|exists:provinces,id',
+            'city_id' => 'required|exists:cities,id'
         ]);
 
         if ($validator->fails()) {

@@ -1,5 +1,5 @@
 <li class="nav-item">
-    <a class="nav-link" href="{{ route('users.index') }}">
+    <a class="nav-link" href="{{ route('admin.users.index') }}">
         {{ __('messages.manage_users') }}
     </a>
 </li>

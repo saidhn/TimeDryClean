@@ -76,9 +76,17 @@ Route::prefix('client')->middleware('auth:client')->group(function () {
 //--------------------------------    Admin Routes    ------------------------------
 //-----------------------------------------------------------------------------------
 Route::prefix('admin')->middleware('auth:admin')->group(function () {
+    //dashboard
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    //users
+    Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
+    Route::post('/users', [AdminManageUsersController::class, 'store'])->name('admin.users.store');
+    Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');
+    Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
 });
-Route::resource('admin.users', AdminManageUsersController::class)->middleware('auth:admin');
 
 //-----------------------------------------------------------------------------------
 //--------------------------------        END        --------------------------------

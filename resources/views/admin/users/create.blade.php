@@ -5,9 +5,7 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
-                <div class="card-header">
-                    {{ __('messages.modify') }} <strong>{{$user->user_type_translated()}}</strong>
-                </div>
+                <div class="card-header">{{ __('messages.register') }}</div>
 
                 <div class="card-body">
                     @if (session('success'))
@@ -15,16 +13,29 @@
                         {{ session('success') }}
                     </div>
                     @endif
-                    <form method="POST" action="{{ route('admin.users.update', $user) }}">
+                    <form method="POST" action="{{ route('admin.users.store') }}">
                         @csrf
-                        @method('PUT')
 
+                        <div class="mb-3">
+                            <label for="user_type" class="form-label">{{ __('messages.user_type') }}</label><span
+                                class="text-danger"> *</span>
+                            <select id="user_type" class="form-control @error('user_type') is-invalid @enderror"
+                                name="user_type" required>
+                                @foreach ($user_types as $ut)
+                                <option value="{{ $ut }}">{{ __("messages.".$ut) }}</option>
+                                @endforeach
+                            </select>
+                            @error('user_type')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                            @enderror
+                        </div>
                         <div class="mb-3">
                             <label for="name" class="form-label">{{ __('messages.name') }}</label><span
                                 class="text-danger"> *</span>
                             <input id="name" type="text" class="form-control @error('name') is-invalid @enderror"
-                                name="name" value="{{ $user->name ?? old('name') }}" required autocomplete="name"
-                                autofocus>
+                                name="name" value="{{ old('name') }}" required autocomplete="name" autofocus>
                             @error('name')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
@@ -34,7 +45,7 @@
                         <div class="mb-3">
                             <label for="email" class="form-label">{{ __('messages.email') }}</label>
                             <input id="email" type="email" class="form-control @error('email') is-invalid @enderror"
-                                name="email" value="{{ $user->email ?? old('email') }}" autocomplete="email">
+                                name="email" value="{{ old('email') }}" autocomplete="email">
                             @error('email')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
@@ -45,24 +56,8 @@
                             <label for="mobile" class="form-label">{{ __('messages.mobile_no') }}</label><span
                                 class="text-danger"> *</span>
                             <input id="mobile" type="text" class="form-control @error('mobile') is-invalid @enderror"
-                                name="mobile" value="{{ $user->mobile ?? old('mobile') }}" required
-                                autocomplete="mobile">
+                                name="mobile" value="{{ old('mobile') }}" required autocomplete="mobile">
                             @error('mobile')
-                            <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                            @enderror
-                        </div>
-                        <div class="mb-3">
-                            <label for="user_type" class="form-label">{{ __('messages.user_type') }}</label><span
-                                class="text-danger"> *</span>
-                            <select id="user_type" class="form-control @error('user_type') is-invalid @enderror"
-                                name="user_type" required>
-                                @foreach ($user_types as $ut)
-                                <option value="{{ $ut }}" {{$ut==$user->user_type?'selected':''}}>{{ __("messages.".$ut)}}</option>
-                                @endforeach
-                            </select>
-                            @error('user_type')
                             <span class="invalid-feedback" role="alert">
                                 <strong>{{ $message }}</strong>
                             </span>
@@ -75,8 +70,7 @@
                                 name="province_id" required>
                                 <option value="">{{__('messages.select_province')}}</option>
                                 @foreach ($provinces as $province)
-                                <option value="{{ $province->id }}" {{$province->id == $user->address->province_id?'
-                                    selected':''}}>{{ $province->name }}</option>
+                                <option value="{{ $province->id }}">{{ $province->name }}</option>
                                 @endforeach
                             </select>
                             @error('province_id')
@@ -90,7 +84,7 @@
                                 class="text-danger"> *</span>
                             <select id="city_id" class="form-control @error('city_id') is-invalid @enderror"
                                 name="city_id" required disabled>
-                                <option value="">{{__('messages.select_city')}}</option>
+                                <option value="">{{__('messages.city')}}</option>
                             </select>
                             @error('city_id')
                             <span class="invalid-feedback" role="alert">
@@ -98,9 +92,29 @@
                             </span>
                             @enderror
                         </div>
+
+                        <div class="mb-3">
+                            <label for="password" class="form-label">{{ __('messages.password') }}</label><span
+                                class="text-danger"> *</span>
+                            <input id="password" type="password"
+                                class="form-control @error('password') is-invalid @enderror" name="password" required
+                                autocomplete="new-password">
+                            @error('password')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="password-confirm" class="form-label">{{ __('messages.confirm_password')
+                                }}</label><span class="text-danger"> *</span>
+                            <input id="password-confirm" type="password" class="form-control"
+                                name="password_confirmation" required autocomplete="new-password">
+                        </div>
                         <div class="mb-0">
                             <button type="submit" class="btn btn-primary">
-                                {{ __('messages.modify') }}
+                                {{ __('messages.create') }}
                             </button>
                         </div>
                     </form>
@@ -117,14 +131,10 @@
     const citySelect = document.getElementById('city_id');
 
     provinceSelect.addEventListener('change', function () {
-        updateAddress(this.value);
-    });
-
-    function updateAddress(val) {
-        citySelect.innerHTML = '<option value="">{{__('messages.select_city')}}</option>'; // Clear existing options
+        citySelect.innerHTML = '<option value="">{{__('messages.city')}}</option>'; // Clear existing options
         citySelect.disabled = true;
 
-        const provinceId = val;
+        const provinceId = this.value;
 
         if (provinceId && citiesByProvince[provinceId]) {
             citiesByProvince[provinceId].forEach(city => {
@@ -135,9 +145,6 @@
             });
             citySelect.disabled = false;
         }
-    }
-
-    updateAddress(provinceSelect.value);
-    citySelect.value = {{ $user -> address -> city_id }};
+    });
 </script>
 @endsection
