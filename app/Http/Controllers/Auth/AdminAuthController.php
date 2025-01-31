@@ -9,6 +9,7 @@ use App\Models\City;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -53,11 +54,17 @@ class AdminAuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'email' => 'nullable|string|email|max:255|unique:users,email',
+            'email' => 'nullable|string|email|max:255|unique:admins,email', // Unique for admins table
             'password' => 'required|string|min:8|confirmed',
-            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'mobile' => [
+                'required',
+                'string',
+                'max:15',
+                'unique:admins,mobile',  // Unique for admins table
+                'regex:/^(\+?\d{1,4}[\s-]?){0,1}(\(\d{1,4}\)[\s-]?){0,1}(\d{1,14}[\s-]?){0,1}$/', // Improved regex
+            ],
             'province_id' => 'required|exists:provinces,id',
-            'city_id' => 'required|exists:cities,id'
+            'city_id' => 'required|exists:cities,id',
         ]);
 
         if ($validator->fails()) {
@@ -65,21 +72,31 @@ class AdminAuthController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        $address = Address::create([
-            'province_id' => $request->input('province_id'),
-            'city_id' => $request->input('city_id')
-        ]);
 
-        Admin::create([
-            'name' => $request['name'],
-            'email' => $request['email'],
-            'password' => Hash::make($request['password']),
-            'mobile' => $request['mobile'],
-            'address_id' => $address->id,
-            'user_type' => 'admin',
-        ]);
+        // Use a database transaction for data integrity (important!)
+        DB::beginTransaction();
 
-        return redirect()->route('admin.login')->with('success', __('messages.registration_successful_please_login'));
+        try {
+            $address = Address::create([
+                'province_id' => $request->input('province_id'),
+                'city_id' => $request->input('city_id'),
+            ]);
+
+            Admin::create([
+                'name' => $request['name'],
+                'email' => $request['email'],
+                'password' => Hash::make($request['password']),
+                'mobile' => $request['mobile'],
+                'address_id' => $address->id,
+                'user_type' => 'admin',
+            ]);
+
+            DB::commit();
+            return redirect()->route('admin.login')->with('success', __('messages.registration_successful_please_login'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', __('messages.registration_failed')); // More specific error message
+        }
     }
 
     public function logout(Request $request)

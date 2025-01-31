@@ -47,5 +47,10 @@ return [
     'add' => 'اضافة',
     'delete' => 'حذف',
     'deleted_successfully' => 'تم الحذف بنجاح',
-    'confirm_deletion' => 'هل انت متاكد انك تريد الحذف'
+    'confirm_deletion' => 'هل انت متاكد انك تريد الحذف',
+    'cannot_delete_last_admin' => 'لا يمكنك حذف آخر مسؤول.',
+    'delete_failed' => 'فشلت عملية الحذف.',
+    'registration_failed' => 'فشل انشاء المستخدم. يرجى المحاولة مرة أخرى.',
+    '404_page_not_found' => 'الصفحة الذي تحاول الوصول اليها غير موجودة',
+    'go_homepage' => 'الذهاب للرئيسية'
 ];

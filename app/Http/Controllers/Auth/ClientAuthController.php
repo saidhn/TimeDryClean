@@ -59,7 +59,13 @@ class ClientAuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'mobile' => [
+                'required',
+                'string',
+                'max:15',
+                'unique:admins,mobile',  // Unique for admins table
+                'regex:/^(\+?\d{1,4}[\s-]?){0,1}(\(\d{1,4}\)[\s-]?){0,1}(\d{1,14}[\s-]?){0,1}$/', // Improved regex
+            ],
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id'
         ]);

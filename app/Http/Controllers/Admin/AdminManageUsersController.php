@@ -8,8 +8,11 @@ use App\Models\Address;
 use App\Models\City;
 use App\Models\Province;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+
 
 class AdminManageUsersController extends Controller
 {
@@ -60,7 +63,13 @@ class AdminManageUsersController extends Controller
         $validator = Validator::make(request()->all(), [
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users,email,' . $user->id,
-            'mobile' => 'required|string|max:15|unique:users,mobile,' . $user->id,
+            'mobile' => [
+                'required',
+                'string',
+                'max:15',
+                Rule::unique('users', 'mobile')->ignore($user->id),  // Ignore current user's mobile
+                'regex:/^(\+?\d{1,4}[\s-]?){0,1}(\(\d{1,4}\)[\s-]?){0,1}(\d{1,14}[\s-]?){0,1}$/', // Improved regex
+            ],
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
             'user_type' => 'required|string|in:' . implode(',', self::USER_TYPES),
@@ -98,20 +107,32 @@ class AdminManageUsersController extends Controller
         return redirect()->back()->with('success', __('messages.updated_successfully'));
     }
 
-    /**
-     * Remove the specified user from storage.
-     *
-     * @param int $user_id
-     * @return \Illuminate\Http\RedirectResponse
-     */
-    public function destroy($user_id)
+
+    public function destroy($user_id, $forceDelete = false)
     {
-        $user = User::findOrFail($user_id);
+        $user = User::withTrashed()->findOrFail($user_id);
+
+        // Check if deleting this user will leave no admins
+        $adminCount = User::where('user_type', 'admin')->count();
+
+        if ($user->user_type === 'admin' && $adminCount <= 1) {
+            return redirect()->back()->with('error', __('messages.cannot_delete_last_admin'));
+        }
+
+        // Use a database transaction for data integrity
+        DB::beginTransaction();
 
         try {
-            $user->delete();
+            if ($forceDelete) {
+                $user->forceDelete(); // Permanently delete the user
+            } else {
+                $user->delete(); // Soft delete the user
+            }
+
+            DB::commit();
             return redirect()->route('admin.users.index')->with('success', __('messages.deleted_successfully'));
         } catch (\Exception $e) {
+            DB::rollBack();
             return redirect()->back()->with('error', __('messages.delete_failed'));
         }
     }
@@ -145,7 +166,13 @@ class AdminManageUsersController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'nullable|string|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'mobile' => 'required|string|max:15|unique:users,mobile',
+            'mobile' => [
+                'required',
+                'string',
+                'max:15',
+                'unique:users,mobile',
+                'regex:/^(\+?\d{1,4}[\s-]?){0,1}(\(\d{1,4}\)[\s-]?){0,1}(\d{1,14}[\s-]?){0,1}$/', // Improved regex
+            ],
             'province_id' => 'required|exists:provinces,id',
             'city_id' => 'required|exists:cities,id',
             'user_type' => 'required|string|in:' . implode(',', self::USER_TYPES),
@@ -157,25 +184,34 @@ class AdminManageUsersController extends Controller
                 ->withInput();
         }
 
-        // Create the user
-        $user = User::create([
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'mobile' => $request->input('mobile'),
-            'user_type' => $request->input('user_type'),
-            'password' => Hash::make($request->input('password')),
-        ]);
+        // Use a database transaction for data integrity
+        DB::beginTransaction();
 
-        // Create the address
-        $address = Address::create([
-            'province_id' => $request->input('province_id'),
-            'city_id' => $request->input('city_id'),
-        ]);
+        try {
+            // Create the user
+            $user = User::create([
+                'name' => $request->input('name'),
+                'email' => $request->input('email'),
+                'mobile' => $request->input('mobile'),
+                'user_type' => $request->input('user_type'),
+                'password' => Hash::make($request->input('password')),
+            ]);
 
-        // Associate the address with the user
-        $user->address_id = $address->id;
-        $user->save();
+            // Create the address
+            $address = Address::create([
+                'province_id' => $request->input('province_id'),
+                'city_id' => $request->input('city_id'),
+            ]);
 
-        return redirect()->route('admin.users.index')->with('success', __('messages.registration_successful_please_login'));
+            // Associate the address with the user
+            $user->address_id = $address->id;
+            $user->save();
+
+            DB::commit();
+            return redirect()->route('admin.users.index')->with('success', __('messages.registration_successful_please_login'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', __('messages.registration_failed')); // More specific error message
+        }
     }
 }

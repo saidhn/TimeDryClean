@@ -4,6 +4,11 @@
     </a>
 </li>
 <li class="nav-item">
+    <a class="nav-link" href="{{ route('admin.orders.index') }}">
+        {{ __('messages.manage_orders') }}
+    </a>
+</li>
+<li class="nav-item">
     <a class="nav-link" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
         {{ __('messages.logout') }}
     </a>
