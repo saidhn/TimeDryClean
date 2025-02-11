@@ -24,9 +24,25 @@ class AdminManageUsersController extends Controller
      *
      * @return \Illuminate\Contracts\View\View
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::paginate(10);
+        $search = $request->get('search');
+        $userTypes = $request->get('user_type', []); // Get selected user types as an array
+
+        $users = User::query();
+
+        if ($search) {
+            $users->where('name', 'LIKE', "%$search%")
+                ->orWhere('id', $search)
+                ->orWhere('mobile', 'LIKE', "%$search%")
+                ->orWhere('email', 'LIKE', "%$search%");
+        }
+
+        if (!empty($userTypes)) { // Check if any user types are selected
+            $users->whereIn('user_type', $userTypes); // Filter by selected user types
+        }
+
+        $users = $users->paginate(10);
         return view('admin.users.index', ["users" => $users]);
     }
 

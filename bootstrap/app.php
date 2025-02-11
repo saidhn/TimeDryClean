@@ -21,4 +21,6 @@ $app = Application::configure(basePath: dirname(__DIR__))
 // $app->router->aliasMiddleware('auth', \App\Http\Middleware\Authenticate::class);
 // $app->router->aliasMiddleware('guest', \App\Http\Middleware\RedirectIfAuthenticated::class);
 
+$app->router->aliasMiddleware('set_locale', \App\Http\Middleware\SetLocale::class);
+
 return $app;

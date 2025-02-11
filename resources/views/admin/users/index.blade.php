@@ -5,11 +5,12 @@
     <h3>{{__('messages.manage_users') }}</h3>
 
     <div class="mt-4">
-        <p>مرحبا، {{ Auth::guard('admin')->user()->name }}!</p>
+        <p>{{__('messages.hello')}}، {{ Auth::guard('admin')->user()->name }}!</p>
 
         <div class="toolbar mb-3">
             <a href="{{ route('admin.users.create') }}" class="btn btn-primary btn-sm">
-                <span class="svg-icon svg-icon-primary svg-icon-2x"><!--begin::Svg Icon --><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 24 24" version="1.1">
+                <span class="svg-icon svg-icon-primary svg-icon-2x">
+                    <!--begin::Svg Icon --><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 24 24" version="1.1">
                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                             <polygon points="0 0 24 0 24 24 0 24" />
                             <path d="M18,8 L16,8 C15.4477153,8 15,7.55228475 15,7 C15,6.44771525 15.4477153,6 16,6 L18,6 L18,4 C18,3.44771525 18.4477153,3 19,3 C19.5522847,3 20,3.44771525 20,4 L20,6 L22,6 C22.5522847,6 23,6.44771525 23,7 C23,7.55228475 22.5522847,8 22,8 L20,8 L20,10 C20,10.5522847 19.5522847,11 19,11 C18.4477153,11 18,10.5522847 18,10 L18,8 Z M9,11 C6.790861,11 5,9.209139 5,7 C5,4.790861 6.790861,3 9,3 C11.209139,3 13,4.790861 13,7 C13,9.209139 11.209139,11 9,11 Z" fill="#ffffff" fill-rule="nonzero" opacity="0.8" />
@@ -18,10 +19,45 @@
                     </svg><!--end::Svg Icon--></span>
                 {{ __('messages.add') }}</a>
         </div>
+        {{-- Search Form --}}
+        <div class="mb-3">
+            <form action="{{ route('admin.users.index') }}" method="GET">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_user') }}" value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-5">
+                        <div class="d-flex align-items-center flex-wrap"> {{-- Flex-wrap for multiple checkboxes --}}
+                            <div class="form-check me-3"> {{-- Checkbox 1 --}}
+                                <input class="form-check-input" type="checkbox" name="user_type[]" value="admin" id="adminCheckbox" {{ in_array('admin', request('user_type', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="adminCheckbox">{{ __('messages.admin') }}</label>
+                            </div>
+                            <div class="form-check me-3"> {{-- Checkbox 2 --}}
+                                <input class="form-check-input" type="checkbox" name="user_type[]" value="employee" id="employeeCheckbox" {{ in_array('employee', request('user_type', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="employeeCheckbox">{{ __('messages.employee') }}</label>
+                            </div>
+                            <div class="form-check me-3"> {{-- Checkbox 3 --}}
+                                <input class="form-check-input" type="checkbox" name="user_type[]" value="driver" id="driverCheckbox" {{ in_array('driver', request('user_type', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="driverCheckbox">{{ __('messages.driver') }}</label>
+                            </div>
+                            <div class="form-check me-3"> {{-- Checkbox 4 --}}
+                                <input class="form-check-input" type="checkbox" name="user_type[]" value="client" id="clientCheckbox" {{ in_array('client', request('user_type', [])) ? 'checked' : '' }}>
+                                <label class="form-check-label" for="clientCheckbox">{{ __('messages.client') }}</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-1"> {{-- User type filter takes the other half --}}
+                        <button class="btn btn-outline-secondary form-control" type="submit">{{ __('messages.search') }}</button>
+                    </div>
+
+                </div>
+            </form>
+        </div>
 
         @if($users->isEmpty())
         <p>{{__("messages.no_data_to_display")}}</p>
         @else
+
         <div class="table-responsive">
             <table class="table table-bordered table-striped">
                 <thead>
@@ -47,7 +83,7 @@
                         <td>{{ $user->user_type_translated() }}</td>
                         <td>{{ $user->address_formatted() }}</td>
                         <td>
-                            <a class="btn btn-secondary btn-sm" href="{{route('admin.users.edit',$user->id)}}">
+                            <a class="btn btn-warning btn-sm text-white" href="{{route('admin.users.edit',$user->id)}}">
                                 <span class="svg-icon svg-icon-primary svg-icon-2x"><!--begin::Svg Icon --><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 24 24" version="1.1">
                                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                             <rect x="0" y="0" width="24" height="24" />
@@ -78,30 +114,9 @@
                 </tbody>
             </table>
         </div>
-        <div class="pagination-container">
-            @if ($users->onFirstPage())
-            <span class="disabled">{{__('pagination.previous')}}</span>
-            @else
-            <a href="{{ $users->previousPageUrl() }}" class="pagination-link">{{__('pagination.previous')}}</a>
-            @endif
+        <x-pagination :paginator="$users" />
 
-            @for ($i = 1; $i <= $users->lastPage(); $i++)
-                @if ($i == $users->currentPage())
-                <span class="current">{{ $i }}</span>
-                @else
-                <a href="{{ $users->url($i) }}" class="pagination-link">{{ $i }}</a>
-                @endif
-                @endfor
-
-                @if ($users->hasMorePages())
-                <a href="{{ $users->nextPageUrl() }}" class="pagination-link">{{__('pagination.next')}}</a>
-                @else
-                <span class="disabled">{{__('pagination.next')}}</span>
-                @endif
-        </div>
         @endif
-
-
     </div>
 </div>
 <script>

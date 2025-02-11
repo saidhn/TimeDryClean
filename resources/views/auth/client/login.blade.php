@@ -20,8 +20,7 @@
 
                         <div class="mb-3">
                             <label for="mobile" class="form-label">{{ __('messages.mobile_no') }}</label>
-                            <div class="input-group"> {{-- Added input group for icon --}}
-                                <span class="input-group-text"><i class="bi bi-envelope"></i></span> {{-- mobile icon --}}
+                            <div class="input-group">
                                 <input id="mobile" type="number" class="form-control @error('mobile') is-invalid @enderror" name="mobile" value="{{ old('mobile') }}" required autocomplete="mobile" autofocus>
                                 @error('mobile')
                                 <span class="invalid-feedback" role="alert">
@@ -33,8 +32,7 @@
 
                         <div class="mb-3">
                             <label for="password" class="form-label">{{ __('messages.password') }}</label>
-                            <div class="input-group"> {{-- Added input group for icon --}}
-                                <span class="input-group-text"><i class="bi bi-lock"></i></span> {{-- Password icon --}}
+                            <div class="input-group">
                                 <input id="password" type="password" class="form-control @error('password') is-invalid @enderror" name="password" required autocomplete="current-password">
                                 @error('password')
                                 <span class="invalid-feedback" role="alert">

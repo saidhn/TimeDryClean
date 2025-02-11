@@ -8,7 +8,7 @@
 
     <div class="mt-4">
         {{-- Content specific to the dashboard goes here --}}
-        <p>مرحبا، {{ Auth::guard('admin')->user()->name }}!</p>
+        <p>{{ __('messages.hello') }}, {{ Auth::guard('admin')->user()->name }}!</p>
         {{-- Add more dashboard content as needed --}}
     </div>
 </div>
