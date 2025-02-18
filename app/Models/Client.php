@@ -12,4 +12,9 @@ class Client extends User
             $builder->where('user_type', 'client');
         });
     }
+
+    public function clientSubscriptions()
+    {
+        return $this->hasMany(ClientSubscription::class);
+    }
 }

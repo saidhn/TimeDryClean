@@ -5,16 +5,19 @@ use App\Http\Controllers\Auth\ClientAuthController;
 use App\Http\Controllers\Auth\DriverAuthController;
 use App\Http\Controllers\Auth\EmployeeAuthController;
 use App\Http\Controllers\Client\ClientDashboardController;
-use App\Http\Controllers\Client\ClientOrderController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminManageOrdersController;
 use App\Http\Controllers\Admin\AdminManageUsersController;
+use App\Http\Controllers\admin\client\AdminManageClientSubscriptionsController;
+use App\Http\Controllers\orders\OrdersController;
 use App\Http\Controllers\product_services\ProductServiceController;
 use App\Http\Controllers\products\ProductController;
+use App\Http\Controllers\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Http\Request;
+use App\Models\User;
 
 Route::get('/language/{locale}', function ($locale) {
     if (in_array($locale, ['en', 'ar'])) { // Validate locale
@@ -68,16 +71,6 @@ Route::middleware(['set_locale'])->group(function () {
     Route::prefix('client')->middleware('auth:client')->group(function () {
         Route::get('/dashboard', [ClientDashboardController::class, 'index'])->name('client.dashboard');
 
-        Route::resource('orders', ClientOrderController::class)->names([ // Resourceful routing with names
-            'index' => 'client.orders.index',
-            'create' => 'client.orders.create',
-            'store' => 'client.orders.store',
-            'show' => 'client.orders.show',
-            'edit' => 'client.orders.edit',
-            'update' => 'client.orders.update',
-            'destroy' => 'client.orders.destroy',
-        ]);
-
         Route::get('/profile/edit', [ClientProfileController::class, 'edit'])->name('client.profile.edit');
         Route::put('/profile', [ClientProfileController::class, 'update'])->name('client.profile.update');
 
@@ -98,25 +91,83 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
         Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
         Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
-        //orders
-        Route::get('/orders', [AdminManageOrdersController::class, 'index'])->name('admin.orders.index');
-        Route::get('/orders/create', [AdminManageOrdersController::class, 'create'])->name('admin.orders.create');
-        Route::post('/orders', [AdminManageOrdersController::class, 'store'])->name('admin.orders.store');
-
-        // Route::get('/orders/{order}', [AdminManageOrdersController::class, 'orderShow'])->name('admin.orders.show');
-        // Route::get('/orders/{order}/edit', [AdminManageOrdersController::class, 'orderEdit'])->name('admin.orders.edit');
-        // Route::put('/orders/{order}', [AdminManageOrdersController::class, 'orderUpdate'])->name('admin.orders.update');
-        // Route::delete('/orders/{order}', [AdminManageOrdersController::class, 'orderDestroy'])->name('admin.orders.destroy');
+        Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class); // Nested route
     });
 
     //-----------------------------------------------------------------------------------
-    //--------------------------------      products        --------------------------------
+    //--------------------------------      products        -----------------------------
     //-----------------------------------------------------------------------------------
     //product resource route
     Route::resource('products', ProductController::class)->middleware('auth:admin,employee,driver');
     //product services resource route
     Route::resource('product_services', ProductServiceController::class)->middleware('auth:admin,employee');
-});//end set locale
+
+
+    //-----------------------------------------------------------------------------------
+    //--------------------------------       orders       -------------------------------
+    //-----------------------------------------------------------------------------------
+    Route::resource('orders', OrdersController::class)->middleware('auth:admin,employee,driver,client'); // needs modification to prevent clients from editing orders
+
+    //search clients inside orders
+    Route::get('/users/search', function (Request $request) {
+        $search = $request->input('q');
+        $page = $request->input('page', 1);
+        $perPage = 10; // Adjust as needed
+
+        // Initialize query for clients only
+        $usersQuery = User::where('user_type', 'client');
+
+        // Apply search logic
+        $usersQuery->where(function ($query) use ($search) {
+            // Search by name
+            $query->where('name', 'like', "%$search%")
+                // Search by sanitized mobile number
+                ->orWhereRaw("REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$search%"]);
+        });
+
+        // Search by ID (if the input is a valid number)
+        if (is_numeric($search)) {
+            $usersQuery->orWhere('id', $search);
+        }
+
+        // Paginate the results
+        $users = $usersQuery->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($users);
+    });
+    //search drivers inside orders
+    Route::get('/drivers/search', function (Request $request) {
+        $search = $request->input('q');
+        $page = $request->input('page', 1);
+        $perPage = 10; // Adjust as needed
+
+        // Initialize query for clients only
+        $driversQuery = User::where('user_type', 'driver');
+
+        // Apply search logic
+        $driversQuery->where(function ($query) use ($search) {
+            // Search by name
+            $query->where('name', 'like', "%$search%")
+                // Search by sanitized mobile number
+                ->orWhereRaw("REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$search%"]);
+        });
+
+        // Search by ID (if the input is a valid number)
+        if (is_numeric($search)) {
+            $driversQuery->orWhere('id', $search);
+        }
+
+        // Paginate the results
+        $drivers = $driversQuery->paginate($perPage, ['*'], 'page', $page);
+
+        return response()->json($drivers);
+    });
+
+    //-----------------------------------------------------------------------------------
+    //--------------------------------   subscriptions   --------------------------------
+    //-----------------------------------------------------------------------------------
+    Route::resource('subscriptions', SubscriptionController::class)->middleware('auth:admin,employee,driver,client');
+}); //end set locale
 //-----------------------------------------------------------------------------------
 //--------------------------------        END        --------------------------------
 //-----------------------------------------------------------------------------------

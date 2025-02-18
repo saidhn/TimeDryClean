@@ -151,4 +151,5 @@ return [
         'zip_code' => 'zip code',
     ],
     'mobile' => 'The :attribute must be a valid phone number.',
+    'the_user_must_be_a_client' => 'The user must be a client',
 ];

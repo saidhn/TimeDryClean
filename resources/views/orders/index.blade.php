@@ -6,8 +6,8 @@
 
     <div class="mt-4">
         <div class="toolbar mb-3">
-            <a href="{{ route('admin.orders.create') }}" class="btn btn-primary btn-sm">
-                {{ __('messages.add') }}</a>
+            <a href="{{ route('orders.create') }}" class="btn btn-primary btn-sm">
+                <i class="fas fa-plus"></i> {{ __('messages.add') }}</a>
             </a>
         </div>
 
@@ -35,7 +35,7 @@
                         <td>{{ $order->status_translated() }}</td>
                         <td>{{ $order->sum_price }}</td>
                         <td>
-                            <a class="btn btn-secondary btn-sm" href="{{ route('admin.orders.show', $order->id) }}">
+                            <a class="btn btn-secondary btn-sm" href="{{ route('orders.show', $order->id) }}">
                                 <span class="svg-icon svg-icon-primary svg-icon-2x"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 24 24" version="1.1">
                                         <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
                                             <rect x="0" y="0" width="24" height="24" />
@@ -45,7 +45,7 @@
                                     </svg></span>
                                 {{ __('messages.modify') }}
                             </a>
-                            <form class="d-inline" id="user-delete-form-{{ $order->id }}" action="{{ route('admin.orders.destroy', $order->id) }}" method="POST">
+                            <form class="d-inline" id="user-delete-form-{{ $order->id }}" action="{{ route('orders.destroy', $order->id) }}" method="POST">
                                 @csrf
                                 @method('DELETE')
                                 <a class="btn btn-danger btn-sm" onclick="confirmUserDeletion({{ $order->id }})">

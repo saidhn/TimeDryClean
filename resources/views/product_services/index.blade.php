@@ -11,7 +11,8 @@
     @endif
 
     <div class="toolbar mb-3">
-        <a href="{{ route('product_services.create') }}" class="btn btn-primary btn-sm">{{ __('messages.add') }}</a>
+        <a href="{{ route('product_services.create') }}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus"></i> {{ __('messages.add') }}</a>
 
     </div>
     {{-- Search Form --}}

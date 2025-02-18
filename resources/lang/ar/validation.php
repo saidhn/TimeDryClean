@@ -153,5 +153,5 @@ return [
         'zip_code' => 'الرمز البريدي',
     ],
     'mobile' => ':attribute رقم هاتف غير صحيح.',
-
+    'the_user_must_be_a_client' => 'يجب ان يكون المستخدم زبون',
 ];

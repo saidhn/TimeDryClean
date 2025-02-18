@@ -50,4 +50,8 @@ class User extends Authenticatable
     {
         return __('messages.' . $this->user_type);
     }
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
 }

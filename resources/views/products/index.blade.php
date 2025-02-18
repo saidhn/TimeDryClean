@@ -8,7 +8,7 @@
     <div class="mt-4">
         <div class="toolbar mb-3">
             <a href="{{ route('products.create') }}" class="btn btn-primary btn-sm">
-                {{ __('messages.add') }}</a>
+                <i class="fas fa-plus"></i> {{ __('messages.add') }}</a>
         </div>
         {{-- Search Form --}}
         <div class="mb-3">

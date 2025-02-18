@@ -17,12 +17,13 @@ class Subscription extends Model
         'end_date',
     ];
 
-    protected $casts = [
-        'paid' => 'boolean',
-    ];
 
     public function clientSubscriptions()
     {
         return $this->hasMany(ClientSubscription::class);
+    }
+    public function getDetails()
+    {
+        return __('messages.paid') . ": " . $this->paid . ' ' . __('messages.benefit') . ': ' . $this->benefit;
     }
 }

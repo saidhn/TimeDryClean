@@ -29,6 +29,7 @@ return new class extends Migration
         Schema::create('advertisers', function (Blueprint $table) {
             $table->id();
             $table->string('name')->comment('The name of the advertiser');
+            $table->string('code')->unique()->comment('The unique discount code');
             $table->timestamps();
             $table->softDeletes(); // Add soft deletes
         });
@@ -36,15 +37,15 @@ return new class extends Migration
         // Subscriptions Table
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
-            $table->boolean('paid')->default(false)->comment('Whether the subscription is paid');
-            $table->text('benefit')->nullable()->comment('The benefits of the subscription');
+            $table->decimal('paid', 10, 2)->comment('Subscription paid a mount');
+            $table->decimal('benefit', 10, 2)->comment('The benefits of the subscription');
             $table->date('start_date')->comment('The start date of the subscription');
             $table->date('end_date')->comment('The end date of the subscription');
             $table->timestamps();
             $table->softDeletes(); // Add soft deletes
         });
 
-        // Client Subscriptions Pivot Table
+        // Client Subscriptions Table
         Schema::create('client_subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->comment('The client associated with the subscription');
@@ -52,13 +53,12 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // Discounts Table
+        // Discounts Table قالب ثابت ممكن يرتبط بمسوق يشار له في الطلبات
         Schema::create('discounts', function (Blueprint $table) {
             $table->id();
             $table->enum('type', ['constant', 'percentage', 'number_of_free_products'])->comment('The type of discount: constant, percentage, number_of_free_products');
             $table->decimal('amount', 10, 2)->nullable()->comment('The amount of the discount');
             $table->foreignId('advertiser_id')->nullable()->constrained('advertisers')->onDelete('set null')->comment('The advertiser associated with the discount');
-            $table->string('code')->unique()->comment('The unique discount code');
             $table->date('start_date')->comment('The start date of the discount');
             $table->date('end_date')->comment('The end date of the discount');
             $table->timestamps();
@@ -74,12 +74,13 @@ return new class extends Migration
             $table->timestamps();
         });
 
+
         // Orders Table
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->comment('The client who placed the order');
             $table->foreignId('discount_id')->nullable()->constrained('discounts')->onDelete('set null')->comment('The discount applied to the order');
-            $table->foreignId('client_subscription_id')->nullable()->constrained('client_subscriptions')->onDelete('set null')->comment('The subscription associated with the order');
+            //$table->foreignId('client_subscription_id')->nullable()->constrained('client_subscriptions')->onDelete('set null')->comment('The subscription associated with the order');
             $table->decimal('sum_price', 10, 2)->comment('The total price of the order');
             $table->decimal('discount_amount', 10, 2)->default(0)->comment('The discount amount applied to the order');
             $table->enum('status', ['Pending', 'Processing', 'Completed'])->default('Pending')->comment('The status of the order');

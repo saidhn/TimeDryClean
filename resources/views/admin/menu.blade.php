@@ -4,7 +4,7 @@
     </a>
 </li>
 <li class="nav-item">
-    <a class="nav-link" href="{{ route('admin.orders.index') }}">
+    <a class="nav-link" href="{{ route('orders.index') }}">
         {{ __('messages.orders') }}
     </a>
 </li>
@@ -19,6 +19,15 @@
             <hr class="dropdown-divider">
         </li>
         <li></li>
+    </ul>
+</li>
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ __('messages.subscriptions') }}
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+        <li><a class="dropdown-item" href="{{ route('subscriptions.index') }}">{{ __('messages.manage_subscriptions') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('client_subscriptions.index') }}">{{ __('messages.manage_client_subscriptions') }}</a></li>
     </ul>
 </li>
 <li class="nav-item">

@@ -16,7 +16,11 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
         $this->call([ // Use an array if calling multiple seeders
             LocationSeeder::class,
-            // Add other seeders here, e.g., UserSeeder::class
+            ProductSeeder::class,
+            ProductServiceSeeder::class,
+            UserSeeder::class,
+            SubscriptionSeeder::class,
+            // Add other seeders here
         ]);
     }
 }
