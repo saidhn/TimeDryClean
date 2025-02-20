@@ -27,7 +27,7 @@ class OrdersController extends Controller
     {
         $search = $request->get('search');
 
-        $orders = Order::with('user', 'discount', 'clientSubscription', 'orderDeliveries')
+        $orders = Order::with('user', 'discount', 'clientSubscription', 'orderDelivery')
             ->with(['orderProductServices' => function ($query) {
                 $query->with('product', 'productService');
             }]);
