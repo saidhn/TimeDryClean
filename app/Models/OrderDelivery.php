@@ -20,8 +20,8 @@ class OrderDelivery extends Model
     ];
 
     protected $casts = [
-        'direction' => 'enum',
-        'status' => 'enum',
+        'direction' => 'string',
+        'status' => 'string',
     ];
 
     public function order()
@@ -32,6 +32,6 @@ class OrderDelivery extends Model
     // Assuming 'user_id' refers to the driver
     public function driver()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id');
+        return $this->belongsTo(Driver::class, 'user_id', 'id');
     }
 }

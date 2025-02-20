@@ -1,5 +1,9 @@
 <?php
 
+use App\Enums\DeliverDirection;
+use App\Enums\DeliveryDirection;
+use App\Enums\DeliveryStatus;
+use App\Enums\OrderStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -80,13 +84,23 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->comment('The client who placed the order');
             $table->foreignId('discount_id')->nullable()->constrained('discounts')->onDelete('set null')->comment('The discount applied to the order');
-            //$table->foreignId('client_subscription_id')->nullable()->constrained('client_subscriptions')->onDelete('set null')->comment('The subscription associated with the order');
+            // $table->foreignId('client_subscription_id')->nullable()->constrained('client_subscriptions')->onDelete('set null')->comment('The subscription associated with the order');
             $table->decimal('sum_price', 10, 2)->comment('The total price of the order');
             $table->decimal('discount_amount', 10, 2)->default(0)->comment('The discount amount applied to the order');
-            $table->enum('status', ['Pending', 'Processing', 'Completed'])->default('Pending')->comment('The status of the order');
+
+            // Correct way to define the enum column:
+            $table->enum('status', [
+                OrderStatus::PENDING,
+                OrderStatus::PROCESSING,
+                OrderStatus::SHIPPED,
+                OrderStatus::COMPLETED,
+                OrderStatus::CANCELLED,
+            ])->default(OrderStatus::PENDING)->comment('The status of the order'); // No ->change() here!
+
             $table->timestamps();
             $table->softDeletes(); // Add soft deletes
         });
+
 
         // Order Product Services Pivot Table
         Schema::create('order_product_services', function (Blueprint $table) {
@@ -103,9 +117,18 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->onDelete('cascade')->comment('The order associated with the delivery');
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade')->comment('The driver assigned to the delivery');
-            $table->enum('direction', ['orderToWork', 'workToOrder'])->comment('The direction of the delivery');
+            $table->enum('direction', [
+                DeliveryDirection::ORDER_TO_WORK,
+                DeliveryDirection::WORK_TO_ORDER,
+                DeliveryDirection::BOTH,
+            ])->comment('The direction of the delivery');
             $table->decimal('price', 10, 2)->comment('The price of the delivery');
-            $table->enum('status', ['Assigned', 'En Route', 'Delivered'])->default('Assigned')->comment('The status of the delivery');
+            $table->enum('status', [
+                DeliveryStatus::ASSIGNED,
+                DeliveryStatus::EN_ROUTE,
+                DeliveryStatus::DELIVERED,
+                DeliveryStatus::CANCELLED,
+            ])->default('Assigned')->comment('The status of the delivery');
             $table->timestamp('delivery_date')->nullable()->comment('The date of delivery');
             $table->timestamps();
             $table->softDeletes(); // Add soft deletes

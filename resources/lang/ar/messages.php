@@ -114,6 +114,13 @@ return [
     'bring_order' => 'احضار الطلب',
     'return_order' => 'ارجاع الطلب',
     'delivery_price' => 'سعر التوصيل',
-    'order_placed_balance' => 'تم تأكيد طلبك بنجاح! رصيدك الجديد هو: :balance'
-
+    'order_placed_balance' => 'تم تأكيد طلبك بنجاح! رصيدك الجديد هو: :balance',
+    'processing' => 'جاري العمل',
+    'shipped' => 'جاري الشحن',
+    'completed' => 'تمت الطلبية',
+    'cancelled' => 'تم الالغاء',
+    'select_driver' => 'حدد السائق',
+    'edit_order' => 'تعديل الطلب',
+    'order_details' => 'تفاصيل الطلب',
+    'order_created_successfully' => 'تم انشاء الطلب بنجاح.',
 ];

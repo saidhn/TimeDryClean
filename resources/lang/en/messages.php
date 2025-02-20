@@ -114,4 +114,12 @@ return [
     'return_order' => 'Return Order',
     'delivery_price' => 'Delivery Price',
     'order_placed_balance' => 'Your order has been placed successfully! Your new balance is: :balance',
+    'processing' => 'Processing Order',
+    'shipped' => 'Shipped Order',
+    'completed' => 'Completed Order',
+    'cancelled' => 'Cancelled Order',
+    'select_driver' => 'Select Driver',
+    'edit_order' => 'Edit Order',
+    'order_details' => 'Order Details',
+    'order_created_successfully' => 'Order created successfully.',
 ];

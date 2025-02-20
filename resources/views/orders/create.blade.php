@@ -4,6 +4,15 @@
 <div class="container">
     <h3>{{ __('messages.create_order') }}</h3>
 
+    @if ($errors->any()) {{-- Check if ANY errors exist --}}
+    <div class="alert alert-danger">
+        <ul>
+            @foreach ($errors->all() as $error) {{-- Iterate through all errors --}}
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
     <form id="create-order-form" action="{{ route('orders.store') }}" method="POST">
         @csrf
         <div class="card">
@@ -137,8 +146,8 @@
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        $(document).ready(function () {
+    document.addEventListener('DOMContentLoaded', function() {
+        $(document).ready(function() {
             let totalPrice = 0;
 
             const bringOrderCheckbox = document.getElementById('bring_order');
@@ -157,7 +166,7 @@
 
             function updateTotal() {
                 totalPrice = 0;
-                $('#order-product-services tr').each(function () {
+                $('#order-product-services tr').each(function() {
                     totalPrice += calculateRowPrice($(this));
                 });
 
@@ -169,20 +178,20 @@
                 $('#total-price-display').text(totalPrice.toFixed(2));
             }
 
-            $('#order-product-services tr').each(function () {
+            $('#order-product-services tr').each(function() {
                 calculateRowPrice($(this));
             });
             updateTotal();
 
-            $('#order-product-services').on('input', '.quantity-input', function () {
+            $('#order-product-services').on('input', '.quantity-input', function() {
                 updateTotal();
             });
 
-            $('#order-product-services').on('change', '.product-service-select', function () {
+            $('#order-product-services').on('change', '.product-service-select', function() {
                 updateTotal();
             });
 
-            $('.add-row').on('click', function () {
+            $('.add-row').on('click', function() {
                 var lastRowIndex = $('#order-product-services tr').length - 1;
                 var newRow = `
             <tr>
@@ -227,9 +236,9 @@
                     $(orders_arr[orders_len - 1]).find('.product-service-select').val(selected_service);
                 }
 
-                $(document).on('change', '.product-select', function () { });
+                $(document).on('change', '.product-select', function() {});
 
-                $(document).on('click', '.remove-row', function () {
+                $(document).on('click', '.remove-row', function() {
                     $(this).closest('tr').remove();
                     updateTotal();
                 });
@@ -237,9 +246,9 @@
                 updateTotal();
             });
 
-            $(document).on('change', '.product-select', function () { });
+            $(document).on('change', '.product-select', function() {});
 
-            $(document).on('click', '.remove-row', function () {
+            $(document).on('click', '.remove-row', function() {
                 $(this).closest('tr').remove();
                 updateTotal();
             });
@@ -264,7 +273,7 @@
             returnOrderCheckbox.addEventListener('change', updateTotal);
             deliveryPriceInput.addEventListener('input', updateTotal);
 
-            form.addEventListener('submit', function (event) {
+            form.addEventListener('submit', function(event) {
                 toggleDriverRequired();
                 if (driverSelect.required && driverSelect.value === "") {
                     driverSelect.setCustomValidity("Please select a driver.");
@@ -281,13 +290,13 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function() {
         // User Select2
         new TomSelect('#user-select', {
             valueField: 'id',
             labelField: 'name',
             searchField: 'name',
-            load: function (query, callback) {
+            load: function(query, callback) {
                 fetch(`/users/search?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(json => {
@@ -302,7 +311,7 @@
                     });
             },
             render: {
-                option: function (item, escape) {
+                option: function(item, escape) {
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
@@ -310,18 +319,18 @@
                     </div>
                     `;
                 },
-                item: function (item, escape) {
+                item: function(item, escape) {
                     return `<div>${escape(item.name)}</div>`;
                 }
             }
         });
 
         // Driver Select2
-        new TomSelect('#driver-select', {  // Initialize TomSelect for driver-select
+        new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
             valueField: 'id',
             labelField: 'name',
             searchField: 'name',
-            load: function (query, callback) {
+            load: function(query, callback) {
                 fetch(`/drivers/search?q=${encodeURIComponent(query)}`) // Adjust your route
                     .then(response => response.json())
                     .then(json => {
@@ -336,14 +345,14 @@
                     });
             },
             render: {
-                option: function (item, escape) {
+                option: function(item, escape) {
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
                         <div class="text-muted">ID: ${escape(item.id)}</div>  </div>
                     `;
                 },
-                item: function (item, escape) {
+                item: function(item, escape) {
                     return `<div>${escape(item.name)}</div>`;
                 }
             }

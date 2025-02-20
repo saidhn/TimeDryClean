@@ -2,9 +2,32 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Relations\Pivot;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 
-class OrderProductService extends Pivot
+class OrderProductService extends Model
 {
-    // You can add any custom attributes here if needed
+    use HasFactory;
+
+    protected $fillable = [
+        'order_id',
+        'product_id',
+        'product_service_id',
+        'quantity',
+    ];
+
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
+    public function product()
+    {
+        return $this->belongsTo(Product::class);
+    }
+
+    public function productService()
+    {
+        return $this->belongsTo(ProductService::class);
+    }
 }

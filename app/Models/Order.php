@@ -13,14 +13,13 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'discount_id',
-        'client_subscription_id',
         'sum_price',
         'discount_amount',
         'status',
     ];
 
     protected $casts = [
-        'status' => 'enum', // Ensure proper type casting for the enum
+        'status' => 'string',
     ];
 
     public function user()
@@ -43,8 +42,12 @@ class Order extends Model
         return $this->hasMany(OrderProductService::class);
     }
 
-    public function orderDeliveries()
+    public function orderDelivery()
     {
-        return $this->hasMany(OrderDelivery::class);
+        return $this->hasOne(OrderDelivery::class);
+    }
+    public function statusTranslated()
+    {
+        return __('messages.' . strtolower($this->status));
     }
 }
