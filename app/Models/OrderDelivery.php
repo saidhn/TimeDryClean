@@ -17,6 +17,10 @@ class OrderDelivery extends Model
         'price',
         'status',
         'delivery_date',
+        'street',
+        'building',
+        'floor',
+        'apartment_number'
     ];
 
     protected $casts = [
@@ -33,5 +37,10 @@ class OrderDelivery extends Model
     public function driver()
     {
         return $this->belongsTo(Driver::class, 'user_id', 'id');
+    }
+
+    public function address()
+    {
+        return $this->belongsTo(Address::class);
     }
 }

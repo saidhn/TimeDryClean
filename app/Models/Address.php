@@ -31,5 +31,8 @@ class Address extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }public function orderDelivery()
+    {
+        return $this->hasMany(Order::class);
     }
 }

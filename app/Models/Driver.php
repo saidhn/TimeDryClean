@@ -13,4 +13,8 @@ class Driver extends User
             $builder->where('user_type', 'driver');
         });
     }
+    //has many relation with orderDelivery
+    public function orderDeliveries(){
+        return $this->hasMany(OrderDelivery::class, 'user_id');
+    }
 }

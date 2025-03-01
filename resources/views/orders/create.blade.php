@@ -24,6 +24,11 @@
                             <select id="user-select" name="user_id"
                                 class="form-control @error('user_id') is-invalid @enderror" required>
                                 <option value="">{{ __('messages.select_user') }}</option>
+                                @foreach($clients as $user)
+                                <option value="{{ $user->id }}" {{ old('user_id')==$user->id ? 'selected' : '' }}>
+                                    {{ $user->name }}
+                                </option>
+                                @endforeach
                             </select>
                             @error('user_id')
                             <span class="invalid-feedback" role="alert">
@@ -38,13 +43,16 @@
                         <div class="form-group">
                             <label for="bring_order">{{ __('messages.delivery') }}</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order">
+                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order"
+                                    value="on" {{ old('bring_order') ? 'checked' : '' }}>
+
                                 <label class="form-check-label" for="bring_order">
                                     {{ __('messages.bring_order') }}
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order">
+                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order" {{
+                                    old('return_order') ? 'checked' : '' }}>
                                 <label class="form-check-label" for="return_order">
                                     {{ __('messages.return_order') }}
                                 </label>
@@ -56,15 +64,20 @@
                             <label class="form-check-label" for="delivery_price">{{ __('messages.delivery_price')
                                 }}</label>
                             <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price"
-                                value="0">
+                                value="{{ old('delivery_price', 0) }}">
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class=" col-md-6">
                         <div class="form-group">
                             <label for="driver-select">{{ __('messages.driver') }}</label>
                             <select id="driver-select" name="driver_id"
                                 class="form-control @error('driver_id') is-invalid @enderror">
                                 <option value="">{{ __('messages.select_driver') }}</option>
+                                @foreach($drivers as $driver)
+                                <option value="{{ $driver->id }}" {{ old('driver_id')==$driver->id ? 'selected' : '' }}>
+                                    {{ $driver->name }}
+                                </option>
+                                @endforeach
                             </select>
                             @error('driver_id')
                             <span class="invalid-feedback" role="alert">
@@ -73,87 +86,154 @@
                             @enderror
                         </div>
                     </div>
+
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label for="province_id" class="form-label">{{ __('messages.province') }}</label>
+                        <select id="province_id" class="form-control @error('province_id') is-invalid @enderror"
+                            name="province_id" required>
+                            <option value="">{{__('messages.select_province')}}</option>
+                            @foreach ($provinces as $province)
+                            <option value="{{ $province->id }}" {{ old('province_id')==$province->id ? 'selected' : ''
+                                }}>{{ $province->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('province_id')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                        @enderror
+                    </div>
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label for="city_id" class="form-label">{{ __('messages.city') }}</label>
+                        <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id"
+                            required disabled>
+                            <option value="">{{__('messages.city')}}</option>
+                        </select>
+                        @error('city_id')
+                        <span class="invalid-feedback" role="alert">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                        @enderror
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="street">{{__('messages.street')}}</label>
+                        <input class="form-control" type="text" name="street" id="street" value="{{ old('street') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="building">{{__('messages.building')}}</label>
+                        <input class="form-control" type="text" name="building" id="building"
+                            value="{{ old('building') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="floor">{{__('messages.floor')}}</label>
+                        <input class="form-control" type="number" name="floor" id="floor" value="{{ old('floor') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="apartment_number">{{__('messages.appartment_number')}}</label>
+                        <input class="form-control" type="text" name="apartment_number" id="apartment_number"
+                            value="{{ old('apartment_number') }}">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>{{ __('messages.order_products') }}</label>
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>{{ __('messages.product') }}</th>
+                                <th>{{ __('messages.product_service') }}</th>
+                                <th>{{ __('messages.quantity') }}</th>
+                                <th>{{ __('messages.price') }}</th>
+                                <th>{{ __('messages.actions') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody id="order-product-services">
+                            @for ($i = 0; $i < (old('order_product_services') ? count(old('order_product_services')) :
+                                1); $i++) <tr>
+                                <td>
+                                    <select name="order_product_services[{{ $i }}][product_id]"
+                                        class="form-control product-select">
+                                        <option value="">{{ __('messages.select_product') }}</option>
+                                        @foreach($products as $product)
+                                        <option value="{{ $product->id }}" {{ old('order_product_services.' . $i
+                                            . '.product_id' )==$product->id ? 'selected' : '' }}>
+                                            {{ $product->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="order_product_services[{{ $i }}][product_service_id]"
+                                        class="form-control product-service-select">
+                                        <option value="">{{ __('messages.select_product_service') }}</option>
+                                        @foreach($product_services as $product_service)
+                                        <option value="{{ $product_service->id }}"
+                                            data-price="{{ $product_service->price }}" {{ old('order_product_services.'
+                                            . $i . '.product_service_id' )==$product_service->id ? 'selected' : '' }}>
+                                            {{ $product_service->name }}
+                                        </option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="number" min="1" class="form-control quantity-input"
+                                        name="order_product_services[{{ $i }}][quantity]"
+                                        value="{{ old('order_product_services.' . $i . '.quantity', 1) }}">
+                                </td>
+                                <td class="unit_price">
+                                    <span class="price-display">0</span>
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-danger remove-row"><i
+                                            class="fa fa-trash"></i></button>
+                                </td>
+                                </tr>
+                                @endfor
+
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-success add-row">
+                                        <i class="fa fa-plus"></i> {{ __('messages.add') }}
+                                    </button>
+                                </td>
+                                <td colspan="2" class="text-end"><strong>{{ __('messages.total_price') }}:</strong></td>
+                                <td id="total-price-display">0</td>
+                            </tr>
+                        </tfoot>
+                    </table>
                 </div>
 
+                <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
+                <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
             </div>
-
-            <div class="form-group">
-                <label>{{ __('messages.order_products') }}</label>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>{{ __('messages.product') }}</th>
-                            <th>{{ __('messages.product_service') }}</th>
-                            <th>{{ __('messages.quantity') }}</th>
-                            <th>{{ __('messages.price') }}</th>
-                            <th>{{ __('messages.actions') }}</th>
-                        </tr>
-                    </thead>
-                    <tbody id="order-product-services">
-                        <tr>
-                            <td>
-                                <select name="order_product_services[0][product_id]"
-                                    class="form-control product-select">
-                                    <option value="">{{ __('messages.select_product') }}</option>
-                                    @foreach($products as $product)
-                                    <option value="{{ $product->id }}">{{ $product->name }}</option>
-                                    @endforeach
-                                </select>
-                            </td>
-                            <td>
-                                <select name="order_product_services[0][product_service_id]"
-                                    class="form-control product-service-select">
-                                    <option value="">{{ __('messages.select_product_service') }}</option>
-                                    @foreach($product_services as $product_service)
-                                    <option value="{{ $product_service->id }}"
-                                        data-price="{{ $product_service->price }}">
-                                        {{ $product_service->name }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </td>
-                            <td>
-                                <input type="number" min="1" class="form-control quantity-input"
-                                    name="order_product_services[0][quantity]" value="1">
-                            </td>
-                            <td class="unit_price">
-                                <span class="price-display">0</span>
-                            </td>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-danger remove-row"><i
-                                        class="fa fa-trash"></i></button>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <td>
-                                <button type="button" class="btn btn-sm btn-success add-row">
-                                    <i class="fa fa-plus"></i> {{ __('messages.add') }}
-                                </button>
-                            </td>
-                            <td colspan="2" class="text-end"><strong>{{ __('messages.total_price') }}:</strong></td>
-                            <td id="total-price-display">0</td>
-                        </tr>
-                    </tfoot>
-                </table>
-            </div>
-
-            <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
         </div>
     </form>
 </div>
 
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        $(document).ready(function() {
+    document.addEventListener('DOMContentLoaded', function () {
+        $(document).ready(function () {
             let totalPrice = 0;
 
             const bringOrderCheckbox = document.getElementById('bring_order');
             const returnOrderCheckbox = document.getElementById('return_order');
             const driverSelect = document.getElementById('driver-select');
             const deliveryPriceInput = document.getElementById('delivery_price');
+
+            const province_id = document.getElementById('province_id');
+            const city_id = document.getElementById('city_id');
+            const street = document.getElementById('street');
+            const building = document.getElementById('building');
+            const floor = document.getElementById('floor');
+            const apartment_number = document.getElementById('apartment_number');
+
             const form = document.getElementById('create-order-form');
 
             function calculateRowPrice(row) {
@@ -166,7 +246,7 @@
 
             function updateTotal() {
                 totalPrice = 0;
-                $('#order-product-services tr').each(function() {
+                $('#order-product-services tr').each(function () {
                     totalPrice += calculateRowPrice($(this));
                 });
 
@@ -178,20 +258,20 @@
                 $('#total-price-display').text(totalPrice.toFixed(2));
             }
 
-            $('#order-product-services tr').each(function() {
+            $('#order-product-services tr').each(function () {
                 calculateRowPrice($(this));
             });
             updateTotal();
 
-            $('#order-product-services').on('input', '.quantity-input', function() {
+            $('#order-product-services').on('input', '.quantity-input', function () {
                 updateTotal();
             });
 
-            $('#order-product-services').on('change', '.product-service-select', function() {
+            $('#order-product-services').on('change', '.product-service-select', function () {
                 updateTotal();
             });
 
-            $('.add-row').on('click', function() {
+            $('.add-row').on('click', function () {
                 var lastRowIndex = $('#order-product-services tr').length - 1;
                 var newRow = `
             <tr>
@@ -236,9 +316,9 @@
                     $(orders_arr[orders_len - 1]).find('.product-service-select').val(selected_service);
                 }
 
-                $(document).on('change', '.product-select', function() {});
+                $(document).on('change', '.product-select', function () { });
 
-                $(document).on('click', '.remove-row', function() {
+                $(document).on('click', '.remove-row', function () {
                     $(this).closest('tr').remove();
                     updateTotal();
                 });
@@ -246,22 +326,26 @@
                 updateTotal();
             });
 
-            $(document).on('change', '.product-select', function() {});
+            $(document).on('change', '.product-select', function () { });
 
-            $(document).on('click', '.remove-row', function() {
+            $(document).on('click', '.remove-row', function () {
                 $(this).closest('tr').remove();
                 updateTotal();
             });
 
 
             function toggleDriverRequired() {
-                if (bringOrderCheckbox.checked || returnOrderCheckbox.checked) {
-                    driverSelect.required = true;
-                    driverSelect.setCustomValidity("");
-                } else {
-                    driverSelect.required = false;
-                    driverSelect.setCustomValidity("");
-                }
+
+                driverSelect.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                deliveryPriceInput.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                province_id.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                city_id.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                street.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                building.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                floor.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                apartment_number.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+
+                driverSelect.setCustomValidity("");
             }
 
             toggleDriverRequired();
@@ -273,7 +357,7 @@
             returnOrderCheckbox.addEventListener('change', updateTotal);
             deliveryPriceInput.addEventListener('input', updateTotal);
 
-            form.addEventListener('submit', function(event) {
+            form.addEventListener('submit', function (event) {
                 toggleDriverRequired();
                 if (driverSelect.required && driverSelect.value === "") {
                     driverSelect.setCustomValidity("Please select a driver.");
@@ -284,20 +368,49 @@
                 }
             });
         });
+        //address province and city select
+        const citiesByProvince = @json(\App\Models\City:: select('id', 'name', 'province_id') -> get() -> groupBy('province_id'));
+
+        const provinceSelect = document.getElementById('province_id');
+        const citySelect = document.getElementById('city_id');
+
+        provinceSelect.addEventListener('change', function () {
+            updateAddress(this.value);
+        });
+        function updateAddress(val) {
+            citySelect.innerHTML = '<option value="">{{__('messages.select_city')}}</option>'; // Clear existing options
+            citySelect.disabled = true;
+
+            const provinceId = val;
+
+            if (provinceId && citiesByProvince[provinceId]) {
+                citiesByProvince[provinceId].forEach(city => {
+                    const option = document.createElement('option');
+                    option.value = city.id;
+                    option.text = city.name;
+                    citySelect.appendChild(option);
+                });
+                citySelect.disabled = false;
+            }
+        }
+        if ({{ old('province_id')!=null ? 'true' : 'false'}}){
+            updateAddress(provinceSelect.value);
+            citySelect.value = {{ old('city_id')??'-1' }};
+        }
     });
 </script>
 
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         // User Select2
         new TomSelect('#user-select', {
             valueField: 'id',
             labelField: 'name',
             searchField: 'name',
-            load: function(query, callback) {
-                fetch(`/users/search?q=${encodeURIComponent(query)}`)
+            load: function (query, callback) {
+                fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{App\Enums\UserType::CLIENT}}`)
                     .then(response => response.json())
                     .then(json => {
                         if (json.data && json.data.length) {
@@ -311,7 +424,7 @@
                     });
             },
             render: {
-                option: function(item, escape) {
+                option: function (item, escape) {
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
@@ -319,7 +432,7 @@
                     </div>
                     `;
                 },
-                item: function(item, escape) {
+                item: function (item, escape) {
                     return `<div>${escape(item.name)}</div>`;
                 }
             }
@@ -330,11 +443,12 @@
             valueField: 'id',
             labelField: 'name',
             searchField: 'name',
-            load: function(query, callback) {
-                fetch(`/drivers/search?q=${encodeURIComponent(query)}`) // Adjust your route
+            load: function (query, callback) {
+                fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{App\Enums\UserType::DRIVER}}`) // Adjust your route
                     .then(response => response.json())
                     .then(json => {
                         if (json.data && json.data.length) {
+                            console.log(json.data);
                             callback(json.data);
                         } else {
                             callback([]);
@@ -345,14 +459,14 @@
                     });
             },
             render: {
-                option: function(item, escape) {
+                option: function (item, escape) {
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
                         <div class="text-muted">ID: ${escape(item.id)}</div>  </div>
                     `;
                 },
-                item: function(item, escape) {
+                item: function (item, escape) {
                     return `<div>${escape(item.name)}</div>`;
                 }
             }

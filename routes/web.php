@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\UserType;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\ClientAuthController;
 use App\Http\Controllers\Auth\DriverAuthController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Client\ClientSettingsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminManageUsersController;
 use App\Http\Controllers\admin\client\AdminManageClientSubscriptionsController;
+use App\Http\Controllers\orders\OrderAssignmentController;
 use App\Http\Controllers\orders\OrdersController;
 use App\Http\Controllers\product_services\ProductServiceController;
 use App\Http\Controllers\products\ProductController;
@@ -111,58 +113,53 @@ Route::middleware(['set_locale'])->group(function () {
     //search clients inside orders
     Route::get('/users/search', function (Request $request) {
         $search = $request->input('q');
+        $userType = $request->input('user_type');
         $page = $request->input('page', 1);
-        $perPage = 10; // Adjust as needed
+        $perPage = 10;
 
-        // Initialize query for clients only
-        $usersQuery = User::where('user_type', 'client');
+        $usersQuery = User::query();
 
-        // Apply search logic
-        $usersQuery->where(function ($query) use ($search) {
-            // Search by name
-            $query->where('name', 'like', "%$search%")
-                // Search by sanitized mobile number
-                ->orWhereRaw("REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$search%"]);
-        });
+        if ($userType) {
+            $validUserTypes = [
+                UserType::ADMIN,
+                UserType::CLIENT,
+                UserType::DRIVER,
+                UserType::EMPLOYEE,
+            ];
 
-        // Search by ID (if the input is a valid number)
-        if (is_numeric($search)) {
-            $usersQuery->orWhere('id', $search);
+            if (in_array($userType, $validUserTypes)) {
+                $usersQuery->where('user_type', $userType);
+            } else {
+                return response()->json(['error' => 'Invalid user type'], 400);
+            }
         }
 
-        // Paginate the results
+        if ($search) {
+            $usersQuery->where(function ($query) use ($search) {
+                $query->where('name', 'like', "%$search%");
+
+                $query->orWhere(function ($query) use ($search) {
+                    $query->whereRaw("REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$search%"]);
+                });
+
+                if (is_numeric($search)) {
+                    $query->orWhere('id', $search);
+                }
+            });
+        }
+
         $users = $usersQuery->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json($users);
     });
-    //search drivers inside orders
-    Route::get('/drivers/search', function (Request $request) {
-        $search = $request->input('q');
-        $page = $request->input('page', 1);
-        $perPage = 10; // Adjust as needed
 
-        // Initialize query for clients only
-        $driversQuery = User::where('user_type', 'driver');
-
-        // Apply search logic
-        $driversQuery->where(function ($query) use ($search) {
-            // Search by name
-            $query->where('name', 'like', "%$search%")
-                // Search by sanitized mobile number
-                ->orWhereRaw("REPLACE(REPLACE(REPLACE(mobile, ' ', ''), '-', ''), '+', '') LIKE ?", ["%$search%"]);
-        });
-
-        // Search by ID (if the input is a valid number)
-        if (is_numeric($search)) {
-            $driversQuery->orWhere('id', $search);
-        }
-
-        // Paginate the results
-        $drivers = $driversQuery->paginate($perPage, ['*'], 'page', $page);
-
-        return response()->json($drivers);
+    Route::middleware(['auth:admin,employee'])->group(function () {
+        Route::get('/orders_search', [OrderAssignmentController::class, 'searchOrders']);
+        Route::get('/orders_assign', [OrderAssignmentController::class, 'showAssignmentForm'])->name('orders.assign.form');
+        Route::post('/orders_assign', [OrderAssignmentController::class, 'assignOrder'])->name('orders.assign');
+        Route::get('/orders_recommend/{order}/recommend-driver', [OrderAssignmentController::class, 'recommendDriver'])->name('orders.recommend.driver');
     });
-
+    
     //-----------------------------------------------------------------------------------
     //--------------------------------   subscriptions   --------------------------------
     //-----------------------------------------------------------------------------------

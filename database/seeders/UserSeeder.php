@@ -6,15 +6,15 @@ use App\Models\User;
 use App\Models\Address;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Faker\Factory as Faker;
 
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Fetch all addresses to associate users with
+        $faker = Faker::create('ar_SA'); // Use Arabic Faker
         $addresses = Address::all();
 
-        // Define user data
         $users = [
             [
                 'name' => 'خالد احمد',
@@ -46,11 +46,31 @@ class UserSeeder extends Seeder
             ],
         ];
 
-        // Create users and associate them with random addresses
         foreach ($users as $userData) {
             $user = User::create($userData);
+            if ($addresses->isNotEmpty()) {
+                $randomAddress = $addresses->random();
+                $user->address_id = $randomAddress->id;
+                $user->save();
+            }
+        }
 
-            // Assign a random address to the user
+        // Generate 196 more users using Faker
+        for ($i = 0; $i < 196; $i++) {
+            $userType = $faker->randomElement(['client', 'driver', 'employee']);
+            $name = $faker->name;
+            $mobile = $faker->numerify('05########'); // Generates 05 followed by 8 random digits
+            $email = $faker->unique()->safeEmail;
+            $password = Hash::make('password123');
+
+            $user = User::create([
+                'name' => $name,
+                'mobile' => $mobile,
+                'email' => $email,
+                'password' => $password,
+                'user_type' => $userType,
+            ]);
+
             if ($addresses->isNotEmpty()) {
                 $randomAddress = $addresses->random();
                 $user->address_id = $randomAddress->id;

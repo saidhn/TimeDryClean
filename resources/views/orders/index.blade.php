@@ -3,12 +3,22 @@
 @section('content')
 <div class="container">
     <h3>{{ __('messages.manage_orders') }}</h3>
-
     <div class="mt-4">
         <div class="toolbar mb-3">
             <a href="{{ route('orders.create') }}" class="btn btn-primary btn-sm">
                 <i class="fas fa-plus"></i> {{ __('messages.add') }}</a>
             </a>
+        </div>
+
+
+        {{-- Search Form --}}
+        <div class="mb-3">
+            <form action="{{ route('orders.index') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_order') }}" value="{{ request('search') }}">
+                    <button class="btn btn-outline-secondary" type="submit">{{ __('messages.search') }}</button>
+                </div>
+            </form>
         </div>
 
         @if (session('success'))
@@ -38,7 +48,7 @@
                     <tr>
                         <td>{{ $order->id }}</td>
                         <td>{{ $order->user->name }}</td>
-                        <td>{{ $order->orderDelivery->driver->name }}</td>
+                        <td>{{ optional(optional($order->orderDelivery)->driver)->name }}</td>
                         <td>{{ $order->created_at->format('Y-m-d') }}</td>
                         <td>{{ $order->statusTranslated() }}</td>
                         <td>{{ $order->sum_price }}</td>

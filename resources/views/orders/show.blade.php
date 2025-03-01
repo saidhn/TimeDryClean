@@ -8,6 +8,8 @@
         <div class="card-body">
             <p><strong>{{ __('messages.id') }}:</strong> {{ $order->id }}</p>
             <p><strong>{{ __('messages.user') }}:</strong> {{ $order->user->name }}</p>
+            <p><strong>{{ __('messages.driver') }}:</strong> {{ optional(optional($order->orderDelivery)->driver)->name }}</p>
+            <p><strong>{{ __('messages.delivery_price') }}:</strong> {{ optional($order->orderDelivery)->price }}</p>
             @if ($order->discount)
             <p><strong>{{ __('messages.discount') }}:</strong> {{ $order->discount->code }}</p>
             @endif
