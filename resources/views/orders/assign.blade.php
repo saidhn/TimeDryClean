@@ -33,7 +33,7 @@
                 </span>
                 @enderror
                 <div id="recommendedDrivers" class="mt-2"></div>
-                <button type="button" class="btn btn-sm btn-info mt-2" id="recommendDriver">Recommend Driver</button>
+                <button type="button" class="btn btn-sm btn-info mt-2" id="recommendDriver">{{ __('messages.recommend_driver') }}</button>
 
             </div>
 
@@ -100,6 +100,30 @@
 </div>
 
 <script>
+    function setFocusAndShowRequired(inputId) {
+        const inputElement = document.getElementById(inputId);
+
+        if (inputElement) {
+            inputElement.focus(); // Set focus on the input
+
+            if (inputElement.hasAttribute('required')) {
+            // Check if the input has the 'required' attribute
+
+            if (inputElement.value.trim() === '') {
+                // Check if the input is empty (after trimming whitespace)
+
+                // Show the required message (using browser's built-in validation or custom message)
+                inputElement.reportValidity(); // This will trigger the browser's default required message
+                //Or you can make your own custom message:
+                //inputElement.setCustomValidity("This field is required.");
+                //inputElement.reportValidity();
+                //inputElement.setCustomValidity(""); // Clear custom validity after showing
+            }
+            }
+        } else {
+            console.error(`Input element with ID '${inputId}' not found.`);
+        }
+        }
     document.addEventListener('DOMContentLoaded', function() {
         new TomSelect('#order-select', {
             valueField: 'id',
@@ -147,7 +171,7 @@
                     .then(response => response.json())
                     .then(json => {
                         if (json.data && json.data.length) {
-                            console.log(json.data);
+                            //console.log(json.data);
                             callback(json.data);
                         } else {
                             callback([]);
@@ -184,7 +208,7 @@
                         const recommendButton = document.createElement('button');
                         recommendButton.textContent = `${driver.name} (ID: ${driver.id}, City: ${driver.address.city.name})`;
                         recommendButton.classList.add('btn', 'btn-sm', 'btn-outline-secondary', 'm-1'); // Add Bootstrap classes for styling
-
+                        recommendButton.setAttribute('type','button');
                         recommendButton.addEventListener('click', function() {
                             const driverSelect = document.getElementById('driver-select').tomselect;
                             driverSelect.search(driver.name); // Start search
@@ -197,6 +221,8 @@
                     recommendedDriversDiv.innerHTML = '<p>No drivers recommended.</p>';
                 }
             });
+    }else{
+        setFocusAndShowRequired('order-select');
     }
 });
     });

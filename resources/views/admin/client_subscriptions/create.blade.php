@@ -39,39 +39,50 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        new TomSelect('#client-select', {
+        let clientSelect = new TomSelect('#client-select', {
             valueField: 'id',
             labelField: 'name',
-            searchField: 'name',
+            searchField: ['id', 'name', 'mobile'], // Allow search by ID, name or mobile
             load: function(query, callback) {
-                fetch(`/users/search?q=${encodeURIComponent(query)}`)
+                fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{App\Enums\UserType::CLIENT}}`)
                     .then(response => response.json())
                     .then(json => {
-                        // Check if the data exists and has length
                         if (json.data && json.data.length) {
-                            callback(json.data);
+                            callback(json.data); // Extract and pass the data array
                         } else {
-                            callback([]); // No results found
+                            callback([]);
                         }
                     })
                     .catch(() => {
-                        callback([]); // In case of an error, return empty results
+                        callback([]);
                     });
             },
             render: {
                 option: function(item, escape) {
                     return `
-                    <div>
-                        <strong>${escape(item.name)}</strong>
-                        <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
-                    </div>
-                `;
+                        <div>
+                            <strong>${escape(item.name)}</strong>
+                            <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
+                        </div>
+                    `;
                 },
                 item: function(item, escape) {
                     return `<div>${escape(item.name)}</div>`;
                 }
             }
         });
+
+        // Load initial data (all clients)
+        fetch(`/users/search?q=&user_type={{App\Enums\UserType::CLIENT}}`)
+            .then(response => response.json())
+            .then(json => {
+                if (json.data && json.data.length) {
+                    clientSelect.addOptions(json.data); // Add the initial data to TomSelect
+                }
+            })
+            .catch(error => {
+                console.error("Error loading initial clients:", error);
+            });
     });
 </script>
 @endpush

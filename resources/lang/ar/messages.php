@@ -133,4 +133,5 @@ return [
     'appartment_number' => 'رقم الشقة',
     'order_assignment' => 'توجيه الطلب',
     'select_order' => 'اختار الطلب',
+    'recommend_driver' => 'اقترح سائق',
 ];

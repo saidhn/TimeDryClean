@@ -77,9 +77,8 @@ class OrderAssignmentController extends Controller
             ->whereDoesntHave('orderDeliveries', function ($query) {
                 $query->where('status', DeliveryStatus::ASSIGNED); // Only available drivers
                 $query->where('user_id', DB::raw('users.id')); // Corrected column name
-            })
+            })->with('address.city')
             ->get();
-
         return response()->json($recommendedDrivers);
     }
     public function searchOrders(Request $request)

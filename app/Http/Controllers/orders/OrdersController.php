@@ -146,7 +146,7 @@ class OrdersController extends Controller
             } elseif ($request->has('return_order')) {
                 $direction = DeliveryDirection::WORK_TO_ORDER;
             }
-           
+
             $orderDelivery = OrderDelivery::create([
                 'order_id' => $order->id,
                 'user_id' => $request->driver_id,
@@ -159,14 +159,14 @@ class OrdersController extends Controller
                 'status' => DeliveryStatus::ASSIGNED,
                 'delivery_date' => now(), // Or a specific date
             ]);
-            
-            if($driverRequired == 'required'){
+
+            if ($driverRequired == 'required') {
                 // Create the address
                 $address = Address::create([
                     'province_id' => $request->input('province_id'),
                     'city_id' => $request->input('city_id'),
                 ]);
-            
+
                 // Associate the address with the OrderDelivery
                 $orderDelivery->address()->associate($address);
                 $orderDelivery->save(); // Save the OrderDelivery after associating the address.
@@ -252,7 +252,7 @@ class OrdersController extends Controller
             'bring_order' => 'nullable|in:on',
             'delivery_price' => $driverRequired . '|numeric|min:0',
             'driver_id' => $driverRequired . '|exists:users,id',
-            
+
             'province_id' =>  $driverRequired . '|exists:provinces,id',
             'city_id' =>  $driverRequired . '|exists:cities,id',
             'street' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
@@ -276,7 +276,7 @@ class OrdersController extends Controller
                 $sum_price += $productService->price * $orderProductServiceData['quantity'];
             }
 
-            if ($request->has('bring_order') || $request->has('return_order')) {
+            if ($driverRequired == 'required') {
                 $sum_price += $request->delivery_price;
             }
 
@@ -287,7 +287,7 @@ class OrdersController extends Controller
             $order->update($orderData);
 
             // 2. Update Order Delivery (if applicable):
-            if ($request->has('bring_order') || $request->has('return_order')) {
+            if ($driverRequired == 'required') {
                 $direction = '';
                 if ($request->has('bring_order') && $request->has('return_order')) {
                     $direction = DeliveryDirection::BOTH;
@@ -311,11 +311,23 @@ class OrdersController extends Controller
                         'status' => DeliveryStatus::ASSIGNED,
                         'delivery_date' => now(), // Or a specific date
                     ]);
-                    $orderDelivery->address->update([
-                        'province_id' => request('province_id'),
-                        'city_id' => request('city_id'),
-                    ]);
-                    $orderDelivery->save();
+                    if ($orderDelivery->address) {
+                        $orderDelivery->address->update([
+                            'province_id' => request('province_id'),
+                            'city_id' => request('city_id'),
+                        ]);
+                        $orderDelivery->save();
+                    } else {
+                        // Create the address
+                        $address = Address::create([
+                            'province_id' => $request->input('province_id'),
+                            'city_id' => $request->input('city_id'),
+                        ]);
+
+                        // Associate the address with the OrderDelivery
+                        $orderDelivery->address()->associate($address);
+                        $orderDelivery->save(); // Save the OrderDelivery after associating the address.
+                    }
                 } else {
                     $orderDelivery = OrderDelivery::create([
                         'order_id' => $order->id,
@@ -329,17 +341,15 @@ class OrdersController extends Controller
                         'status' => DeliveryStatus::ASSIGNED,
                         'delivery_date' => now(), // Or a specific date
                     ]);
-                    if($driverRequired == 'required'){
-                        // Create the address
-                        $address = Address::create([
-                            'province_id' => $request->input('province_id'),
-                            'city_id' => $request->input('city_id'),
-                        ]);
-                    
-                        // Associate the address with the OrderDelivery
-                        $orderDelivery->address()->associate($address);
-                        $orderDelivery->save(); // Save the OrderDelivery after associating the address.
-                    }
+                    // Create the address
+                    $address = Address::create([
+                        'province_id' => $request->input('province_id'),
+                        'city_id' => $request->input('city_id'),
+                    ]);
+
+                    // Associate the address with the OrderDelivery
+                    $orderDelivery->address()->associate($address);
+                    $orderDelivery->save(); // Save the OrderDelivery after associating the address.
                 }
             } else {
                 // If delivery options are un-checked, delete the OrderDelivery record if it exists

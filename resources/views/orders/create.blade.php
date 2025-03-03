@@ -24,11 +24,6 @@
                             <select id="user-select" name="user_id"
                                 class="form-control @error('user_id') is-invalid @enderror" required>
                                 <option value="">{{ __('messages.select_user') }}</option>
-                                @foreach($clients as $user)
-                                <option value="{{ $user->id }}" {{ old('user_id')==$user->id ? 'selected' : '' }}>
-                                    {{ $user->name }}
-                                </option>
-                                @endforeach
                             </select>
                             @error('user_id')
                             <span class="invalid-feedback" role="alert">
@@ -73,11 +68,7 @@
                             <select id="driver-select" name="driver_id"
                                 class="form-control @error('driver_id') is-invalid @enderror">
                                 <option value="">{{ __('messages.select_driver') }}</option>
-                                @foreach($drivers as $driver)
-                                <option value="{{ $driver->id }}" {{ old('driver_id')==$driver->id ? 'selected' : '' }}>
-                                    {{ $driver->name }}
-                                </option>
-                                @endforeach
+                               
                             </select>
                             @error('driver_id')
                             <span class="invalid-feedback" role="alert">
@@ -405,10 +396,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         // User Select2
-        new TomSelect('#user-select', {
+        let clientSelect = new TomSelect('#user-select', {
             valueField: 'id',
             labelField: 'name',
-            searchField: 'name',
+            searchField: ['id', 'name', 'mobile'], // Allow search by ID, name or mobile
             load: function (query, callback) {
                 fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{App\Enums\UserType::CLIENT}}`)
                     .then(response => response.json())
@@ -437,18 +428,27 @@
                 }
             }
         });
-
+            // Load initial data (all clients)
+            fetch(`/users/search?q=&user_type={{App\Enums\UserType::CLIENT}}`)
+            .then(response => response.json())
+            .then(json => {
+                if (json.data && json.data.length) {
+                    clientSelect.addOptions(json.data); // Add the initial data to TomSelect
+                }
+            })
+            .catch(error => {
+                console.error("Error loading initial clients:", error);
+            });
         // Driver Select2
-        new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
+       let driverSelect = new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
             valueField: 'id',
             labelField: 'name',
-            searchField: 'name',
+            searchField: ['id', 'name', 'mobile'], // Allow search by ID, name or mobile
             load: function (query, callback) {
                 fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{App\Enums\UserType::DRIVER}}`) // Adjust your route
                     .then(response => response.json())
                     .then(json => {
                         if (json.data && json.data.length) {
-                            console.log(json.data);
                             callback(json.data);
                         } else {
                             callback([]);
@@ -463,7 +463,7 @@
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
-                        <div class="text-muted">ID: ${escape(item.id)}</div>  </div>
+                        <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
                     `;
                 },
                 item: function (item, escape) {
@@ -471,7 +471,17 @@
                 }
             }
         });
-
+        // Load initial data (all drivers)
+        fetch(`/users/search?q=&user_type={{App\Enums\UserType::DRIVER}}`)
+        .then(response => response.json())
+        .then(json => {
+            if (json.data && json.data.length) {
+                driverSelect.addOptions(json.data); // Add the initial data to TomSelect
+            }
+        })
+        .catch(error => {
+            console.error("Error loading initial drivers:", error);
+        });
 
     });
 </script>

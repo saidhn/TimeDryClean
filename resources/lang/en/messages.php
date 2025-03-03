@@ -132,4 +132,5 @@ return [
     'appartment_number' => 'Appartment Number',
     'order_assignment' => 'Order Assignment',
     'select_order' => 'Select Order',
+    'recommend_driver' => 'Recommend Driver',
 ];
