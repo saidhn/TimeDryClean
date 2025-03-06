@@ -18,7 +18,7 @@
     <header class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
         <div class="container">
             <a class="navbar-brand" href="{{ url('/') }}">
-                <img class="logo-white" src="{{ Vite::asset('resources/images/l5.png') }}" alt="Your Logo" height="30">
+                <img class="logo-white" src="{{ Vite::asset('resources/images/L5.png') }}" alt="Your Logo" height="30">
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>

@@ -10,7 +10,7 @@ use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminManageUsersController;
-use App\Http\Controllers\admin\client\AdminManageClientSubscriptionsController;
+use App\Http\Controllers\Admin\client\AdminManageClientSubscriptionsController;
 use App\Http\Controllers\orders\OrderAssignmentController;
 use App\Http\Controllers\orders\OrdersController;
 use App\Http\Controllers\product_services\ProductServiceController;
