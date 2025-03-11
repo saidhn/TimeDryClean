@@ -20,6 +20,7 @@
 
         <div class="card">
             <div class="card-body">
+                <div>{{__('messages.id')}}#: {{$order->id}}</div>
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
@@ -37,7 +38,29 @@
                             @enderror
                         </div>
                     </div>
-                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="order_status">{{ __('messages.order_status') }}</label>
+                            <select class="form-control" id="order_status" name="order_status">
+                                <option value="{{ $order->status }}" selected>{{ $order->statusTranslated() }}</option>
+                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $order->status === \App\Enums\OrderStatus::PENDING ? 'disabled' : '' }}>
+                                    {{ __('messages.pending') }}
+                                </option>
+                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $order->status === \App\Enums\OrderStatus::PROCESSING ? 'disabled' : '' }}>
+                                    {{ __('messages.processing') }}
+                                </option>
+                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $order->status === \App\Enums\OrderStatus::SHIPPED ? 'disabled' : '' }}>
+                                    {{ __('messages.shipped') }}
+                                </option>
+                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $order->status === \App\Enums\OrderStatus::COMPLETED ? 'disabled' : '' }}>
+                                    {{ __('messages.completed') }}
+                                </option>
+                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $order->status === \App\Enums\OrderStatus::CANCELLED ? 'disabled' : '' }}>
+                                    {{ __('messages.cancelled') }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="col-md-3 d-flex align-items-center">
                         <div class="form-group">

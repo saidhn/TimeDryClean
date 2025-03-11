@@ -4,6 +4,11 @@
 <div class="container">
     <h1>{{ __('messages.order_details') }}</h1>
 
+    @if (session('success'))
+    <div class="alert alert-success">
+        {{ session('success') }}
+    </div>
+    @endif
     <div class="card">
         <div class="card-body">
             <p><strong>{{ __('messages.id') }}:</strong> {{ $order->id }}</p>

@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Subscription;
 
+use App\Http\Controllers\Controller;
 use App\Models\Subscription;
 use Carbon\Carbon;
 use Illuminate\Http\Request;

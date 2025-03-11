@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\orders;
+namespace App\Http\Controllers\Order;
 
 use App\Enums\DeliveryDirection;
 use App\Enums\DeliveryStatus;
@@ -240,160 +240,150 @@ class OrdersController extends Controller
      * Update the specified resource in storage.
      */
     public function update(Request $request, Order $order)
-    {
-        $driverRequired = 'nullable';
-        if ($request->has('bring_order') || $request->has('return_order')) {
-            $driverRequired = 'required';
+{
+    $driverRequired = 'nullable';
+    if ($request->has('bring_order') || $request->has('return_order')) {
+        $driverRequired = 'required';
+    }
+
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'return_order' => 'nullable|in:on',
+        'bring_order' => 'nullable|in:on',
+        'delivery_price' => $driverRequired . '|numeric|min:0',
+        'driver_id' => $driverRequired . '|exists:users,id',
+        'order_status' => 'required|in:' . implode(',', [
+            \App\Enums\OrderStatus::PENDING,
+            \App\Enums\OrderStatus::PROCESSING,
+            \App\Enums\OrderStatus::SHIPPED,
+            \App\Enums\OrderStatus::COMPLETED,
+            \App\Enums\OrderStatus::CANCELLED,
+        ]),
+        'province_id' => $driverRequired . '|exists:provinces,id',
+        'city_id' => $driverRequired . '|exists:cities,id',
+        'street' => $driverRequired . '|string|max:255',
+        'building' => $driverRequired . '|string|max:255',
+        'floor' => $driverRequired . '|integer',
+        'apartment_number' => $driverRequired . '|string|max:255',
+        'order_product_services' => 'required|array',
+        'order_product_services.*.product_id' => 'required|exists:products,id',
+        'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
+        'order_product_services.*.quantity' => 'required|integer|min:1',
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        // 1. Update Order:
+        $sum_price = 0;
+        foreach ($request->order_product_services as $orderProductServiceData) {
+            $productService = ProductService::find($orderProductServiceData['product_service_id']);
+            $sum_price += $productService->price * $orderProductServiceData['quantity'];
         }
 
-        $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'return_order' => 'nullable|in:on',
-            'bring_order' => 'nullable|in:on',
-            'delivery_price' => $driverRequired . '|numeric|min:0',
-            'driver_id' => $driverRequired . '|exists:users,id',
+        if ($driverRequired == 'required') {
+            $sum_price += $request->delivery_price;
+        }
 
-            'province_id' =>  $driverRequired . '|exists:provinces,id',
-            'city_id' =>  $driverRequired . '|exists:cities,id',
-            'street' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
-            'building' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
-            'floor' => $driverRequired . '|integer', //required (only when at least bring_order or return_order are checked)
-            'apartment_number' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
+        $orderData = $request->only(['user_id']);
+        $orderData['sum_price'] = $sum_price;
+        $orderData['status'] = $request->order_status; // Update the order status
+        $originalPrice = ($order->sum_price);
+        $order->update($orderData);
 
-            'order_product_services' => 'required|array',
-            'order_product_services.*.product_id' => 'required|exists:products,id',
-            'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
-            'order_product_services.*.quantity' => 'required|integer|min:1',
-        ]);
-
-        try {
-            DB::beginTransaction();
-
-            // 1. Update Order:
-            $sum_price = 0;
-            foreach ($request->order_product_services as $orderProductServiceData) {
-                $productService = ProductService::find($orderProductServiceData['product_service_id']);
-                $sum_price += $productService->price * $orderProductServiceData['quantity'];
+        // 2. Update Order Delivery (if applicable):
+        if ($driverRequired == 'required') {
+            $direction = '';
+            if ($request->has('bring_order') && $request->has('return_order')) {
+                $direction = DeliveryDirection::BOTH;
+            } elseif ($request->has('bring_order')) {
+                $direction = DeliveryDirection::ORDER_TO_WORK;
+            } elseif ($request->has('return_order')) {
+                $direction = DeliveryDirection::WORK_TO_ORDER;
             }
 
-            if ($driverRequired == 'required') {
-                $sum_price += $request->delivery_price;
-            }
+            $orderDelivery = $order->orderDelivery;
 
-            $orderData = $request->only(['user_id']);
-            $orderData['sum_price'] = $sum_price;
-            //important to get original price before updating the order data (we need it to calculate new balance)
-            $originalPrice = ($order->sum_price);
-            $order->update($orderData);
-
-            // 2. Update Order Delivery (if applicable):
-            if ($driverRequired == 'required') {
-                $direction = '';
-                if ($request->has('bring_order') && $request->has('return_order')) {
-                    $direction = DeliveryDirection::BOTH;
-                } elseif ($request->has('bring_order')) {
-                    $direction = DeliveryDirection::ORDER_TO_WORK;
-                } elseif ($request->has('return_order')) {
-                    $direction = DeliveryDirection::WORK_TO_ORDER;
-                }
-
-                $orderDelivery = $order->orderDelivery;
-
-                if ($orderDelivery) {
-                    $orderDelivery->update([
-                        'user_id' => $request->driver_id,
-                        'direction' => $direction,
-                        'price' => $request->delivery_price ?? 0,
-                        'street' => $request->street ?? null,
-                        'building' => $request->building ?? null,
-                        'floor' => $request->floor ?? null,
-                        'apartment_number' => $request->apartment_number ?? null,
-                        'status' => DeliveryStatus::ASSIGNED,
-                        'delivery_date' => now(), // Or a specific date
+            if ($orderDelivery) {
+                $orderDelivery->update([
+                    'user_id' => $request->driver_id,
+                    'direction' => $direction,
+                    'price' => $request->delivery_price ?? 0,
+                    'street' => $request->street ?? null,
+                    'building' => $request->building ?? null,
+                    'floor' => $request->floor ?? null,
+                    'apartment_number' => $request->apartment_number ?? null,
+                    'status' => DeliveryStatus::ASSIGNED,
+                    'delivery_date' => now(),
+                ]);
+                if ($orderDelivery->address) {
+                    $orderDelivery->address->update([
+                        'province_id' => request('province_id'),
+                        'city_id' => request('city_id'),
                     ]);
-                    if ($orderDelivery->address) {
-                        $orderDelivery->address->update([
-                            'province_id' => request('province_id'),
-                            'city_id' => request('city_id'),
-                        ]);
-                        $orderDelivery->save();
-                    } else {
-                        // Create the address
-                        $address = Address::create([
-                            'province_id' => $request->input('province_id'),
-                            'city_id' => $request->input('city_id'),
-                        ]);
-
-                        // Associate the address with the OrderDelivery
-                        $orderDelivery->address()->associate($address);
-                        $orderDelivery->save(); // Save the OrderDelivery after associating the address.
-                    }
+                    $orderDelivery->save();
                 } else {
-                    $orderDelivery = OrderDelivery::create([
-                        'order_id' => $order->id,
-                        'user_id' => $request->driver_id,
-                        'direction' => $direction, // Set the appropriate direction
-                        'price' => $request->delivery_price ?? 0,
-                        'street' => $request->street ?? null,
-                        'building' => $request->building ?? null,
-                        'floor' => $request->floor ?? null,
-                        'apartment_number' => $request->apartment_number ?? null,
-                        'status' => DeliveryStatus::ASSIGNED,
-                        'delivery_date' => now(), // Or a specific date
-                    ]);
-                    // Create the address
                     $address = Address::create([
                         'province_id' => $request->input('province_id'),
                         'city_id' => $request->input('city_id'),
                     ]);
-
-                    // Associate the address with the OrderDelivery
                     $orderDelivery->address()->associate($address);
-                    $orderDelivery->save(); // Save the OrderDelivery after associating the address.
+                    $orderDelivery->save();
                 }
             } else {
-                // If delivery options are un-checked, delete the OrderDelivery record if it exists
-                if ($order->orderDelivery) {
-                    $order->orderDelivery()->delete();
-                }
+                $orderDelivery = OrderDelivery::create([
+                    'order_id' => $order->id,
+                    'user_id' => $request->driver_id,
+                    'direction' => $direction,
+                    'price' => $request->delivery_price ?? 0,
+                    'street' => $request->street ?? null,
+                    'building' => $request->building ?? null,
+                    'floor' => $request->floor ?? null,
+                    'apartment_number' => $request->apartment_number ?? null,
+                    'status' => DeliveryStatus::ASSIGNED,
+                    'delivery_date' => now(),
+                ]);
+                $address = Address::create([
+                    'province_id' => $request->input('province_id'),
+                    'city_id' => $request->input('city_id'),
+                ]);
+                $orderDelivery->address()->associate($address);
+                $orderDelivery->save();
             }
-
-            // 3. Update Order Product Services:
-            $order->orderProductServices()->delete(); // Delete existing records first
-
-            foreach ($request->order_product_services as $orderProductServiceData) {
-                $order->orderProductServices()->create($orderProductServiceData);
+        } else {
+            if ($order->orderDelivery) {
+                $order->orderDelivery()->delete();
             }
-
-            // 4. Update User Balance (if needed - be careful with this logic):
-            $user = User::find($request->user_id);
-            if (!$user) {
-                throw new \Exception("User not found.");
-            }
-
-            // Recalculate order cost (important if products or delivery changes)
-            $orderCost = $order->sum_price;
-
-            // Handle balance changes
-            $user->balance = $user->balance - ($orderCost - $originalPrice); // Correct way to update balance
-            $user->save();
-
-
-            // 5. Send WhatsApp Message (if needed):
-            // Use the service to send the whatsapp message
-            $messageBody = __('messages.order_update_balance') . ": {$user->balance}";
-            $this->whatsAppService->sendMessage('+970592674624', $messageBody); // User's WhatsApp number
-
-            DB::commit();
-            return redirect()->route('orders.index')->with('success', __('messages.order_updated_successfully')); // Updated message
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            Log::error("Error updating order: " . $e->getMessage());
-            return back()->withErrors(['message' => 'An error occurred while updating the order. Please try again later. ' . $e->getMessage()]);
         }
+
+        // 3. Update Order Product Services:
+        $order->orderProductServices()->delete();
+        foreach ($request->order_product_services as $orderProductServiceData) {
+            $order->orderProductServices()->create($orderProductServiceData);
+        }
+
+        // 4. Update User Balance (if needed - be careful with this logic):
+        $user = User::find($request->user_id);
+        if (!$user) {
+            throw new \Exception("User not found.");
+        }
+        $orderCost = $order->sum_price;
+        $user->balance = $user->balance - ($orderCost - $originalPrice);
+        $user->save();
+
+        // 5. Send WhatsApp Message (if needed):
+        $messageBody = __('messages.order_update_balance') . ": {$user->balance}";
+        $this->whatsAppService->sendMessage('+970592674624', $messageBody);
+
+        DB::commit();
+        return redirect()->route('orders.index')->with('success', __('messages.order_updated_successfully'));
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error("Error updating order: " . $e->getMessage());
+        return back()->withErrors(['message' => 'An error occurred while updating the order. Please try again later. ' . $e->getMessage()]);
     }
+}
 
 
     public function destroy(Order $order)

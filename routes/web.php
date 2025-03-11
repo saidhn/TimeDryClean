@@ -1,6 +1,11 @@
 <?php
 
 use App\Enums\UserType;
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminManageUsersController;
+use App\Http\Controllers\Admin\client\AdminManageClientSubscriptionsController;
+use App\Http\Controllers\Admin\contact\AdminContactController;
+use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\ClientAuthController;
 use App\Http\Controllers\Auth\DriverAuthController;
@@ -8,14 +13,11 @@ use App\Http\Controllers\Auth\EmployeeAuthController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
-use App\Http\Controllers\Admin\AdminDashboardController;
-use App\Http\Controllers\Admin\AdminManageUsersController;
-use App\Http\Controllers\Admin\client\AdminManageClientSubscriptionsController;
-use App\Http\Controllers\orders\OrderAssignmentController;
-use App\Http\Controllers\orders\OrdersController;
-use App\Http\Controllers\product_services\ProductServiceController;
-use App\Http\Controllers\products\ProductController;
-use App\Http\Controllers\SubscriptionController;
+use App\Http\Controllers\Contact\PublicContactController;
+use App\Http\Controllers\Order\OrderAssignmentController;
+use App\Http\Controllers\Order\OrdersController;
+use App\Http\Controllers\ProductService\ProductServiceController;
+use App\Http\Controllers\Subscription\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
@@ -59,13 +61,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::post('/logout', [EmployeeAuthController::class, 'logout'])->name('employee.logout');
     });
 
-    Route::prefix('admin')->group(function () {
-        Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
-        Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
-        Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
-        Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
-        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-    });
+    
 
     //-----------------------------------------------------------------------------------
     //--------------------------------    Client Routes    ------------------------------
@@ -82,18 +78,38 @@ Route::middleware(['set_locale'])->group(function () {
     //-----------------------------------------------------------------------------------
     //--------------------------------    Admin Routes    ------------------------------
     //-----------------------------------------------------------------------------------
-    Route::prefix('admin')->middleware('auth:admin')->group(function () {
-        //dashboard
-        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-        //users
-        Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
-        Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
-        Route::post('/users', [AdminManageUsersController::class, 'store'])->name('admin.users.store');
-        Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');
-        Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
-        Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
-        Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
-        Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class); // Nested route
+    Route::prefix('admin')->group(function () {
+        // Authentication Routes
+        Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
+        Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
+        Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
+        Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
+        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+    
+        // Protected Routes (Require Authentication)
+        Route::middleware('auth:admin')->group(function () {
+            // Dashboard
+            Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    
+            // Users
+            Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
+            Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
+            Route::post('/users', [AdminManageUsersController::class, 'store'])->name('admin.users.store');
+            Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');
+            Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
+            Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
+            Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
+            Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class);
+    
+            // Contacts
+            Route::prefix('/contacts')->group(function () {
+                Route::get('/', [AdminContactController::class, 'index'])->name('admin.contacts.index');
+                Route::get('/{contact}', [AdminContactController::class, 'show'])->name('admin.contacts.show');
+                Route::put('/mark-read/{contact}', [AdminContactController::class, 'markRead'])->name('admin.contacts.markRead');
+                Route::put('/mark-replied/{contact}', [AdminContactController::class, 'markReplied'])->name('admin.contacts.markReplied');
+                Route::put('/reply/{contact}', [AdminContactController::class, 'reply'])->name('admin.contacts.reply');
+            });
+        });
     });
 
     //-----------------------------------------------------------------------------------
@@ -164,6 +180,17 @@ Route::middleware(['set_locale'])->group(function () {
     //--------------------------------   subscriptions   --------------------------------
     //-----------------------------------------------------------------------------------
     Route::resource('subscriptions', SubscriptionController::class)->middleware('auth:admin,employee,driver,client');
+
+    //-----------------------------------------------------------------------------------
+    //------------------------------     Public Contact      ----------------------------
+    //-----------------------------------------------------------------------------------
+    // Public Contact Form Routes
+    Route::post('/contact/send', [PublicContactController::class, 'send'])->name('contact.send');
+    Route::get('/contact', [PublicContactController::class, 'show'])->name('contact.show'); //optional, if you want a get route to the form.
+
+    // Admin Contact Message Routes
+    
+
 }); //end set locale
 //-----------------------------------------------------------------------------------
 //--------------------------------        END        --------------------------------

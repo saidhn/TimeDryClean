@@ -42,6 +42,17 @@
         <li><a class="dropdown-item" href="{{ route('client_subscriptions.index') }}">{{ __('messages.manage_client_subscriptions') }}</a></li>
     </ul>
 </li>
+
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ __('messages.contact_messages') }}
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdown4">
+        <li><a class="dropdown-item" href="{{ route('admin.contacts.index') }}">{{ __('messages.contact_messages') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('contact.show') }}">{{ __('messages.send_message') }}</a></li>
+    </ul>
+</li>
+
 <li class="nav-item">
     <a class="nav-link" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
         {{ __('messages.logout') }}
