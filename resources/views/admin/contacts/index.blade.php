@@ -13,7 +13,30 @@
                         {{ session('success') }}
                     </div>
                     @endif
-
+                    <form method="GET" action="{{ route('admin.contacts.index') }}">
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search') }}" value="{{ request('search') }}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="is_read" class="form-control">
+                                    <option value="">{{ __('messages.all_read_status') }}</option>
+                                    <option value="1" {{ request('is_read') === '1' ? 'selected' : '' }}>{{ __('messages.read') }}</option>
+                                    <option value="0" {{ request('is_read') === '0' ? 'selected' : '' }}>{{ __('messages.unread') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="is_replied" class="form-control">
+                                    <option value="">{{ __('messages.all_reply_status') }}</option>
+                                    <option value="1" {{ request('is_replied') === '1' ? 'selected' : '' }}>{{ __('messages.replied') }}</option>
+                                    <option value="0" {{ request('is_replied') === '0' ? 'selected' : '' }}>{{ __('messages.unreplied') }}</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary">{{ __('messages.filter') }}</button>
+                            </div>
+                        </div>
+                    </form>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped">
                             <thead>
@@ -31,9 +54,9 @@
                             <tbody>
                                 @forelse ($contacts as $contact)
                                 <tr>
-                                    <td>{{ $contact->id }}</td>
-                                    <td>{{ $contact->title }}</td>
-                                    <td>{{ Str::limit($contact->message, 100) }}</td>
+                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ $contact->id }}</a></td>
+                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ $contact->title }}</a></td>
+                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ Str::limit($contact->message, 100) }}</a></td>
                                     <td>{{ $contact->user ? $contact->user->name : __('messages.anonymous') }}</td>
                                     <td>{{ $contact->date->format('Y-m-d H:i:s') }}</td>
                                     <td>

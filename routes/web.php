@@ -61,7 +61,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::post('/logout', [EmployeeAuthController::class, 'logout'])->name('employee.logout');
     });
 
-    
+
 
     //-----------------------------------------------------------------------------------
     //--------------------------------    Client Routes    ------------------------------
@@ -85,12 +85,12 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
         Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
-    
+
         // Protected Routes (Require Authentication)
         Route::middleware('auth:admin')->group(function () {
             // Dashboard
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
-    
+
             // Users
             Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
             Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
@@ -100,7 +100,7 @@ Route::middleware(['set_locale'])->group(function () {
             Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
             Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
             Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class);
-    
+
             // Contacts
             Route::prefix('/contacts')->group(function () {
                 Route::get('/', [AdminContactController::class, 'index'])->name('admin.contacts.index');
@@ -109,6 +109,8 @@ Route::middleware(['set_locale'])->group(function () {
                 Route::put('/mark-replied/{contact}', [AdminContactController::class, 'markReplied'])->name('admin.contacts.markReplied');
                 Route::put('/reply/{contact}', [AdminContactController::class, 'reply'])->name('admin.contacts.reply');
             });
+            Route::get('/users-numbers', [AdminManageUsersController::class, 'byNumber'])->name('admin.users.byNumber');
+            Route::post('/users-whatsapp', [AdminManageUsersController::class, 'sendWhatsapp'])->name('admin.users.sendWhatsapp');
         });
     });
 
@@ -175,7 +177,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::post('/orders_assign', [OrderAssignmentController::class, 'assignOrder'])->name('orders.assign');
         Route::get('/orders_recommend/{order}/recommend-driver', [OrderAssignmentController::class, 'recommendDriver'])->name('orders.recommend.driver');
     });
-    
+
     //-----------------------------------------------------------------------------------
     //--------------------------------   subscriptions   --------------------------------
     //-----------------------------------------------------------------------------------
@@ -189,7 +191,7 @@ Route::middleware(['set_locale'])->group(function () {
     Route::get('/contact', [PublicContactController::class, 'show'])->name('contact.show'); //optional, if you want a get route to the form.
 
     // Admin Contact Message Routes
-    
+
 
 }); //end set locale
 //-----------------------------------------------------------------------------------

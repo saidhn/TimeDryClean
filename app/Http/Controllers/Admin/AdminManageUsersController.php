@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserType;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
@@ -10,6 +11,7 @@ use App\Models\Province;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -17,7 +19,7 @@ use Illuminate\Validation\Rule;
 class AdminManageUsersController extends Controller
 {
     // Define user types as a constant for better reusability
-    public const USER_TYPES = ["client", "driver", "employee", "admin"];
+    public const USER_TYPES = [UserType::CLIENT, UserType::DRIVER, UserType::EMPLOYEE, UserType::ADMIN];
 
     /**
      * Display a paginated list of users.
@@ -229,5 +231,63 @@ class AdminManageUsersController extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', __('messages.registration_failed')); // More specific error message
         }
+    }
+    public function byNumber(Request $request)
+    {
+        $users = User::query();
+
+        if ($request->filled('search')) {
+            $search = '%' . $request->search . '%';
+            $users->where('name', 'like', $search)
+                ->orWhere('mobile', 'like', $search)
+                ->orWhere('id', $request->search);
+        }
+
+        if ($request->filled('user_type')) {
+            $users->where('user_type', $request->user_type);
+        }
+
+        if ($request->has('negative_balance') && $request->negative_balance == 1) {
+            $users->where('balance', '<', 0);
+        }
+
+        $filteredUsers = $users->get();
+        $users = $users->paginate(10)->appends($request->query());
+
+        return view('admin.users.user_numbers', compact('users', 'filteredUsers'));
+    }
+
+    public function sendWhatsapp(Request $request)
+    {
+        if (!$request->has('send_negative_balance')) {
+            $request->validate([
+                'message' => 'required|string',
+            ]);
+        }
+
+        if ($request->has('send_negative_balance') && $request->send_negative_balance == 1) {
+            $users = User::where('balance', '<', 0)->get();
+            $message = $request->negative_balance_message;
+            foreach ($users as $user) {
+                // Implement WhatsApp sending logic here using $user->mobile and $message
+                //Log::info("Sending WhatsApp to {$user->mobile} with message: {$message}");
+            }
+        } elseif ($request->has('send_filtered') && $request->send_filtered == 1) {
+            $users = json_decode($request->filtered_users);
+            foreach ($users as $mobile) {
+                // Implement WhatsApp sending logic here using $mobile and $request->message
+                //Log::info("Sending WhatsApp to {$mobile} with message: {$request->message}");
+            }
+        } else {
+            $request->validate([
+                'users' => 'required|array',
+            ]);
+            foreach ($request->users as $mobile) {
+                // Implement WhatsApp sending logic here using $mobile and $request->message
+                //Log::info("Sending WhatsApp to {$mobile} with message: {$request->message}");
+            }
+        }
+
+        return back()->with('success', __('messages.whatsapp_messages_sent'));
     }
 }

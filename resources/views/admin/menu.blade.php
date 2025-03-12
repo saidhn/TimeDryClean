@@ -52,7 +52,9 @@
         <li><a class="dropdown-item" href="{{ route('contact.show') }}">{{ __('messages.send_message') }}</a></li>
     </ul>
 </li>
-
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('admin.users.byNumber') }}">{{ __('messages.whatsapp_message') }}</a>
+</li>
 <li class="nav-item">
     <a class="nav-link" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
         {{ __('messages.logout') }}

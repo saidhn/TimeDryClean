@@ -44,18 +44,6 @@
                             </span>
                         </div>
                     </div>
-                    {{-- Reply Section --}}
-                    <div class="mb-4 border p-3 rounded">
-                        <strong>{{ __('messages.reply') }}:</strong>
-                        <form method="POST" action="{{ route('admin.contacts.reply', $contact->id) }}">
-                            @csrf
-                            @method('PUT')
-                            <div class="mb-3">
-                                <textarea name="reply_message" class="form-control" rows="4" placeholder="{{ __('messages.enter_reply') }}" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">{{ __('messages.send_reply') }}</button>
-                        </form>
-                    </div>
 
                     {{-- Previous Replies --}}
                     @if ($contact->replies)
@@ -67,6 +55,26 @@
                             <small>{{ \Carbon\Carbon::parse($reply['created_at'])->format('Y-m-d H:i:s') }}</small>
                         </div>
                         @endforeach
+                    </div>
+                    @endif
+
+                    {{-- Reply Section --}}
+                    @if ($contact->user)
+                    <div class="mb-4 border p-3 rounded">
+                        <strong>{{ __('messages.reply') }}:</strong>
+                        <form method="POST" action="{{ route('admin.contacts.reply', $contact->id) }}">
+                            @csrf
+                            @method('PUT')
+                            <div class="mb-3">
+                                <textarea name="reply_message" class="form-control" rows="4" placeholder="{{ __('messages.enter_reply') }}" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">{{ __('messages.send_reply') }}</button>
+                        </form>
+                    </div>
+                    @else
+                    <div class="mb-4 border p-3 rounded">
+                        <strong>{{ __('messages.reply') }}:</strong>
+                        <p>{{ __('messages.reply_disabled_anonymous') }}</p>
                     </div>
                     @endif
 
