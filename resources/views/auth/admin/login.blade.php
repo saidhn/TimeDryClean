@@ -61,7 +61,7 @@
                                 {{ __('messages.forgot_your_password') }}
                             </a>
                             @endif
-                            <p class="mt-2 mb-0">{{__('messages.dont_have_an_account')}} <a href="{{ route('admin.register') }}">{{__('messages.register')}}</a></p>
+                            
                         </div>
                     </form>
                 </div>

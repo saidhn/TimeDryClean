@@ -10,6 +10,7 @@ use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\ClientAuthController;
 use App\Http\Controllers\Auth\DriverAuthController;
 use App\Http\Controllers\Auth\EmployeeAuthController;
+use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
@@ -73,6 +74,11 @@ Route::middleware(['set_locale'])->group(function () {
         Route::put('/profile', [ClientProfileController::class, 'update'])->name('client.profile.update');
 
         Route::get('/settings', [ClientSettingsController::class, 'index'])->name('client.settings');
+        //orders
+        Route::get('/client/orders', [ClientController::class, 'showOrders'])->name('client.orders.index');
+        Route::get('/client/orders/create', [ClientController::class, 'createOrder'])->name('client.orders.create');
+        Route::post('/client/orders', [ClientController::class, 'storeOrder'])->name('client.orders.store');
+    
     });
 
     //-----------------------------------------------------------------------------------
@@ -82,12 +88,14 @@ Route::middleware(['set_locale'])->group(function () {
         // Authentication Routes
         Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
         Route::post('/login', [AdminAuthController::class, 'login'])->name('admin.login.post');
-        Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
-        Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
 
         // Protected Routes (Require Authentication)
         Route::middleware('auth:admin')->group(function () {
+            // Register admin account
+            Route::get('/register', [AdminAuthController::class, 'showRegistrationForm'])->name('admin.register');
+            Route::post('/register', [AdminAuthController::class, 'register'])->name('admin.register.post');
+
             // Dashboard
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
 
@@ -126,7 +134,22 @@ Route::middleware(['set_locale'])->group(function () {
     //-----------------------------------------------------------------------------------
     //--------------------------------       orders       -------------------------------
     //-----------------------------------------------------------------------------------
-    Route::resource('orders', OrdersController::class)->middleware('auth:admin,employee,driver,client'); // needs modification to prevent clients from editing orders
+    Route::middleware(['auth:admin,employee,driver,client'])->group(function () {
+        Route::get('/orders/create', [OrdersController::class, 'create'])->name('orders.create');
+        Route::post('/orders', [OrdersController::class, 'store'])->name('orders.store');
+        Route::get('/users/search', [OrdersController::class, 'searchUsers']);
+    });
+    
+    Route::middleware(['auth:admin,client'])->group(function () {
+        Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
+        Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
+    });
+    
+    Route::middleware(['auth:admin'])->group(function () {
+        Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
+        Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
+    });
 
     //search clients inside orders
     Route::get('/users/search', function (Request $request) {

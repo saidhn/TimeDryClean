@@ -177,5 +177,6 @@ return [
     'negative_balance' => 'Negative Balance',
     'send_negative_balance_message' => 'Send Negative Balance Message',
     'negative_balance_reminder' => 'Please recharge your balance.',
+    'delivery_options' =>'Delivery Options',
 
 ];

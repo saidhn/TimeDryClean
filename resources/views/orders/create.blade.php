@@ -4,132 +4,19 @@
 <div class="container">
     <h3>{{ __('messages.create_order') }}</h3>
 
-    @if ($errors->any()) {{-- Check if ANY errors exist --}}
-    <div class="alert alert-danger">
-        <ul>
-            @foreach ($errors->all() as $error) {{-- Iterate through all errors --}}
-            <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
     <form id="create-order-form" action="{{ route('orders.store') }}" method="POST">
         @csrf
         <div class="card">
             <div class="card-body">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="user-select">{{ __('messages.user') }}</label>
-                            <select id="user-select" name="user_id"
-                                class="form-control @error('user_id') is-invalid @enderror" required>
-                                <option value="">{{ __('messages.select_user') }}</option>
-                            </select>
-                            @error('user_id')
-                            <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                            @enderror
-                        </div>
-                    </div>
-                    <div class="col-md-6"></div>
-
-                    <div class="col-md-3 d-flex align-items-center">
-                        <div class="form-group">
-                            <label for="bring_order">{{ __('messages.delivery') }}</label>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order"
-                                    value="on" {{ old('bring_order') ? 'checked' : '' }}>
-
-                                <label class="form-check-label" for="bring_order">
-                                    {{ __('messages.bring_order') }}
-                                </label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order" {{
-                                    old('return_order') ? 'checked' : '' }}>
-                                <label class="form-check-label" for="return_order">
-                                    {{ __('messages.return_order') }}
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group">
-                            <label class="form-check-label" for="delivery_price">{{ __('messages.delivery_price')
-                                }}</label>
-                            <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price"
-                                value="{{ old('delivery_price', 0) }}">
-                        </div>
-                    </div>
-                    <div class=" col-md-6">
-                        <div class="form-group">
-                            <label for="driver-select">{{ __('messages.driver') }}</label>
-                            <select id="driver-select" name="driver_id"
-                                class="form-control @error('driver_id') is-invalid @enderror">
-                                <option value="">{{ __('messages.select_driver') }}</option>
-                               
-                            </select>
-                            @error('driver_id')
-                            <span class="invalid-feedback" role="alert">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                            @enderror
-                        </div>
-                    </div>
-
-
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label for="province_id" class="form-label">{{ __('messages.province') }}</label>
-                        <select id="province_id" class="form-control @error('province_id') is-invalid @enderror"
-                            name="province_id" required>
-                            <option value="">{{__('messages.select_province')}}</option>
-                            @foreach ($provinces as $province)
-                            <option value="{{ $province->id }}" {{ old('province_id')==$province->id ? 'selected' : ''
-                                }}>{{ $province->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('province_id')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                        @enderror
-                    </div>
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label for="city_id" class="form-label">{{ __('messages.city') }}</label>
-                        <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id"
-                            required disabled>
-                            <option value="">{{__('messages.city')}}</option>
-                        </select>
-                        @error('city_id')
-                        <span class="invalid-feedback" role="alert">
-                            <strong>{{ $message }}</strong>
-                        </span>
-                        @enderror
-                    </div>
-
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label class="form-label" for="street">{{__('messages.street')}}</label>
-                        <input class="form-control" type="text" name="street" id="street" value="{{ old('street') }}">
-                    </div>
-
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label class="form-label" for="building">{{__('messages.building')}}</label>
-                        <input class="form-control" type="text" name="building" id="building"
-                            value="{{ old('building') }}">
-                    </div>
-
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label class="form-label" for="floor">{{__('messages.floor')}}</label>
-                        <input class="form-control" type="number" name="floor" id="floor" value="{{ old('floor') }}">
-                    </div>
-
-                    <div class="mt-3 mb-3 col-md-2">
-                        <label class="form-label" for="apartment_number">{{__('messages.appartment_number')}}</label>
-                        <input class="form-control" type="text" name="apartment_number" id="apartment_number"
-                            value="{{ old('apartment_number') }}">
-                    </div>
-                </div>
                 <div class="form-group">
                     <label>{{ __('messages.order_products') }}</label>
                     <table class="table table-bordered">
@@ -144,46 +31,47 @@
                         </thead>
                         <tbody id="order-product-services">
                             @for ($i = 0; $i < (old('order_product_services') ? count(old('order_product_services')) :
-                                1); $i++) <tr>
-                                <td>
+                                1); $i++)
+                                <tr>
+                                    <td>
                                     <select name="order_product_services[{{ $i }}][product_id]"
-                                        class="form-control product-select">
-                                        <option value="">{{ __('messages.select_product') }}</option>
-                                        @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ old('order_product_services.' . $i
-                                            . '.product_id' )==$product->id ? 'selected' : '' }}>
-                                            {{ $product->name }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td>
-                                    <select name="order_product_services[{{ $i }}][product_service_id]"
-                                        class="form-control product-service-select">
-                                        <option value="">{{ __('messages.select_product_service') }}</option>
-                                        @foreach($product_services as $product_service)
-                                        <option value="{{ $product_service->id }}"
-                                            data-price="{{ $product_service->price }}" {{ old('order_product_services.'
-                                            . $i . '.product_service_id' )==$product_service->id ? 'selected' : '' }}>
-                                            {{ $product_service->name }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                </td>
-                                <td>
-                                    <input type="number" min="1" class="form-control quantity-input"
-                                        name="order_product_services[{{ $i }}][quantity]"
-                                        value="{{ old('order_product_services.' . $i . '.quantity', 1) }}">
-                                </td>
-                                <td class="unit_price">
-                                    <span class="price-display">0</span>
-                                </td>
-                                <td>
-                                    <button type="button" class="btn btn-sm btn-danger remove-row"><i
-                                            class="fa fa-trash"></i></button>
-                                </td>
+                                                class="form-control product-select">
+                                            <option value="">{{ __('messages.select_product') }}</option>
+                                            @foreach($products as $product)
+                                                <option value="{{ $product->id }}" {{ old('order_product_services.' . $i
+                                                    . '.product_id' )==$product->id ? 'selected' : '' }}>
+                                                    {{ $product->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <select name="order_product_services[{{ $i }}][product_service_id]"
+                                                class="form-control product-service-select">
+                                            <option value="">{{ __('messages.select_product_service') }}</option>
+                                            @foreach($product_services as $product_service)
+                                                <option value="{{ $product_service->id }}"
+                                                    data-price="{{ $product_service->price }}" {{ old('order_product_services.'
+                                                    . $i . '.product_service_id' )==$product_service->id ? 'selected' : '' }}>
+                                                    {{ $product_service->name }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" min="1" class="form-control quantity-input"
+                                            name="order_product_services[{{ $i }}][quantity]"
+                                            value="{{ old('order_product_services.' . $i . '.quantity', 1) }}">
+                                    </td>
+                                    <td class="unit_price">
+                                        <span class="price-display">0</span>
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-sm btn-danger remove-row"><i
+                                                class="fa fa-trash"></i></button>
+                                    </td>
                                 </tr>
-                                @endfor
+                            @endfor
 
                         </tbody>
                         <tfoot>
@@ -199,6 +87,128 @@
                         </tfoot>
                     </table>
                 </div>
+
+            <button type="button" id="show_hide_deliveryOpts" class="btn btn-outline-primary d-block mb-3">
+                {{ __('messages.delivery_options') }}
+            </button>
+                <div class="row" id="deliveryOpts" style="display: none">
+                    @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="user-select">{{ __('messages.user') }}</label>
+                            <select id="user-select" name="user_id"
+                                    class="form-control @error('user_id') is-invalid @enderror" required>
+                                <option value="">{{ __('messages.select_user') }}</option>
+                            </select>
+                            @error('user_id')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+                    @else
+                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+                    @endif
+
+                    <div class="col-md-3 d-flex align-items-center">
+                        <div class="form-group">
+                            <label for="bring_order">{{ __('messages.delivery') }}</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order"
+                                       value="on" {{ old('bring_order') ? 'checked' : '' }}>
+
+                                <label class="form-check-label" for="bring_order">
+                                    {{ __('messages.bring_order') }}
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order" {{
+                                    old('return_order') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="return_order">
+                                    {{ __('messages.return_order') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
+
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="form-check-label" for="delivery_price">{{ __('messages.delivery_price')
+                                }}</label>
+                            <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price"
+                                   value="{{ old('delivery_price', 0) }}">
+                        </div>
+                    </div>
+                    <div class=" col-md-6">
+                        <div class="form-group">
+                            <label for="driver-select">{{ __('messages.driver') }}</label>
+                            <select id="driver-select" name="driver_id"
+                                    class="form-control @error('driver_id') is-invalid @enderror">
+                                <option value="">{{ __('messages.select_driver') }}</option>
+                            </select>
+                            @error('driver_id')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+                    @endif
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label for="province_id" class="form-label">{{ __('messages.province') }}</label>
+                        <select id="province_id" class="form-control @error('province_id') is-invalid @enderror"
+                                name="province_id" required>
+                            <option value="">{{__('messages.select_province')}}</option>
+                            @foreach ($provinces as $province)
+                                <option value="{{ $province->id }}" {{ old('province_id')==$province->id ? 'selected' : ''
+                                    }}>{{ $province->name }}</option>
+                            @endforeach
+                        </select>
+                        @error('province_id')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                    </div>
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label for="city_id" class="form-label">{{ __('messages.city') }}</label>
+                        <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id"
+                                required disabled>
+                            <option value="">{{__('messages.city')}}</option>
+                        </select>
+                        @error('city_id')
+                            <span class="invalid-feedback" role="alert">
+                                <strong>{{ $message }}</strong>
+                            </span>
+                        @enderror
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="street">{{__('messages.street')}}</label>
+                        <input class="form-control" type="text" name="street" id="street" value="{{ old('street') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="building">{{__('messages.building')}}</label>
+                        <input class="form-control" type="text" name="building" id="building"
+                               value="{{ old('building') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="floor">{{__('messages.floor')}}</label>
+                        <input class="form-control" type="number" name="floor" id="floor" value="{{ old('floor') }}">
+                    </div>
+
+                    <div class="mt-3 mb-3 col-md-2">
+                        <label class="form-label" for="apartment_number">{{__('messages.appartment_number')}}</label>
+                        <input class="form-control" type="text" name="apartment_number" id="apartment_number"
+                               value="{{ old('apartment_number') }}">
+                    </div>
+                </div>
+                
 
                 <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
@@ -395,6 +405,16 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // show/hide delivery options
+        $('#show_hide_deliveryOpts').on('click',function(){
+            const ds = $('#deliveryOpts').css('display');
+                if(ds != 'none'){
+                    $('#deliveryOpts').slideUp(500);
+                }else{
+                    $('#deliveryOpts').slideDown(500).fadeIn(500);
+                }
+            });
+        @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
         // User Select2
         let clientSelect = new TomSelect('#user-select', {
             valueField: 'id',
@@ -417,10 +437,10 @@
             render: {
                 option: function (item, escape) {
                     return `
-                    <div>
-                        <strong>${escape(item.name)}</strong>
-                        <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
-                    </div>
+                        <div>
+                            <strong>${escape(item.name)}</strong>
+                            <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
+                        </div>
                     `;
                 },
                 item: function (item, escape) {
@@ -439,8 +459,9 @@
             .catch(error => {
                 console.error("Error loading initial clients:", error);
             });
+        @endif
         // Driver Select2
-       let driverSelect = new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
+        let driverSelect = new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
             valueField: 'id',
             labelField: 'name',
             searchField: ['id', 'name', 'mobile'], // Allow search by ID, name or mobile
@@ -461,9 +482,10 @@
             render: {
                 option: function (item, escape) {
                     return `
-                    <div>
-                        <strong>${escape(item.name)}</strong>
-                        <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
+                        <div>
+                            <strong>${escape(item.name)}</strong>
+                            <div class="text-muted">ID: ${escape(item.id)}, Mobile: ${escape(item.mobile)}</div>
+                        </div>
                     `;
                 },
                 item: function (item, escape) {
