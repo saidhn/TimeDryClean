@@ -181,4 +181,5 @@ return [
     'send_negative_balance_message' => 'إرسال رسالة لاصحاب الرصيد السالب',
     'negative_balance_reminder' => 'يرجى إعادة شحن رصيدك.',
     'delivery_options' =>'خيارت التوصيل',
+    'unauthorized_access' => 'لا يمكن الوصول الى هذا المحتوى',
 ];

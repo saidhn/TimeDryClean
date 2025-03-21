@@ -141,6 +141,7 @@
                                    value="{{ old('delivery_price', 0) }}">
                         </div>
                     </div>
+                    @endif
                     <div class=" col-md-6">
                         <div class="form-group">
                             <label for="driver-select">{{ __('messages.driver') }}</label>
@@ -155,7 +156,6 @@
                             @enderror
                         </div>
                     </div>
-                    @endif
 
                     <div class="mt-3 mb-3 col-md-2">
                         <label for="province_id" class="form-label">{{ __('messages.province') }}</label>

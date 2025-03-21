@@ -56,6 +56,8 @@
                             <a href="{{ route('orders.show', $order->id) }}" class="btn btn-info btn-sm" title="{{ __('messages.show') }}">
                                 <i class="fas fa-eye"></i> {{-- View Icon --}}
                             </a>
+                            @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
+
                             <a href="{{ route('orders.edit', $order->id) }}" class="btn btn-warning btn-sm" title="{{ __('messages.edit') }}">
                                 <i class="fas fa-edit"></i> {{-- Edit Icon --}}
                             </a>
@@ -66,6 +68,7 @@
                                     <i class="fas fa-trash-alt"></i> {{-- Delete Icon --}}
                                 </button>
                             </form>
+                            @endif
                         </td>
                     </tr>
                     @endforeach

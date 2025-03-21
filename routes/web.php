@@ -138,17 +138,15 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/orders/create', [OrdersController::class, 'create'])->name('orders.create');
         Route::post('/orders', [OrdersController::class, 'store'])->name('orders.store');
         Route::get('/users/search', [OrdersController::class, 'searchUsers']);
-    });
-    
-    Route::middleware(['auth:admin,client'])->group(function () {
-        Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
-        Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
+        Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
+
     });
     
     Route::middleware(['auth:admin'])->group(function () {
-        Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
-        Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
         Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
+        Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
+        Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
     });
 
     //search clients inside orders

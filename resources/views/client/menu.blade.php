@@ -4,7 +4,6 @@
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown1">
         <li><a class="dropdown-item" href="{{ route('orders.index') }}">{{ __('messages.manage_orders') }}</a></li>
-        <li><a class="dropdown-item" href="{{ route('orders.assign.form') }}">{{ __('messages.order_assignment') }}</a></li>
         <li>
             <hr class="dropdown-divider">
         </li>

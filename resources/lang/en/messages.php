@@ -178,5 +178,6 @@ return [
     'send_negative_balance_message' => 'Send Negative Balance Message',
     'negative_balance_reminder' => 'Please recharge your balance.',
     'delivery_options' =>'Delivery Options',
+    'unauthorized_access' => 'Unauthorized Access',
 
 ];
