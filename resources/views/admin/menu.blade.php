@@ -48,8 +48,8 @@
         {{ __('messages.contact_messages') }}
     </a>
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown4">
-        <li><a class="dropdown-item" href="{{ route('admin.contacts.index') }}">{{ __('messages.contact_messages') }}</a></li>
-        <li><a class="dropdown-item" href="{{ route('contact.show') }}">{{ __('messages.send_message') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('contact.index') }}">{{ __('messages.contact_messages') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('contact.showForm') }}">{{ __('messages.send_message') }}</a></li>
     </ul>
 </li>
 <li class="nav-item">

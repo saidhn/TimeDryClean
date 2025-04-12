@@ -78,10 +78,14 @@ class OrdersController extends Controller
             }
         }
 
-        $orders = $orders->paginate(10); // Paginate AFTER applying the search and user filter
+        // Add the order by clause here
+        $orders = $orders->orderBy('created_at', 'desc');
+
+        $orders = $orders->paginate(10); // Paginate AFTER applying the search, user filter, and order
 
         return view('orders.index', compact('orders'));
     }
+
     /**
      * Show the form for creating a new resource.
      */

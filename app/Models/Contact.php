@@ -16,6 +16,9 @@ class Contact extends Model
         'date',
         'isRead',
         'isReplied',
+        'replies',
+        'deleted_by_user',
+        'deleted_by_admin',
     ];
 
     protected $casts = [

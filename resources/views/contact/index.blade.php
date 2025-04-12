@@ -13,7 +13,7 @@
                         {{ session('success') }}
                     </div>
                     @endif
-                    <form method="GET" action="{{ route('admin.contacts.index') }}">
+                    <form method="GET" action="{{ route('contact.index') }}">
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search') }}" value="{{ request('search') }}">
@@ -54,9 +54,9 @@
                             <tbody>
                                 @forelse ($contacts as $contact)
                                 <tr>
-                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ $contact->id }}</a></td>
-                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ $contact->title }}</a></td>
-                                    <td><a href="{{ route('admin.contacts.show', $contact->id) }}">{{ Str::limit($contact->message, 100) }}</a></td>
+                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ $contact->id }}</a></td>
+                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ $contact->title }}</a></td>
+                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ Str::limit($contact->message, 100) }}</a></td>
                                     <td>{{ $contact->user ? $contact->user->name : __('messages.anonymous') }}</td>
                                     <td>{{ $contact->date->format('Y-m-d H:i:s') }}</td>
                                     <td>
@@ -70,18 +70,22 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('admin.contacts.show', $contact->id) }}" class="btn btn-sm btn-info">{{ __('messages.view') }}</a>
-                                        <form action="{{ route('admin.contacts.markRead', $contact->id) }}" method="POST" class="d-inline">
+                                        <a href="{{ route('contact.show', $contact->id) }}" class="btn btn-sm btn-info">{{ __('messages.view') }}</a>
+                                        <form action="{{ route('contact.markRead', $contact->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('PUT')
                                             <button type="submit" class="btn btn-sm btn-primary">{{ $contact->isRead ? __('messages.mark_unread') : __('messages.mark_read') }}</button>
                                         </form>
-                                        <form action="{{ route('admin.contacts.markReplied', $contact->id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('contact.markReplied', $contact->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('PUT')
                                             <button type="submit" class="btn btn-sm btn-success">{{ $contact->isReplied ? __('messages.mark_unreplied') : __('messages.mark_replied') }}</button>
                                         </form>
-
+                                        <form action="{{ route('contact.destroy', $contact->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.confirm_deletion') }}')">{{ __('messages.delete') }}</button>
+                                        </form>
                                     </td>
                                 </tr>
                                 @empty

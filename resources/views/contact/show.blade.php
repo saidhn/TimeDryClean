@@ -62,7 +62,7 @@
                     @if ($contact->user)
                     <div class="mb-4 border p-3 rounded">
                         <strong>{{ __('messages.reply') }}:</strong>
-                        <form method="POST" action="{{ route('admin.contacts.reply', $contact->id) }}">
+                        <form method="POST" action="{{ route('contact.reply', $contact->id) }}">
                             @csrf
                             @method('PUT')
                             <div class="mb-3">
@@ -80,18 +80,23 @@
 
                     <div class="mt-4 d-flex justify-content-between">
                         <div>
-                            <a href="{{ route('admin.contacts.index') }}" class="btn btn-secondary">{{ __('messages.back') }}</a>
+                            <a href="{{ route('contact.index') }}" class="btn btn-secondary">{{ __('messages.back') }}</a>
                         </div>
                         <div>
-                            <form action="{{ route('admin.contacts.markRead', $contact->id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('contact.markRead', $contact->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PUT')
                                 <button type="submit" class="btn btn-sm btn-primary">{{ $contact->isRead ? __('messages.mark_unread') : __('messages.mark_read') }}</button>
                             </form>
-                            <form action="{{ route('admin.contacts.markReplied', $contact->id) }}" method="POST" class="d-inline">
+                            <form action="{{ route('contact.markReplied', $contact->id) }}" method="POST" class="d-inline">
                                 @csrf
                                 @method('PUT')
                                 <button type="submit" class="btn btn-sm btn-success">{{ $contact->isReplied ? __('messages.mark_unreplied') : __('messages.mark_replied') }}</button>
+                            </form>
+                            <form action="{{ route('contact.destroy', $contact->id) }}" method="POST" class="d-inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.confirm_deletion') }}')">{{ __('messages.delete') }}</button>
                             </form>
                         </div>
                     </div>

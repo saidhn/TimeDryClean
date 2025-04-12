@@ -14,7 +14,8 @@ use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
-use App\Http\Controllers\Contact\PublicContactController;
+use App\Http\Controllers\Client\Contact\ClientContactController;
+use App\Http\Controllers\Contact\ContactController;
 use App\Http\Controllers\Order\OrderAssignmentController;
 use App\Http\Controllers\Order\OrdersController;
 use App\Http\Controllers\ProductService\ProductServiceController;
@@ -78,7 +79,10 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/client/orders', [ClientController::class, 'showOrders'])->name('client.orders.index');
         Route::get('/client/orders/create', [ClientController::class, 'createOrder'])->name('client.orders.create');
         Route::post('/client/orders', [ClientController::class, 'storeOrder'])->name('client.orders.store');
-    
+        //blance
+        Route::get('/client/balance', [ClientController::class, 'balanceIndex'])->name('client.balance.index');
+        // Route::get('/payment/create', 'PaymentController@create')->name('payment.create');
+        
     });
 
     //-----------------------------------------------------------------------------------
@@ -109,14 +113,14 @@ Route::middleware(['set_locale'])->group(function () {
             Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
             Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class);
 
-            // Contacts
-            Route::prefix('/contacts')->group(function () {
-                Route::get('/', [AdminContactController::class, 'index'])->name('admin.contacts.index');
-                Route::get('/{contact}', [AdminContactController::class, 'show'])->name('admin.contacts.show');
-                Route::put('/mark-read/{contact}', [AdminContactController::class, 'markRead'])->name('admin.contacts.markRead');
-                Route::put('/mark-replied/{contact}', [AdminContactController::class, 'markReplied'])->name('admin.contacts.markReplied');
-                Route::put('/reply/{contact}', [AdminContactController::class, 'reply'])->name('admin.contacts.reply');
-            });
+            // // Contacts
+            // Route::prefix('/contacts')->group(function () {
+            //     Route::get('/', [AdminContactController::class, 'index'])->name('admin.contacts.index');
+            //     Route::get('/{contact}', [AdminContactController::class, 'show'])->name('admin.contacts.show');
+            //     Route::put('/mark-read/{contact}', [AdminContactController::class, 'markRead'])->name('admin.contacts.markRead');
+            //     Route::put('/mark-replied/{contact}', [AdminContactController::class, 'markReplied'])->name('admin.contacts.markReplied');
+            //     Route::put('/reply/{contact}', [AdminContactController::class, 'reply'])->name('admin.contacts.reply');
+            // });
             Route::get('/users-numbers', [AdminManageUsersController::class, 'byNumber'])->name('admin.users.byNumber');
             Route::post('/users-whatsapp', [AdminManageUsersController::class, 'sendWhatsapp'])->name('admin.users.sendWhatsapp');
         });
@@ -140,9 +144,8 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/users/search', [OrdersController::class, 'searchUsers']);
         Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
-
     });
-    
+
     Route::middleware(['auth:admin'])->group(function () {
         Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
         Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
@@ -202,15 +205,34 @@ Route::middleware(['set_locale'])->group(function () {
     //-----------------------------------------------------------------------------------
     //--------------------------------   subscriptions   --------------------------------
     //-----------------------------------------------------------------------------------
-    Route::resource('subscriptions', SubscriptionController::class)->middleware('auth:admin,employee,driver,client');
+    Route::resource('subscriptions', SubscriptionController::class)->middleware('auth:admin,employee');
 
     //-----------------------------------------------------------------------------------
-    //------------------------------     Public Contact      ----------------------------
+    //----------------------------   client subscriptions   -----------------------------
+    //-----------------------------------------------------------------------------------
+    Route::middleware(['auth:client'])->group(function () {
+        Route::get('/client/subscriptions', [ClientController::class, 'clientSubscriptionsIndex'])->name('client.clientSubscription.index');
+        Route::get('/client/subscriptions/create', [ClientController::class, 'clientSubscriptionsCreate'])->name('client.clientSubscription.create');
+        Route::post('/client/subscriptions/store', [ClientController::class, 'clientSubscriptionsStore'])->name('client.client_subscriptions.store');
+        Route::get('/client/bills', [ClientController::class, 'clientBillsIndex'])->name('client.bills.index');
+    });
+
+    //-----------------------------------------------------------------------------------
+    //------------------------------     Contact      ----------------------------
     //-----------------------------------------------------------------------------------
     // Public Contact Form Routes
-    Route::post('/contact/send', [PublicContactController::class, 'send'])->name('contact.send');
-    Route::get('/contact', [PublicContactController::class, 'show'])->name('contact.show'); //optional, if you want a get route to the form.
-
+    Route::middleware(['auth:admin,employee,driver,client'])->group(function () {
+        Route::prefix('/contact')->group(function () {
+            Route::get('/', [ContactController::class, 'index'])->name('contact.index');
+            Route::post('/send', [ContactController::class, 'send'])->name('contact.send');
+            Route::get('/sendForm', [ContactController::class, 'showForm'])->name('contact.showForm');
+            Route::get('/{contact}', [ContactController::class, 'show'])->name('contact.show');
+            Route::put('/mark-read/{contact}', [ContactController::class, 'markRead'])->name('contact.markRead');
+            Route::put('/mark-replied/{contact}', [ContactController::class, 'markReplied'])->name('contact.markReplied');
+            Route::put('/reply/{contact}', [ContactController::class, 'reply'])->name('contact.reply');
+            Route::delete('/{contact}', [ContactController::class, 'destroy'])->name('contact.destroy');
+        });
+    });
     // Admin Contact Message Routes
 
 
