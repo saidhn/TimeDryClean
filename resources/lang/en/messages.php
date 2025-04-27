@@ -196,5 +196,10 @@ return [
     'balance_negative_message' => 'Your balance is negative. Please make a payment to continue.',
     'add_balance' => 'Add Balance',
     'current_orders' => 'Current Orders',
-
+    'delivery_orders' => 'Delivery Orders',
+    'no_orders_found' => 'No Orders Found',
+    'change_status' => 'Change Status',
+    'change_status_to_completed' => 'Change status to completed',
+    'change_status_to_shipped' => 'Change status to shipped',
+    'required_delivery' => 'Required Delivery',
 ];

@@ -16,6 +16,8 @@ use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
 use App\Http\Controllers\Client\Contact\ClientContactController;
 use App\Http\Controllers\Contact\ContactController;
+use App\Http\Controllers\Driver\DriverController;
+use App\Http\Controllers\Driver\DriverDashboardController;
 use App\Http\Controllers\Order\OrderAssignmentController;
 use App\Http\Controllers\Order\OrdersController;
 use App\Http\Controllers\ProductService\ProductServiceController;
@@ -46,7 +48,6 @@ Route::middleware(['set_locale'])->group(function () {
         Route::post('/logout', [ClientAuthController::class, 'logout'])->name('client.logout');
     });
 
-    // Repeat this pattern for driver, employee, and admin routes
     Route::prefix('driver')->group(function () {
         Route::get('/login', [DriverAuthController::class, 'showLoginForm'])->name('driver.login');
         Route::post('/login', [DriverAuthController::class, 'login'])->name('driver.login.post');
@@ -82,7 +83,7 @@ Route::middleware(['set_locale'])->group(function () {
         //blance
         Route::get('/client/balance', [ClientController::class, 'balanceIndex'])->name('client.balance.index');
         // Route::get('/payment/create', 'PaymentController@create')->name('payment.create');
-        
+
     });
 
     //-----------------------------------------------------------------------------------
@@ -124,6 +125,16 @@ Route::middleware(['set_locale'])->group(function () {
             Route::get('/users-numbers', [AdminManageUsersController::class, 'byNumber'])->name('admin.users.byNumber');
             Route::post('/users-whatsapp', [AdminManageUsersController::class, 'sendWhatsapp'])->name('admin.users.sendWhatsapp');
         });
+    });
+    //-----------------------------------------------------------------------------------
+    //--------------------------------    Driver Routes    ------------------------------
+    //-----------------------------------------------------------------------------------
+    Route::prefix('driver')->middleware('auth:driver')->group(function () {
+        Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('driver.dashboard');
+        Route::get('/delivery', [DriverController::class, 'deliveryOrders'])->name('driver.delivery');
+        Route::get('/orders/{order}', [DriverController::class, 'details'])->name('orders.details');
+        Route::put('driver/orders/{order}/{status}', [DriverController::class, 'updateOrderStatus'])->name('driver.orders.update');
+
     });
 
     //-----------------------------------------------------------------------------------

@@ -14,13 +14,23 @@ class DriverAuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::guard('client')->check()) { // Check if the client is already authenticated
+            return redirect()->route('client.dashboard'); // Redirect to client dashboard
+        } else if (Auth::guard('admin')->check()) { // Check if the admin is already authenticated
+            return redirect()->route('admin.dashboard'); // Redirect to admin dashboard
+        } else if (Auth::guard('employee')->check()) { // Check if the employee is already authenticated
+            return redirect()->route('employee.dashboard'); // Redirect to employee dashboard
+        } else if (Auth::guard('driver')->check()) { // Check if the driver is already authenticated
+            return redirect()->route('driver.dashboard'); // Redirect to driver dashboard
+        }
         return view('auth.driver.login'); // Make sure this view exists
     }
 
     public function login(Request $request)
     {
+        // dd($request);
         $credentials = $request->validate([
-            'email' => 'required|email',
+            'mobile' => 'required|numeric',
             'password' => 'required',
         ]);
 
@@ -30,8 +40,8 @@ class DriverAuthController extends Controller
             return redirect()->intended('/driver/dashboard'); // Redirect to driver dashboard
         }
 
-        return back()->withInput($request->only('email'))->withErrors([ // Preserve the email input
-            'email' => 'These credentials do not match our records.',
+        return back()->withErrors([
+            'mobile' => __('messages.the_provided_credentials_do_not_match_our_records'),
         ]);
     }
 

@@ -4,16 +4,16 @@
 <div class="container">
     <h3></h3>
     <div class="mt-4">
-        <p>{{ __('messages.hello') }}, {{ $client->name }}!</p>
+        <p>{{ __('messages.hello') }}, {{ $driver->name }}!</p>
         {{-- Add more dashboard content as needed --}}
         <h3>{{ __('messages.current_balance') }}</h3>
-        @if($client->balance >= 0)
+        @if($driver->balance >= 0)
         <div class="fw-bold fs-2 text-success">
-            {{ $client->balance }}
+            {{ $driver->balance }}
         </div>
         @else
         <div class="fw-bold fs-2 text-danger">
-            {{ $client->balance }}
+            {{ $driver->balance }}
         </div>
         @endif
     </div>

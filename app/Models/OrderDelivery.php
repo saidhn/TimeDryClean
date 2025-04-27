@@ -12,7 +12,7 @@ class OrderDelivery extends Model
 
     protected $fillable = [
         'order_id',
-        'user_id', // Assuming 'user_id' refers to the driver here
+        'user_id', // Refers to the driver's user ID
         'direction',
         'price',
         'status',
@@ -33,10 +33,10 @@ class OrderDelivery extends Model
         return $this->belongsTo(Order::class);
     }
 
-    // Assuming 'user_id' refers to the driver
+    // Corrected relationship to User (driver)
     public function driver()
     {
-        return $this->belongsTo(Driver::class, 'user_id', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
     public function address()

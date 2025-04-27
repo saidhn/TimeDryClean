@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>{{__('messages.client_orders_and_balance')}}</h1>
+    <h1>{{__('messages.delivery_orders')}}</h1>
 
     @if(session('success'))
     <div class="alert alert-success">
@@ -19,12 +19,13 @@
                 <th>{{ __('messages.order_details') }}</th>
                 <th>{{ __('messages.order_status') }}</th>
                 <th>{{ __('messages.delivery_price') }}</th>
-                <th>{{ __('messages.total_price') }}</th>
+                <th>{{ __('messages.driver') }}</th>
                 <th>{{ __('messages.created_at') }}</th>
+                <th>{{ __('messages.order_details') }}</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($orders as $order)
+            @forelse($current_orders as $order)
             <tr>
                 <td>{{ $order->id }}</td>
                 <td>@if($order->orderProductServices->isNotEmpty())
@@ -32,8 +33,7 @@
                         @foreach($order->orderProductServices as $orderProductService)
                         @if($orderProductService->product)
                         <li>{{ $orderProductService->product->name }}</li>
-                        <small>({{ $orderProductService->productService->name }})
-                            <strong class="text-danger">({{ $orderProductService->productService->price }})</strong></small>
+                        <small>({{ $orderProductService->productService->name }})</small>
                         @else
                         <li></li>
                         @endif
@@ -52,9 +52,12 @@
                     <p></p>
                     @endif
                 </td>
-                <td>{{ number_format($order->sum_price, 2) }}</td>
 
+                <td>{{ $order->orderDelivery->driver->name }}</td>
                 <td>{{ $order->created_at }}</td>
+                <td><a href="{{ route('orders.details', $order->id) }}" class="btn btn-info btn-sm" title="{{ __('messages.show') }}">
+                            <i class="fas fa-eye"></i> {{ __('messages.order_details') }}
+                        </a></td>
             </tr>
             @empty
             <tr>
@@ -64,28 +67,7 @@
         </tbody>
     </table>
 
-    <x-pagination :paginator="$orders" />
+    <x-pagination :paginator="$current_orders" />
 
-    <hr>
-
-    <h2>{{__('messages.balance_summary')}}</h2>
-
-    <div class="card">
-        <div class="card-body">
-            <p><strong>{{__('messages.total_billed')}}:</strong> {{ number_format($totalBilled, 2) }}</p>
-            <p><strong>{{__('messages.total_paid')}}:</strong> {{ number_format($totalPaid, 2) }}</p>
-            <p><strong>{{__('messages.current_balance')}}:</strong> {{ number_format($currentBalance, 2) }}</p>
-
-            @if($currentBalance > 0)
-                <p class="text-success">{{__('messages.you_have_a_credit_of')}} {{ number_format($currentBalance, 2) }}.</p>
-                @elseif($currentBalance < 0)
-                <p class="text-danger">{{ __('messages.you_owe') }} {{ number_format(abs($currentBalance), 2) }}.</p>
-                @else
-                <p>{{ __('your_balance_is') }} 0.00.</p>
-                @endif
-
-                <a href="#" class="btn btn-success mt-3">{{__('messages.make_payment')}}</a>
-        </div>
-    </div>
 </div>
 @endsection
