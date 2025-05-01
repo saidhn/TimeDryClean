@@ -11,11 +11,19 @@
         </div>
 
 
-        {{-- Search Form --}}
+        {{-- Search and Date Filter Form --}}
         <div class="mb-3">
             <form action="{{ route('orders.index') }}" method="GET">
                 <div class="input-group">
+                    {{-- Existing search input --}}
                     <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_order') }}" value="{{ request('search') }}">
+
+                    {{-- New Start Date input --}}
+                    <input type="date" name="start_date" class="form-control" value="{{ request('start_date') }}" title="{{ __('messages.start_date') }}">
+
+                    {{-- New End Date input --}}
+                    <input type="date" name="end_date" class="form-control" value="{{ request('end_date') }}" title="{{ __('messages.end_date') }}">
+
                     <button class="btn btn-outline-secondary" type="submit">{{ __('messages.search') }}</button>
                 </div>
             </form>

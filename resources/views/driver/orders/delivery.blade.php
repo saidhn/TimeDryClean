@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container">
-    <h1>{{__('messages.delivery_orders')}}</h1>
+    <h1>{{__('messages.current_orders')}}</h1>
 
     @if(session('success'))
     <div class="alert alert-success">

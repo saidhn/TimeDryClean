@@ -3,8 +3,7 @@
 use App\Enums\UserType;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminManageUsersController;
-use App\Http\Controllers\Admin\client\AdminManageClientSubscriptionsController;
-use App\Http\Controllers\Admin\contact\AdminContactController;
+use App\Http\Controllers\Admin\Client\ManageClientSubscriptionsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
 use App\Http\Controllers\Auth\ClientAuthController;
@@ -14,10 +13,10 @@ use App\Http\Controllers\Client\ClientController;
 use App\Http\Controllers\Client\ClientDashboardController;
 use App\Http\Controllers\Client\ClientProfileController;
 use App\Http\Controllers\Client\ClientSettingsController;
-use App\Http\Controllers\Client\Contact\ClientContactController;
 use App\Http\Controllers\Contact\ContactController;
 use App\Http\Controllers\Driver\DriverController;
 use App\Http\Controllers\Driver\DriverDashboardController;
+use App\Http\Controllers\Employee\EmployeeDashboardController;
 use App\Http\Controllers\Order\OrderAssignmentController;
 use App\Http\Controllers\Order\OrdersController;
 use App\Http\Controllers\ProductService\ProductServiceController;
@@ -112,7 +111,6 @@ Route::middleware(['set_locale'])->group(function () {
             Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
             Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
             Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
-            Route::resource('/client_subscriptions', AdminManageClientSubscriptionsController::class);
 
             // // Contacts
             // Route::prefix('/contacts')->group(function () {
@@ -132,9 +130,18 @@ Route::middleware(['set_locale'])->group(function () {
     Route::prefix('driver')->middleware('auth:driver')->group(function () {
         Route::get('/dashboard', [DriverDashboardController::class, 'index'])->name('driver.dashboard');
         Route::get('/delivery', [DriverController::class, 'deliveryOrders'])->name('driver.delivery');
+        Route::get('/deliveryHistory', [DriverController::class, 'deliveryHistory'])->name('driver.deliveryHistory');
         Route::get('/orders/{order}', [DriverController::class, 'details'])->name('orders.details');
         Route::put('driver/orders/{order}/{status}', [DriverController::class, 'updateOrderStatus'])->name('driver.orders.update');
 
+    });
+
+    //-----------------------------------------------------------------------------------
+    //------------------------------    Employee Routes    ------------------------------
+    //-----------------------------------------------------------------------------------
+
+    Route::prefix('employee')->middleware('auth:employee')->group(function () {
+        Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
     });
 
     //-----------------------------------------------------------------------------------
@@ -157,7 +164,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
     });
 
-    Route::middleware(['auth:admin'])->group(function () {
+    Route::middleware(['auth:admin,employee'])->group(function () {
         Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
         Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
         Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
@@ -227,6 +234,9 @@ Route::middleware(['set_locale'])->group(function () {
         Route::post('/client/subscriptions/store', [ClientController::class, 'clientSubscriptionsStore'])->name('client.client_subscriptions.store');
         Route::get('/client/bills', [ClientController::class, 'clientBillsIndex'])->name('client.bills.index');
     });
+    //manage client subscriptions
+    Route::resource('/client_subscriptions', ManageClientSubscriptionsController::class)->middleware('auth:admin,employee');
+
 
     //-----------------------------------------------------------------------------------
     //------------------------------     Contact      ----------------------------

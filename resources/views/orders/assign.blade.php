@@ -279,8 +279,8 @@
         const apartment_number = document.getElementById('apartment_number');
 
         if (street) {
-            if (order.delivery && order.delivery.address && order.delivery.address.street) {
-                street.value = order.delivery.address.street;
+            if (order.delivery && order.delivery.street) {
+                street.value = order.delivery.street;
             } else if (order.user && order.user.address && order.user.address.street) {
                 street.value = order.user.address.street;
             } else {
@@ -289,8 +289,8 @@
         }
 
         if (building) {
-            if (order.delivery && order.delivery.address && order.delivery.address.building) {
-                building.value = order.delivery.address.building;
+            if (order.delivery && order.delivery.building) {
+                building.value = order.delivery.building;
             } else if (order.user && order.user.address && order.user.address.building) {
                 building.value = order.user.address.building;
             } else {
@@ -299,8 +299,8 @@
         }
 
         if (floor) {
-            if (order.delivery && order.delivery.address && order.delivery.address.floor) {
-                floor.value = order.delivery.address.floor;
+            if (order.delivery && order.delivery.floor) {
+                floor.value = order.delivery.floor;
             } else if (order.user && order.user.address && order.user.address.floor) {
                 floor.value = order.user.address.floor;
             } else {
@@ -309,8 +309,8 @@
         }
 
         if (apartment_number) {
-            if (order.delivery && order.delivery.address && order.delivery.address.apartment_number) {
-                apartment_number.value = order.delivery.address.apartment_number;
+            if (order.delivery && order.delivery.apartment_number) {
+                apartment_number.value = order.delivery.apartment_number;
             } else if (order.user && order.user.address && order.user.address.apartment_number) {
                 apartment_number.value = order.user.address.apartment_number;
             } else {

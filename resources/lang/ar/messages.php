@@ -205,4 +205,6 @@ return [
     'change_status_to_completed' => 'تغيير الحالة الى تم التوصيل',
     'change_status_to_shipped' => 'تغيير الحالة الى جاري التوصيل',
     'required_delivery' => 'التوصيل المطلوب',
+    'delivery_history' => 'تاريخ الطلبات',
+    'reset_filter' => 'مسح الفلتر',
 ];

@@ -17,6 +17,24 @@
         @csrf
         <div class="card">
             <div class="card-body">
+            @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="user-select">{{ __('messages.user') }}</label>
+                            <select id="user-select" name="user_id"
+                                    class="form-control @error('user_id') is-invalid @enderror" required>
+                                <option value="">{{ __('messages.select_user') }}</option>
+                            </select>
+                            @error('user_id')
+                                <span class="invalid-feedback" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
+                    </div>
+                    @else
+                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+                    @endif
                 <div class="form-group">
                     <label>{{ __('messages.order_products') }}</label>
                     <table class="table table-bordered">
@@ -92,24 +110,7 @@
                 {{ __('messages.delivery_options') }}
             </button>
                 <div class="row" id="deliveryOpts" style="display: none">
-                    @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label for="user-select">{{ __('messages.user') }}</label>
-                            <select id="user-select" name="user_id"
-                                    class="form-control @error('user_id') is-invalid @enderror" required>
-                                <option value="">{{ __('messages.select_user') }}</option>
-                            </select>
-                            @error('user_id')
-                                <span class="invalid-feedback" role="alert">
-                                    <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
-                        </div>
-                    </div>
-                    @else
-                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
-                    @endif
+                    
 
                     <div class="col-md-3 d-flex align-items-center">
                         <div class="form-group">

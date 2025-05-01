@@ -152,6 +152,7 @@ class OrderAssignmentController extends Controller
 
         $orders = Order::with('user.address.city')
             ->with('orderDelivery.driver')
+            // ->with('orderDelivery.address')
             ->whereHas('user', function ($userQuery) use ($query) {
                 $userQuery->where('name', 'like', "%$query%");
             })

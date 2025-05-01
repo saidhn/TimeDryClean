@@ -36,17 +36,32 @@ class OrdersController extends Controller
     public function index(Request $request)
     {
         $search = $request->get('search');
+        $startDate = $request->get('start_date'); // Get the start_date from the request
+        $endDate = $request->get('end_date');     // Get the end_date from the request
 
         $orders = Order::with('user', 'discount', 'clientSubscription', 'orderDelivery')
             ->with(['orderProductServices' => function ($query) {
                 $query->with('product', 'productService');
             }]);
 
+        // Apply date filtering if start_date and/or end_date are provided
+        if ($startDate) {
+            // Filter orders created on or after the start date
+            $orders->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            // Filter orders created on or before the end date
+            $orders->whereDate('created_at', '<=', $endDate);
+        }
+
+
         // Check if the current user is a client
         if (auth()->check() && auth()->user() && auth()->user()->user_type === 'client') {
             // If the user is a client, show only their orders
             $orders->where('user_id', auth()->id());
 
+            // Apply search filter for clients if search term is provided
             if ($search) {
                 $orders->where(function ($query) use ($search) {
                     $query->where('id', $search)
@@ -61,7 +76,8 @@ class OrdersController extends Controller
                         });
                 });
             }
-        } else { //For admin users
+        } else { // For admin, employee, and driver users
+            // Apply search filter for non-clients if search term is provided
             if ($search) {
                 $orders->where(function ($query) use ($search) {
                     $query->where('id', $search)
@@ -81,7 +97,7 @@ class OrdersController extends Controller
         // Add the order by clause here
         $orders = $orders->orderBy('created_at', 'desc');
 
-        $orders = $orders->paginate(10); // Paginate AFTER applying the search, user filter, and order
+        $orders = $orders->paginate(10); // Paginate AFTER applying all filters and order
 
         return view('orders.index', compact('orders'));
     }

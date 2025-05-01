@@ -8,7 +8,7 @@ use App\Models\ClientSubscription;
 use App\Models\Subscription;
 use Illuminate\Http\Request;
 
-class AdminManageClientSubscriptionsController extends Controller
+class ManageClientSubscriptionsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -17,7 +17,7 @@ class AdminManageClientSubscriptionsController extends Controller
     {
         $clientSubscriptions = ClientSubscription::paginate(10); // Replace 1 with a valid ID
 
-        return view('admin.client_subscriptions.index', compact('clientSubscriptions'));
+        return view('client_subscriptions.index', compact('clientSubscriptions'));
     }
 
     /**
@@ -27,7 +27,7 @@ class AdminManageClientSubscriptionsController extends Controller
     {
         $clients = Client::all();
         $subscriptions = Subscription::all();
-        return view('admin.client_subscriptions.create', compact('clients', 'subscriptions'));
+        return view('client_subscriptions.create', compact('clients', 'subscriptions'));
     }
 
     /**
@@ -58,7 +58,7 @@ class AdminManageClientSubscriptionsController extends Controller
      */
     public function show(ClientSubscription $clientSubscription)
     {
-        return view('admin.client_subscriptions.show', compact('clientSubscription'));
+        return view('client_subscriptions.show', compact('clientSubscription'));
     }
 
     /**
@@ -68,7 +68,7 @@ class AdminManageClientSubscriptionsController extends Controller
     {
         $clients = Client::all();
         $subscriptions = Subscription::all();
-        return view('admin.client_subscriptions.edit', compact('clientSubscription', 'clients', 'subscriptions'));
+        return view('client_subscriptions.edit', compact('clientSubscription', 'clients', 'subscriptions'));
     }
 
     /**

@@ -202,4 +202,6 @@ return [
     'change_status_to_completed' => 'Change status to completed',
     'change_status_to_shipped' => 'Change status to shipped',
     'required_delivery' => 'Required Delivery',
+    'delivery_history' => 'Delivery History',
+    'reset_filter' => 'Reset Filter',
 ];
