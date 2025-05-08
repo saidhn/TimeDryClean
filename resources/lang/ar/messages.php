@@ -207,4 +207,5 @@ return [
     'required_delivery' => 'التوصيل المطلوب',
     'delivery_history' => 'تاريخ الطلبات',
     'reset_filter' => 'مسح الفلتر',
+    'balance_positive_message' => 'لا تحتاج الى اضافة رصيد',
 ];

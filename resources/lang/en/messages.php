@@ -204,4 +204,5 @@ return [
     'required_delivery' => 'Required Delivery',
     'delivery_history' => 'Delivery History',
     'reset_filter' => 'Reset Filter',
+    'balance_positive_message' => 'No need to add balance',
 ];
