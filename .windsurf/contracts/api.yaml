@@ -1,0 +1,802 @@
+openapi: 3.0.3
+info:
+  title: TimeDryClean UI/UX Enhancement API
+  description: API specifications for enhanced UI/UX features
+  version: 1.0.0
+  contact:
+    name: TimeDryClean Development Team
+
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://timedryclean.com/api
+    description: Production server
+
+paths:
+  /dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics
+      description: Retrieve statistics for the dashboard display
+      security:
+        - sanctum: []
+      responses:
+        '200':
+          description: Dashboard statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+              example:
+                totalOrders: 1247
+                activeOrders: 23
+                revenue: "$15,234.50"
+                pendingDeliveries: 8
+                trends:
+                  orders: 12.5
+                  revenue: 8.3
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /dashboard/activity:
+    get:
+      tags:
+        - Dashboard
+      summary: Get recent activity
+      description: Retrieve recent activity for the dashboard feed
+      security:
+        - sanctum: []
+      parameters:
+        - name: limit
+          in: query
+          description: Number of activities to retrieve
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: Recent activity retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  activities:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Activity'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /dashboard/charts:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard chart data
+      description: Retrieve data for dashboard charts and visualizations
+      security:
+        - sanctum: []
+      parameters:
+        - name: period
+          in: query
+          description: Time period for chart data
+          schema:
+            type: string
+            enum: [week, month, quarter, year]
+            default: month
+      responses:
+        '200':
+          description: Chart data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartsData'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Get orders list
+      description: Retrieve paginated list of orders with filtering and sorting
+      security:
+        - sanctum: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: per_page
+          in: query
+          description: Items per page
+          schema:
+            type: integer
+            default: 15
+            maximum: 100
+        - name: search
+          in: query
+          description: Search term for orders
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by order status
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/OrderStatus'
+        - name: start_date
+          in: query
+          description: Filter by start date
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          description: Filter by end date
+          schema:
+            type: string
+            format: date
+        - name: sort
+          in: query
+          description: Sort field
+          schema:
+            type: string
+            enum: [id, created_at, updated_at, total_price, status]
+            default: created_at
+        - name: direction
+          in: query
+          description: Sort direction
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdersResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders/{id}:
+    get:
+      tags:
+        - Orders
+      summary: Get order details
+      description: Retrieve detailed information for a specific order
+      security:
+        - sanctum: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Order ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Order details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/search:
+    get:
+      tags:
+        - Users
+      summary: Search users
+      description: Search users by name, mobile, or ID for dropdown selection
+      security:
+        - sanctum: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+            minLength: 2
+        - name: user_type
+          in: query
+          description: Filter by user type
+          schema:
+            $ref: '#/components/schemas/UserType'
+        - name: limit
+          in: query
+          description: Maximum number of results
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        '200':
+          description: Users found successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /products:
+    get:
+      tags:
+        - Products
+      summary: Get products list
+      description: Retrieve list of products with their services
+      security:
+        - sanctum: []
+      parameters:
+        - name: search
+          in: query
+          description: Search term for products
+          schema:
+            type: string
+        - name: include_services
+          in: query
+          description: Include product services
+          schema:
+            type: boolean
+            default: true
+      responses:
+        '200':
+          description: Products retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /product-services:
+    get:
+      tags:
+        - Products
+      summary: Get product services
+      description: Retrieve list of all product services
+      security:
+        - sanctum: []
+      parameters:
+        - name: product_id
+          in: query
+          description: Filter by product ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product services retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProductService'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications:
+    get:
+      tags:
+        - Notifications
+      summary: Get user notifications
+      description: Retrieve notifications for the current user
+      security:
+        - sanctum: []
+      parameters:
+        - name: unread_only
+          in: query
+          description: Get only unread notifications
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          in: query
+          description: Number of notifications to retrieve
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Notifications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /notifications/{id}/read:
+    post:
+      tags:
+        - Notifications
+      summary: Mark notification as read
+      description: Mark a specific notification as read
+      security:
+        - sanctum: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Notification ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Notification marked as read
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  schemas:
+    DashboardStats:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+          example: 1247
+        activeOrders:
+          type: integer
+          example: 23
+        revenue:
+          type: string
+          example: "$15,234.50"
+        pendingDeliveries:
+          type: integer
+          example: 8
+        trends:
+          type: object
+          properties:
+            orders:
+              type: number
+              example: 12.5
+            revenue:
+              type: number
+              example: 8.3
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        type:
+          type: string
+          enum: [order_created, order_updated, user_registered, payment_received, delivery_completed]
+          example: order_created
+        description:
+          type: string
+          example: "New order #1234 created by John Doe"
+        user:
+          type: string
+          example: "John Doe"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        metadata:
+          type: object
+          additionalProperties: true
+
+    ChartsData:
+      type: object
+      properties:
+        orderTrends:
+          $ref: '#/components/schemas/LineChartData'
+        revenueBreakdown:
+          $ref: '#/components/schemas/PieChartData'
+        serviceDistribution:
+          $ref: '#/components/schemas/BarChartData'
+
+    LineChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                example: "Orders"
+              data:
+                type: array
+                items:
+                  type: integer
+                example: [12, 19, 3, 5, 2, 3, 9]
+              borderColor:
+                type: string
+                example: "#464687"
+              backgroundColor:
+                type: string
+                example: "rgba(70, 70, 135, 0.1)"
+
+    PieChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Washing", "Dry Cleaning", "Ironing", "Special"]
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  type: integer
+                example: [300, 150, 100, 50]
+              backgroundColor:
+                type: array
+                items:
+                  type: string
+                example: ["#464687", "#1da58d", "#f59e0b", "#ef4444"]
+
+    BarChartData:
+      type: object
+      properties:
+        labels:
+          type: array
+          items:
+            type: string
+          example: ["Week 1", "Week 2", "Week 3", "Week 4"]
+        datasets:
+          type: array
+          items:
+            type: object
+            properties:
+              label:
+                type: string
+                example: "Revenue"
+              data:
+                type: array
+                items:
+                  type: number
+                example: [3000, 3500, 3200, 4100]
+              backgroundColor:
+                type: array
+                items:
+                  type: string
+                example: ["#464687", "#1da58d", "#f59e0b", "#ef4444"]
+
+    OrderStatus:
+      type: string
+      enum: [pending, confirmed, processing, ready, delivering, delivered, cancelled]
+
+    UserType:
+      type: string
+      enum: [client, driver, employee, admin]
+
+    OrdersResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        meta:
+          type: object
+          properties:
+            current_page:
+              type: integer
+              example: 1
+            last_page:
+              type: integer
+              example: 10
+            per_page:
+              type: integer
+              example: 15
+            total:
+              type: integer
+              example: 150
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1234
+        user:
+          $ref: '#/components/schemas/User'
+        driver:
+          $ref: '#/components/schemas/User'
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        total_price:
+          type: string
+          example: "$45.99"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T14:20:00Z"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        delivery:
+          $ref: '#/components/schemas/OrderDelivery'
+
+    OrderItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5678
+        product:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Shirt"
+        service:
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            name:
+              type: string
+              example: "Washing & Ironing"
+            price:
+              type: string
+              example: "$5.99"
+        quantity:
+          type: integer
+          example: 3
+        subtotal:
+          type: string
+          example: "$17.97"
+
+    OrderDelivery:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 9012
+        driver:
+          $ref: '#/components/schemas/User'
+        address:
+          $ref: '#/components/schemas/Address'
+        bring_order:
+          type: boolean
+          example: true
+        return_order:
+          type: boolean
+          example: true
+        delivery_price:
+          type: string
+          example: "$10.00"
+        status:
+          type: string
+          enum: [pending, assigned, picked_up, delivered]
+          example: assigned
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 123
+        name:
+          type: string
+          example: "John Doe"
+        mobile:
+          type: string
+          example: "+1234567890"
+        type:
+          $ref: '#/components/schemas/UserType'
+        balance:
+          type: string
+          example: "$150.75"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Shirt"
+        description:
+          type: string
+          example: "Men's dress shirt"
+        services:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductService'
+
+    ProductService:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Washing & Ironing"
+        price:
+          type: string
+          example: "$5.99"
+        duration:
+          type: integer
+          example: 120
+        description:
+          type: string
+          example: "Professional washing and ironing service"
+
+    Address:
+      type: object
+      properties:
+        province:
+          type: string
+          example: "California"
+        city:
+          type: string
+          example: "Los Angeles"
+        street:
+          type: string
+          example: "123 Main St"
+        building:
+          type: string
+          example: "Apt 4B"
+        floor:
+          type: string
+          example: "4"
+        apartment_number:
+          type: string
+          example: "4B"
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 789
+        type:
+          type: string
+          enum: [info, success, warning, error]
+          example: info
+        title:
+          type: string
+          example: "Order Update"
+        message:
+          type: string
+          example: "Your order #1234 has been confirmed"
+        read_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        metadata:
+          type: object
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Validation failed"
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items:
+                    type: string
+
+    Unauthorized:
+      description: Unauthorized access
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthenticated"
+
+    Forbidden:
+      description: Access forbidden
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "This action is unauthorized"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Resource not found"
+
+  securitySchemes:
+    sanctum:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Laravel Sanctum token authentication
+
+tags:
+  - name: Dashboard
+    description: Dashboard related endpoints
+  - name: Orders
+    description: Order management endpoints
+  - name: Users
+    description: User management endpoints
+  - name: Products
+    description: Product and service endpoints
+  - name: Notifications
+    description: Notification system endpoints
