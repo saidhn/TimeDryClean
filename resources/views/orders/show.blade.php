@@ -13,8 +13,25 @@
         <div class="card-body">
             <p><strong>{{ __('messages.id') }}:</strong> {{ $order->id }}</p>
             <p><strong>{{ __('messages.user') }}:</strong> {{ $order->user->name }}</p>
-            <p><strong>{{ __('messages.driver') }}:</strong> {{ optional(optional($order->orderDelivery)->driver)->name }}</p>
-            <p><strong>{{ __('messages.delivery_price') }}:</strong> {{ optional($order->orderDelivery)->price }}</p>
+            
+            @if($order->orderDelivery)
+            <div class="card mb-3">
+                <div class="card-header">{{ __('messages.delivery_information') }}</div>
+                <div class="card-body">
+                    <p><strong>{{ __('messages.driver') }}:</strong> {{ optional($order->orderDelivery->driver)->name ?? __('messages.not_assigned') }}</p>
+                    <p><strong>{{ __('messages.delivery_price') }}:</strong> {{ $order->orderDelivery->price ?? 0 }}</p>
+                    <p><strong>{{ __('messages.delivery_direction') }}:</strong> {{ $order->orderDelivery->direction }}</p>
+                    @if($order->orderDelivery->address)
+                    <p><strong>{{ __('messages.province') }}:</strong> {{ optional($order->orderDelivery->address->province)->name }}</p>
+                    <p><strong>{{ __('messages.city') }}:</strong> {{ optional($order->orderDelivery->address->city)->name }}</p>
+                    @endif
+                    <p><strong>{{ __('messages.street') }}:</strong> {{ $order->orderDelivery->street }}</p>
+                    <p><strong>{{ __('messages.building') }}:</strong> {{ $order->orderDelivery->building }}</p>
+                    <p><strong>{{ __('messages.floor') }}:</strong> {{ $order->orderDelivery->floor }}</p>
+                    <p><strong>{{ __('messages.appartment_number') }}:</strong> {{ $order->orderDelivery->apartment_number }}</p>
+                </div>
+            </div>
+            @endif
             @if ($order->discount)
             <p><strong>{{ __('messages.discount') }}:</strong> {{ $order->discount->code }}</p>
             @endif
@@ -54,19 +71,6 @@
             <div class="mt-3">
                 @include('components.discount-display', ['order' => $order])
             </div>
-            @endif
-
-            @if ($order->delivery_price > 0)
-            <p><strong>{{ __('messages.delivery_price') }}:</strong> {{ $order->delivery_price }}</p>
-            @endif
-            @if ($order->driver_id)
-            <p><strong>{{ __('messages.driver') }}:</strong> {{ $order->driver->name }}</p>
-            @endif
-            @if ($order->bring_order)
-            <p><strong>{{ __('messages.bring_order') }}:</strong> Yes</p>
-            @endif
-            @if ($order->return_order)
-            <p><strong>{{ __('messages.return_order') }}:</strong> Yes</p>
             @endif
 
             <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.back') }}</a>

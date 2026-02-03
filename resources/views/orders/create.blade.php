@@ -143,7 +143,7 @@
                         </div>
                     </div>
                     @endif
-                    <div class=" col-md-6">
+                    <div class="col-md-5">
                         <div class="form-group">
                             <label for="driver-select">{{ __('messages.driver') }}</label>
                             <select id="driver-select" name="driver_id"
@@ -155,7 +155,13 @@
                                     <strong>{{ $message }}</strong>
                                 </span>
                             @enderror
+                            <div id="driver-error" class="text-danger small mt-1" style="display: none;"></div>
                         </div>
+                    </div>
+                    <div class="col-md-1 d-flex align-items-center">
+                        <button type="button" id="clear-driver-btn" class="btn btn-outline-secondary btn-sm mt-3">
+                            <i class="fa fa-times"></i> {{ __('messages.clear') }}
+                        </button>
                     </div>
 
                     <div class="mt-3 mb-3 col-md-2">
@@ -413,8 +419,40 @@
             });
 
 
-            function toggleDriverRequired() {
+            const driverError = document.getElementById('driver-error');
+            const clearDriverBtn = document.getElementById('clear-driver-btn');
+            const driverRequiredMsg = '{{ __("messages.driver_required") }}';
+            const deliveryOptionRequiredMsg = '{{ __("messages.delivery_option_required") }}';
 
+            function validateDriverAndDelivery() {
+                const driverSelected = driverSelect.value !== "";
+                const checkboxSelected = bringOrderCheckbox.checked || returnOrderCheckbox.checked;
+                
+                driverError.style.display = 'none';
+                driverError.textContent = '';
+                driverSelect.classList.remove('is-invalid');
+                bringOrderCheckbox.classList.remove('is-invalid');
+                returnOrderCheckbox.classList.remove('is-invalid');
+                
+                // If driver is selected but no checkbox is selected
+                if (driverSelected && !checkboxSelected) {
+                    driverError.textContent = deliveryOptionRequiredMsg;
+                    driverError.style.display = 'block';
+                    return false;
+                }
+                
+                // If checkbox is selected but no driver is selected
+                if (checkboxSelected && !driverSelected) {
+                    driverError.textContent = driverRequiredMsg;
+                    driverError.style.display = 'block';
+                    driverSelect.classList.add('is-invalid');
+                    return false;
+                }
+                
+                return true;
+            }
+
+            function toggleDriverRequired() {
                 driverSelect.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
                 deliveryPriceInput.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
                 province_id.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
@@ -425,12 +463,28 @@
                 apartment_number.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
 
                 driverSelect.setCustomValidity("");
+                validateDriverAndDelivery();
             }
+
+            // Clear driver button functionality
+            clearDriverBtn.addEventListener('click', function() {
+                // Clear TomSelect if available
+                if (typeof driverSelectTS !== 'undefined' && driverSelectTS) {
+                    driverSelectTS.clear();
+                } else {
+                    driverSelect.value = '';
+                }
+                bringOrderCheckbox.checked = false;
+                returnOrderCheckbox.checked = false;
+                validateDriverAndDelivery();
+                updateTotal();
+            });
 
             toggleDriverRequired();
 
             bringOrderCheckbox.addEventListener('change', toggleDriverRequired);
             returnOrderCheckbox.addEventListener('change', toggleDriverRequired);
+            driverSelect.addEventListener('change', validateDriverAndDelivery);
 
             bringOrderCheckbox.addEventListener('change', updateTotal);
             returnOrderCheckbox.addEventListener('change', updateTotal);
@@ -438,12 +492,9 @@
 
             form.addEventListener('submit', function (event) {
                 toggleDriverRequired();
-                if (driverSelect.required && driverSelect.value === "") {
-                    driverSelect.setCustomValidity("Please select a driver.");
-                    driverSelect.reportValidity();
+                if (!validateDriverAndDelivery()) {
                     event.preventDefault();
-                } else {
-                    driverSelect.setCustomValidity("");
+                    driverSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 }
             });
         });

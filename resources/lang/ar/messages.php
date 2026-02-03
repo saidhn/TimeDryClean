@@ -244,4 +244,14 @@ return [
     'currency_symbol' => 'د.ك',
     'off' => 'خصم',
     'tax' => 'الضريبة',
+    
+    // Delivery Information
+    'delivery_information' => 'معلومات التوصيل',
+    'delivery_direction' => 'اتجاه التوصيل',
+    'not_assigned' => 'غير معين',
+    
+    // Driver/Delivery Validation
+    'driver_required' => 'يرجى اختيار سائق عند تحديد خيار التوصيل.',
+    'delivery_option_required' => 'يرجى تحديد خيار توصيل واحد على الأقل (إحضار الطلب أو إرجاع الطلب) عند اختيار سائق.',
+    'clear' => 'مسح',
 ];

@@ -199,66 +199,69 @@ class OrdersController extends Controller
             $sum_price -= $discountAmount;
         }
 
-        // Create the order (include delivery and driver if applicable)
-        $orderData = $request->only(['user_id']); // Start with user_id
-        $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
-        $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
-        
-        // Add discount fields if applicable
-        if ($discountAmount > 0) {
-            $orderData['discount_type'] = $request->discount_type;
-            $orderData['discount_value'] = $request->discount_value;
-            $orderData['discount_amount'] = $discountAmount;
-            $orderData['discount_applied_by'] = auth()->id();
-            $orderData['discount_applied_at'] = now();
-        }
-
-        $order = Order::create($orderData);
-        // Add delivery information (create ONE OrderDelivery record)
-        if ($request->has('bring_order') || $request->has('return_order')) {
-            $direction = '';
-
-            if ($request->has('bring_order') && $request->has('return_order')) {
-                $direction = DeliveryDirection::BOTH;
-            } elseif ($request->has('bring_order')) {
-                $direction = DeliveryDirection::ORDER_TO_WORK;
-            } elseif ($request->has('return_order')) {
-                $direction = DeliveryDirection::WORK_TO_ORDER;
-            }
-
-            $orderDelivery = OrderDelivery::create([
-                'order_id' => $order->id,
-                'user_id' => $request->driver_id,
-                'direction' => $direction, // Set the appropriate direction
-                'price' => $deliveryPrice, // Use calculated or request delivery price
-                'street' => $request->street ?? null,
-                'building' => $request->building ?? null,
-                'floor' => $request->floor ?? null,
-                'apartment_number' => $request->apartment_number ?? null,
-                'status' => DeliveryStatus::ASSIGNED,
-                'delivery_date' => now(), // Or a specific date
-            ]);
-
-            if ($driverRequired == 'required') {
-                // Create the address
-                $address = Address::create([
-                    'province_id' => $request->input('province_id'),
-                    'city_id' => $request->input('city_id'),
-                ]);
-
-                // Associate the address with the OrderDelivery
-                $orderDelivery->address()->associate($address);
-                $orderDelivery->save(); // Save the OrderDelivery after associating the address.
-            }
-        }
-        // Create order product services
-        foreach ($request->order_product_services as $orderProductServiceData) {
-            $order->orderProductServices()->create($orderProductServiceData);
-        }
         try {
             DB::beginTransaction(); // Start a database transaction
 
-            // 1. Update User Balance:
+            // Create the order (include delivery and driver if applicable)
+            $orderData = $request->only(['user_id']); // Start with user_id
+            $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
+            $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
+            
+            // Add discount fields if applicable
+            if ($discountAmount > 0) {
+                $orderData['discount_type'] = $request->discount_type;
+                $orderData['discount_value'] = $request->discount_value;
+                $orderData['discount_amount'] = $discountAmount;
+                $orderData['discount_applied_by'] = auth()->id();
+                $orderData['discount_applied_at'] = now();
+            }
+
+            $order = Order::create($orderData);
+            
+            // Add delivery information (create ONE OrderDelivery record)
+            if ($request->has('bring_order') || $request->has('return_order')) {
+                $direction = '';
+
+                if ($request->has('bring_order') && $request->has('return_order')) {
+                    $direction = DeliveryDirection::BOTH;
+                } elseif ($request->has('bring_order')) {
+                    $direction = DeliveryDirection::ORDER_TO_WORK;
+                } elseif ($request->has('return_order')) {
+                    $direction = DeliveryDirection::WORK_TO_ORDER;
+                }
+
+                $orderDelivery = OrderDelivery::create([
+                    'order_id' => $order->id,
+                    'user_id' => $request->driver_id,
+                    'direction' => $direction, // Set the appropriate direction
+                    'price' => $deliveryPrice, // Use calculated or request delivery price
+                    'street' => $request->street ?? null,
+                    'building' => $request->building ?? null,
+                    'floor' => $request->floor ?? null,
+                    'apartment_number' => $request->apartment_number ?? null,
+                    'status' => DeliveryStatus::ASSIGNED,
+                    'delivery_date' => now(), // Or a specific date
+                ]);
+
+                if ($driverRequired == 'required') {
+                    // Create the address
+                    $address = Address::create([
+                        'province_id' => $request->input('province_id'),
+                        'city_id' => $request->input('city_id'),
+                    ]);
+
+                    // Associate the address with the OrderDelivery
+                    $orderDelivery->address()->associate($address);
+                    $orderDelivery->save(); // Save the OrderDelivery after associating the address.
+                }
+            }
+            
+            // Create order product services
+            foreach ($request->order_product_services as $orderProductServiceData) {
+                $order->orderProductServices()->create($orderProductServiceData);
+            }
+
+            // Update User Balance:
             $user = User::find($request->user_id);
             if (!$user) {
                 throw new \Exception("User not found."); // Handle user not found
@@ -266,10 +269,6 @@ class OrdersController extends Controller
 
             // Calculate the total order cost (including delivery if applicable)
             $orderCost = $order->sum_price;  // Assuming sum_price is already calculated
-
-            // if ($user->balance < $orderCost) {
-            //     throw new \Exception("Insufficient balance."); // Handle insufficient balance
-            // }
 
             $user->balance -= $orderCost; // Allow negative balance
             $user->save();
@@ -285,9 +284,8 @@ class OrdersController extends Controller
             DB::rollBack(); // Rollback on error
 
             Log::error("Error creating order: " . $e->getMessage()); // Log the error
-            return back()->withErrors(['message' => 'An error occurred while creating the order. Please try again later.' . $e->getMessage()]); // Show a user-friendly error message
+            return back()->withErrors(['message' => 'An error occurred while creating the order. Please try again later.' . $e->getMessage()])->withInput(); // Show a user-friendly error message
         }
-        return redirect()->route('orders.index')->with('success', __('messages.order_created_successfully'));
     }
 
     /**
@@ -303,7 +301,7 @@ class OrdersController extends Controller
             }
         }
 
-        $order->load('user', 'discount', 'clientSubscription', 'orderProductServices.product', 'orderProductServices.productService'); // Eager load all related data
+        $order->load('user', 'discount', 'clientSubscription', 'orderProductServices.product', 'orderProductServices.productService', 'orderDelivery.driver', 'orderDelivery.address.province', 'orderDelivery.address.city'); // Eager load all related data
         return view('orders.show', compact('order'));
     }
 
@@ -312,7 +310,7 @@ class OrdersController extends Controller
      */
     public function edit(Order $order)
     {
-        $order->load('orderProductServices.product', 'orderProductServices.productService', 'orderDelivery'); // Load existing products and services
+        $order->load('orderProductServices.product', 'orderProductServices.productService', 'orderDelivery.driver', 'orderDelivery.address'); // Load existing products and services
         $products = Product::all();
         $product_services = ProductService::all();
         $provinces = Province::all();

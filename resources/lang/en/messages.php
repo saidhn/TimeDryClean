@@ -235,4 +235,14 @@ return [
     'currency_symbol' => 'KWD',
     'off' => 'off',
     'tax' => 'Tax',
+    
+    // Delivery Information
+    'delivery_information' => 'Delivery Information',
+    'delivery_direction' => 'Delivery Direction',
+    'not_assigned' => 'Not Assigned',
+    
+    // Driver/Delivery Validation
+    'driver_required' => 'Please select a driver when delivery option is selected.',
+    'delivery_option_required' => 'Please select at least one delivery option (Bring Order or Return Order) when a driver is selected.',
+    'clear' => 'Clear',
 ];
