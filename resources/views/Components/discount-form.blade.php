@@ -34,8 +34,8 @@
                            id="discountValue" 
                            name="discount_value"
                            value="{{ $order->discount_value ?? '' }}"
-                           step="0.01" 
-                           min="0.01"
+                           step="1" 
+                           min="1"
                            placeholder="0.00"
                            aria-label="Discount value">
                     <span class="input-group-text d-none" id="discountSuffix">%</span>

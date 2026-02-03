@@ -243,6 +243,5 @@ return [
     // Currency
     'currency_symbol' => 'د.ك',
     'off' => 'خصم',
-    'savings' => 'على هذا الطلب',
     'tax' => 'الضريبة',
 ];
