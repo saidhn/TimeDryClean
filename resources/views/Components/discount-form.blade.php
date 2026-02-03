@@ -41,7 +41,15 @@
                     <span class="input-group-text d-none" id="discountSuffix">%</span>
                 </div>
                 <div class="form-text" id="discountHelp">
-                    {{ __('messages.order_subtotal') }}: $<span id="currentSubtotal">{{ number_format($order->sum_price, 2) }}</span>
+                    @php
+                        $originalSubtotal = $order->hasDiscount() 
+                            ? $order->sum_price + $order->discount_amount 
+                            : $order->sum_price;
+                        $existingDiscount = $order->discount_amount ?? 0;
+                    @endphp
+                    {{ __('messages.order_subtotal') }}: $<span id="currentSubtotal" 
+                        data-value="{{ number_format($originalSubtotal, 2, '.', '') }}"
+                        data-discount="{{ number_format($existingDiscount, 2, '.', '') }}">{{ number_format($originalSubtotal, 2) }}</span>
                 </div>
             </div>
         </div>
@@ -114,7 +122,8 @@ document.addEventListener('DOMContentLoaded', function() {
         
         const type = typeFixed.checked ? 'fixed' : (typePercentage.checked ? 'percentage' : null);
         const value = parseFloat(valueInput.value);
-        const subtotal = parseFloat(currentSubtotalSpan ? currentSubtotalSpan.textContent.replace(/,/g, '') : 0);
+        const subtotalText = currentSubtotalSpan ? currentSubtotalSpan.getAttribute('data-value') : '0';
+        const subtotal = parseFloat(subtotalText) || 0;
         
         if (!type || !value || value <= 0) {
             if (preview) preview.classList.add('d-none');
@@ -148,13 +157,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (preview) preview.classList.remove('d-none');
                 
                 const discountedSubtotal = subtotal - discountAmount;
-                const tax = discountedSubtotal * 0.15;
-                const newTotal = discountedSubtotal + tax;
                 
-                document.getElementById('previewDiscountAmount').textContent = '$' + discountAmount.toFixed(2);
-                document.getElementById('previewSubtotal').textContent = '$' + discountedSubtotal.toFixed(2);
-                document.getElementById('previewTotal').textContent = '$' + newTotal.toFixed(2);
-                document.getElementById('previewSavings').textContent = '$' + discountAmount.toFixed(2);
+                const currencySymbol = @json(__('messages.currency_symbol'));
+                document.getElementById('previewDiscountAmount').textContent = currencySymbol + ' ' + discountAmount.toFixed(2);
+                document.getElementById('previewSubtotal').textContent = currencySymbol + ' ' + discountedSubtotal.toFixed(2);
+                document.getElementById('previewTotal').textContent = currencySymbol + ' ' + discountedSubtotal.toFixed(2);
+                document.getElementById('previewSavings').textContent = currencySymbol + ' ' + discountAmount.toFixed(2);
             } else {
                 if (preview) preview.classList.add('d-none');
                 if (errors) {

@@ -210,4 +210,10 @@ return [
     'discount_display_percentage' => 'Percentage',
     'discount_validation_failed' => 'Discount validation failed',
     'discount_valid' => 'Discount is valid',
+    
+    // Currency
+    'currency_symbol' => 'KWD',
+    'off' => 'off',
+    'savings' => 'on this order',
+    'tax' => 'Tax',
 ];

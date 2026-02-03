@@ -17,14 +17,14 @@
                 <p class="mb-1">
                     <strong>{{ __('messages.discount_value') }}:</strong> 
                     @if($order->discount_type === 'fixed')
-                        ${{ number_format($order->discount_value, 2) }}
+                        {{ __('messages.currency_symbol') }} {{ number_format($order->discount_value, 2) }}
                     @else
                         {{ $order->discount_value }}%
                     @endif
                 </p>
                 <p class="mb-1">
                     <strong>{{ __('messages.discount_amount_calculated') }}:</strong> 
-                    <span class="text-success fw-bold">-${{ number_format($order->discount_amount, 2) }}</span>
+                    <span class="text-success fw-bold">-{{ __('messages.currency_symbol') }} {{ number_format($order->discount_amount, 2) }}</span>
                 </p>
                 @if($order->discountAppliedBy)
                 <p class="mb-1">

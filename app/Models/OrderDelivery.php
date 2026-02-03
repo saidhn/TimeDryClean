@@ -13,6 +13,7 @@ class OrderDelivery extends Model
     protected $fillable = [
         'order_id',
         'user_id', // Refers to the driver's user ID
+        'address_id',
         'direction',
         'price',
         'status',

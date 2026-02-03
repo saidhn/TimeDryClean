@@ -239,4 +239,10 @@ return [
     'discount_display_percentage' => 'نسبة مئوية',
     'discount_validation_failed' => 'فشل التحقق من الخصم',
     'discount_valid' => 'الخصم صالح',
+    
+    // Currency
+    'currency_symbol' => 'د.ك',
+    'off' => 'خصم',
+    'savings' => 'على هذا الطلب',
+    'tax' => 'الضريبة',
 ];

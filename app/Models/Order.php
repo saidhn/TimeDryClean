@@ -80,10 +80,12 @@ class Order extends Model
             return '';
         }
 
+        $currency = __('messages.currency_symbol');
+        
         if ($this->discount_type === 'fixed') {
-            return "$" . number_format((float)$this->discount_value, 2) . " off";
+            return $currency . " " . number_format((float)$this->discount_value, 2) . " " . __('messages.off');
         }
 
-        return $this->discount_value . "% off ($" . number_format((float)$this->discount_amount, 2) . ")";
+        return $this->discount_value . "% " . __('messages.off') . " (" . $currency . " " . number_format((float)$this->discount_amount, 2) . ")";
     }
 }

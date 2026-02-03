@@ -538,21 +538,6 @@
                 if (isValid) {
                     errors.classList.add('d-none');
                     preview.classList.remove('d-none');
-                    
-                    const discountedSubtotal = subtotal - discountAmount;
-                    const tax = discountedSubtotal * 0.15; // Assuming 15% tax
-                    const newTotal = discountedSubtotal + tax;
-                    
-                    document.getElementById('previewDiscountAmount').textContent = '$' + discountAmount.toFixed(2);
-                    document.getElementById('previewSubtotal').textContent = '$' + discountedSubtotal.toFixed(2);
-                    document.getElementById('previewTotal').textContent = '$' + newTotal.toFixed(2);
-                    document.getElementById('previewSavings').textContent = '$' + discountAmount.toFixed(2);
-                } else {
-                    preview.classList.add('d-none');
-                    errors.classList.remove('d-none');
-                    errors.innerHTML = '<ul class="mb-0">' + 
-                        errorMessages.map(e => `<li>${e}</li>`).join('') + 
-                        '</ul>';
                 }
             }, 500);
         }

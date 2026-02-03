@@ -416,9 +416,23 @@ class OrdersController extends Controller
                 $orderData['discount_applied_by'] = auth()->id();
                 $orderData['discount_applied_at'] = now();
             }
-            // If discount fields are not provided, don't update them (keep existing values)
             
             $order->update($orderData);
+            
+            // Clear discount fields when no discount is provided
+            // discount_amount is NOT NULL DEFAULT 0, discount_value must be NULL (constraint: NULL or > 0)
+            if (!$request->filled('discount_type') || !$request->filled('discount_value')) {
+                DB::table('orders')
+                    ->where('id', $order->id)
+                    ->update([
+                        'discount_type' => null,
+                        'discount_value' => null,
+                        'discount_amount' => 0,
+                        'discount_applied_by' => null,
+                        'discount_applied_at' => null,
+                    ]);
+                $order->refresh();
+            }
 
             // 2. Update Order Delivery (if applicable):
             if ($driverRequired == 'required') {
@@ -445,16 +459,17 @@ class OrdersController extends Controller
                         'status' => DeliveryStatus::ASSIGNED,
                         'delivery_date' => now(),
                     ]);
+                    
+                    // Update or create address
                     if ($orderDelivery->address) {
                         $orderDelivery->address->update([
-                            'province_id' => request('province_id'),
-                            'city_id' => request('city_id'),
+                            'province_id' => $request->province_id,
+                            'city_id' => $request->city_id,
                         ]);
-                        $orderDelivery->save();
                     } else {
                         $address = Address::create([
-                            'province_id' => $request->input('province_id'),
-                            'city_id' => $request->input('city_id'),
+                            'province_id' => $request->province_id,
+                            'city_id' => $request->city_id,
                         ]);
                         $orderDelivery->address()->associate($address);
                         $orderDelivery->save();
@@ -472,9 +487,10 @@ class OrdersController extends Controller
                         'status' => DeliveryStatus::ASSIGNED,
                         'delivery_date' => now(),
                     ]);
+                    
                     $address = Address::create([
-                        'province_id' => $request->input('province_id'),
-                        'city_id' => $request->input('city_id'),
+                        'province_id' => $request->province_id,
+                        'city_id' => $request->city_id,
                     ]);
                     $orderDelivery->address()->associate($address);
                     $orderDelivery->save();

@@ -120,7 +120,7 @@
                     <div class="mt-3 mb-3 col-md-2">
                         <label for="city_id" class="form-label">{{ __('messages.city') }}</label>
                         <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id"
-                            required disabled>
+                            required>
                             <option value="">{{__('messages.city')}}</option>
                         </select>
                         @error('city_id')
@@ -255,9 +255,13 @@
                 $('#total-price-display').text(totalPrice.toFixed(2));
                 
                 // Update discount form's current subtotal
+                // If order has existing discount, add it back to show original subtotal
                 const currentSubtotalSpan = document.getElementById('currentSubtotal');
                 if (currentSubtotalSpan) {
-                    currentSubtotalSpan.textContent = totalPrice.toFixed(2);
+                    const existingDiscount = parseFloat(currentSubtotalSpan.getAttribute('data-discount') || '0');
+                    const originalSubtotal = totalPrice + existingDiscount;
+                    currentSubtotalSpan.textContent = originalSubtotal.toFixed(2);
+                    currentSubtotalSpan.setAttribute('data-value', originalSubtotal.toFixed(2));
                 }
             }
 
@@ -370,9 +374,8 @@
         provinceSelect.addEventListener('change', function () {
             updateAddress(this.value);
         });
-        function updateAddress(val) {
+        function updateAddress(val, selectedCityId = null) {
             citySelect.innerHTML = '<option value="">{{__('messages.select_city')}}</option>'; // Clear existing options
-            citySelect.disabled = true;
 
             const provinceId = val;
 
@@ -383,13 +386,18 @@
                     option.text = city.name;
                     citySelect.appendChild(option);
                 });
-                citySelect.disabled = false;
+                
+                // Set selected city if provided
+                if (selectedCityId) {
+                    citySelect.value = selectedCityId;
+                }
             }
         }
-        if ({{ optional(optional($order->orderDelivery)->address)->province_id !=null ? 'true' : 'false'}}){
-            updateAddress(provinceSelect.value);
-            citySelect.value = {{ optional(optional($order->orderDelivery)->address)->city_id ?? '-1' }};
-        }
+        
+        // Initialize city select on page load if province is selected
+        @if(optional(optional($order->orderDelivery)->address)->province_id)
+            updateAddress(provinceSelect.value, {{ optional(optional($order->orderDelivery)->address)->city_id ?? 'null' }});
+        @endif
     });
 </script>
 
@@ -431,7 +439,7 @@
         });
 
         // Driver Select2
-        new TomSelect('#driver-select', { // Initialize TomSelect for driver-select
+        new TomSelect('#driver-select', {
             valueField: 'id',
             labelField: 'name',
             searchField: 'name',
@@ -454,7 +462,8 @@
                     return `
                     <div>
                         <strong>${escape(item.name)}</strong>
-                        <div class="text-muted">ID: ${escape(item.id)}</div>  </div>
+                        <div class="text-muted">ID: ${escape(item.id)}</div>
+                    </div>
                     `;
                 },
                 item: function(item, escape) {
@@ -462,35 +471,6 @@
                 }
             }
         });
-        //address province and city select
-        const citiesByProvince = @json(\App\Models\City:: select('id', 'name', 'province_id') -> get() -> groupBy('province_id'));
-
-        const provinceSelect = document.getElementById('province_id');
-        const citySelect = document.getElementById('city_id');
-
-        provinceSelect.addEventListener('change', function () {
-            updateAddress(this.value);
-        });
-        function updateAddress(val) {
-            citySelect.innerHTML = '<option value="">{{__('messages.select_city')}}</option>'; // Clear existing options
-            citySelect.disabled = true;
-
-            const provinceId = val;
-
-            if (provinceId && citiesByProvince[provinceId]) {
-                citiesByProvince[provinceId].forEach(city => {
-                    const option = document.createElement('option');
-                    option.value = city.id;
-                    option.text = city.name;
-                    citySelect.appendChild(option);
-                });
-                citySelect.disabled = false;
-            }
-        }
-        if ({{ optional(optional($order->orderDelivery)->address)->province_id !=null ? 'true' : 'false'}}){
-            updateAddress(provinceSelect.value);
-            citySelect.value = {{ optional(optional($order->orderDelivery)->address)->city_id ??'-1' }};
-        }
     });
 </script>
 @endpush
