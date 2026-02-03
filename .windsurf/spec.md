@@ -2,7 +2,7 @@
 
 ## Project Overview
 **Project Name:** TimeDryClean - Laundry Management System  
-**Framework:** Laravel with Bootstrap 5, TailwindCSS, jQuery, FontAwesome  
+**Framework:** Laravel with Bootstrap 5, jQuery, FontAwesome  
 **Current State:** Functional application with basic UI using Bootstrap 5  
 **Enhancement Goal:** Modernize and enhance UI/UX for better usability, flexibility, and interactivity without changing functionality or database structure
 
@@ -42,7 +42,7 @@
 ### 1.2 Typography
 **Enhancements:**
 - Implement better font hierarchy
-- Add custom Google Fonts (e.g., Inter, Poppins for modern look)
+- Use system fonts for performance (no external font libraries)
 - Improve readability with proper line-height and letter-spacing
 - Responsive font sizes using clamp() or viewport units
 - Better heading styles with consistent sizing
@@ -145,7 +145,7 @@
 
 **Enhancements:**
 - **Floating labels** for modern look
-- **Input icons** for context (phone, email, etc.)
+- **Input icons** for context (search icon in search boxes, phone, email, etc.)
 - **Real-time validation** with clear error messages
 - **Success states** with checkmarks
 - **Loading states** on submit buttons
@@ -253,7 +253,7 @@
 
 ### 7.1 Button Improvements
 **Enhancements:**
-- **Icon + text** combinations
+- **Icon + text** combinations using inline SVG icons (no extra icon libraries)
 - **Loading states** with spinners
 - **Disabled states** with clear styling
 - **Button groups** for related actions
@@ -261,6 +261,7 @@
 - **Tooltip on hover** for icon-only buttons
 - **Consistent sizing** (sm, md, lg)
 - **Ripple effect** on click
+- **Intuitive icons** for common actions (save, delete, edit, search, etc.)
 
 ### 7.2 Action Confirmations
 **Enhancements:**
@@ -402,10 +403,10 @@
 
 ### 13.2 Data Visualization
 **Enhancements:**
-- **Chart.js integration** for analytics
+- **CSS-based charts** for simple analytics (progress circles, sparklines)
 - **Progress circles** for completion rates
-- **Sparklines** for trends
-- **Heatmaps** for activity patterns
+- **Sparklines** for trends using CSS
+- **Simple bar charts** using CSS flexbox
 
 ---
 
@@ -485,40 +486,87 @@
 ## 17. Technical Implementation Plan
 
 ### 17.1 Libraries to Install
+**IMPORTANT: Minimize external libraries - use only what's absolutely necessary**
+
 **CSS/UI Libraries:**
-- **Alpine.js** - Lightweight JS framework for interactivity (optional, can use vanilla JS)
-- **Animate.css** - Pre-built CSS animations
-- **SweetAlert2** - Beautiful alert/modal dialogs
-- **Toastr** or **Notyf** - Toast notifications
-- **Chart.js** - Data visualization
-- **Flatpickr** - Modern date picker
-- **Choices.js** or enhance **Tom-Select** - Better select dropdowns
-- **Sortable.js** - Drag and drop functionality
-- **AOS (Animate On Scroll)** - Scroll animations
+- **Keep Bootstrap 5** - Already installed, no need for TailwindCSS
+- **Use existing FontAwesome** - Already installed for icons
+- **Custom CSS animations** - Instead of animation libraries
+- **Custom toast notifications** - Instead of external libraries
 
-**Icons:**
-- Continue using **FontAwesome** (already installed)
-- Consider adding **Lucide** or **Heroicons** for additional modern icons
+**JavaScript:**
+- **Keep jQuery** - Already installed, familiar to the team
+- **Vanilla JavaScript** - For new interactions instead of Alpine.js
+- **Custom components** - Build in-house instead of external libraries
 
-**Utilities:**
-- **Lodash** - Utility functions (debounce, throttle)
-- **Day.js** - Date manipulation (lightweight alternative to Moment.js)
+**Avoid These Libraries:**
+- ❌ Alpine.js (use vanilla JS instead)
+- ❌ Animate.css (use custom CSS animations)
+- ❌ SweetAlert2 (use custom modals)
+- ❌ Toastr/Notyf (use custom toast system)
+- ❌ Chart.js (use simple CSS charts or skip for now)
+- ❌ Flatpickr (use native HTML5 date inputs)
+- ❌ Choices.js/Tom-Select (enhance existing selects with CSS)
+- ❌ Sortable.js (skip advanced features for now)
+- ❌ AOS (use custom scroll animations)
+- ❌ Additional icon libraries (FontAwesome is sufficient)
 
 ### 17.2 CSS Architecture
 **Enhancements:**
-- Create **component-based CSS** structure
-- Use **CSS custom properties** for theming
-- Implement **utility classes** (similar to Tailwind)
-- Create **animation library**
-- Build **responsive mixins**
+- **Organize CSS files** by component and feature
+- **Use CSS custom properties** for theming
+- **Create utility classes** for common patterns
+- **Build animation library** with keyframes
+- **Responsive mixins** for breakpoints
+- **Keep Bootstrap base** - Add custom enhancements on top
+
+**File Structure:**
+```
+/resources/css/
+├── app.css (main file)
+├── components/
+│   ├── buttons.css
+│   ├── forms.css
+│   ├── cards.css
+│   ├── tables.css
+│   └── modals.css
+├── utilities/
+│   ├── animations.css
+│   ├── spacing.css
+│   └── colors.css
+└── pages/
+    ├── dashboard.css
+    ├── orders.css
+    └── auth.css
+```
 
 ### 17.3 JavaScript Architecture
 **Enhancements:**
-- Modular JS structure
-- Event delegation for dynamic content
-- Reusable component functions
-- Form validation library
-- AJAX helpers for smooth interactions
+- **Modular JS structure** with clear organization
+- **Event delegation** for dynamic content
+- **Reusable component functions**
+- **Form validation library** (custom build)
+- **AJAX helpers** for smooth interactions
+- **Keep using jQuery** - Already familiar and installed
+
+**File Structure:**
+```
+/resources/js/
+├── app.js (main file)
+├── components/
+│   ├── modal.js
+│   ├── toast.js
+│   ├── dropdown.js
+│   └── form-validator.js
+├── pages/
+│   ├── dashboard.js
+│   ├── orders.js
+│   └── auth.js
+└── utils/
+    ├── ajax.js
+    ├── animations.js
+    └── helpers.js
+```
 
 ---
 

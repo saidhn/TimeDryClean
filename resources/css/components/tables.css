@@ -1,0 +1,138 @@
+/* Table Component Styles */
+
+/* Table enhancements */
+.table {
+    --bs-table-bg: transparent;
+    --bs-table-striped-bg: rgba(0, 0, 0, 0.02);
+    --bs-table-hover-bg: rgba(0, 0, 0, 0.04);
+}
+
+.table thead th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    color: var(--color-text-secondary);
+    border-bottom: 2px solid var(--color-border);
+}
+
+/* Sortable columns */
+.table thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    padding-right: 1.5rem;
+}
+
+.table thead th.sortable:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.table thead th.sortable::after {
+    content: '\f0dc';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 0.5rem;
+    opacity: 0.3;
+}
+
+.table thead th.sortable.asc::after {
+    content: '\f0de';
+    opacity: 1;
+}
+
+.table thead th.sortable.desc::after {
+    content: '\f0dd';
+    opacity: 1;
+}
+
+/* Row hover effects */
+.table-hover tbody tr {
+    transition: background-color 0.15s ease-in-out;
+}
+
+.table-hover tbody tr:hover {
+    cursor: pointer;
+}
+
+/* Compact table */
+.table-compact th,
+.table-compact td {
+    padding: 0.5rem;
+}
+
+/* Responsive table */
+.table-responsive {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Row actions */
+.table-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.table-actions .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Sticky header */
+.table-sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--color-bg-primary);
+}
+
+/* Mobile card view */
+@media (max-width: 768px) {
+    .table-mobile-cards {
+        display: none;
+    }
+    
+    .table-mobile-cards + .mobile-cards {
+        display: block;
+    }
+    
+    .mobile-card {
+        border: 1px solid var(--color-border);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mobile-card-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--color-border);
+    }
+    
+    .mobile-card-row:last-child {
+        border-bottom: none;
+    }
+    
+    .mobile-card-label {
+        font-weight: 600;
+        color: var(--color-text-secondary);
+    }
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .table {
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.02);
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.04);
+    color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .table thead th {
+    border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .table-sticky-header {
+    background-color: var(--color-bg-primary);
+}

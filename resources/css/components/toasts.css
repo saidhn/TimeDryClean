@@ -1,0 +1,91 @@
+/* Toast Notification Styles */
+
+/* Toast container */
+.toast-container {
+    z-index: 9999;
+}
+
+/* Toast enhancements */
+.toast {
+    min-width: 300px;
+    max-width: 400px;
+    border: none;
+    border-radius: 0.5rem;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(8px);
+}
+
+.toast-header {
+    padding: 0.75rem 1rem;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+.toast-body {
+    padding: 0.75rem 1rem;
+}
+
+/* Toast progress bar */
+.toast-progress {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    overflow: hidden;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+}
+
+.toast-progress-bar {
+    height: 100%;
+    transition: width linear;
+}
+
+/* Toast variants */
+.toast.text-bg-success {
+    background-color: var(--bs-success) !important;
+    color: white;
+}
+
+.toast.text-bg-danger {
+    background-color: var(--bs-danger) !important;
+    color: white;
+}
+
+.toast.text-bg-warning {
+    background-color: var(--bs-warning) !important;
+    color: #000;
+}
+
+.toast.text-bg-info {
+    background-color: var(--bs-info) !important;
+    color: white;
+}
+
+/* Toast action button */
+.toast-action {
+    font-size: 0.875rem;
+    padding: 0.25rem 0.75rem;
+}
+
+/* Animation */
+.toast.animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Close button for colored toasts */
+.toast .btn-close-white {
+    filter: brightness(0) invert(1);
+}

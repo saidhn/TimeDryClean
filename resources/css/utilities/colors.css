@@ -1,0 +1,88 @@
+/* Color System Variables */
+/* Bootstrap 5 Color Overrides + Custom Colors */
+
+:root {
+  /* Primary Colors */
+  --bs-primary: #464687;
+  --bs-primary-hover: #3a3a70;
+  --bs-primary-rgb: 70, 70, 135;
+  
+  /* Secondary Colors */
+  --bs-secondary: #1da58d;
+  --bs-secondary-hover: #169080;
+  --bs-secondary-rgb: 29, 165, 141;
+  
+  /* Semantic Colors */
+  --bs-success: #10b981;
+  --bs-success-rgb: 16, 185, 129;
+  --bs-warning: #f59e0b;
+  --bs-warning-rgb: 245, 158, 11;
+  --bs-danger: #ef4444;
+  --bs-danger-rgb: 239, 68, 68;
+  --bs-info: #3b82f6;
+  --bs-info-rgb: 59, 130, 246;
+  
+  /* Neutral Colors */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+  
+  /* Background Colors */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f9fafb;
+  --color-bg-tertiary: #f3f4f6;
+  
+  /* Text Colors */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #6b7280;
+  --color-text-tertiary: #9ca3af;
+  
+  /* Border Colors */
+  --color-border: #e5e7eb;
+  --color-border-hover: #d1d5db;
+}
+
+/* Dark Mode Variables */
+[data-theme="dark"] {
+  /* Background Colors */
+  --color-bg-primary: #1f2937;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #374151;
+  
+  /* Text Colors */
+  --color-text-primary: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  
+  /* Border Colors */
+  --color-border: #374151;
+  --color-border-hover: #4b5563;
+  
+  /* Adjust semantic colors for dark mode */
+  --bs-primary: #5a5aa0;
+  --bs-secondary: #26c9ad;
+}
+
+/* Utility Classes */
+.bg-primary-hover:hover {
+  background-color: var(--bs-primary-hover) !important;
+}
+
+.bg-secondary-hover:hover {
+  background-color: var(--bs-secondary-hover) !important;
+}
+
+.text-primary-hover:hover {
+  color: var(--bs-primary-hover) !important;
+}
+
+.text-secondary-hover:hover {
+  color: var(--bs-secondary-hover) !important;
+}

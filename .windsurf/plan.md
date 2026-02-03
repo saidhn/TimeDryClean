@@ -5,7 +5,7 @@
 **Project:** TimeDryClean Laundry Management System  
 **Framework:** Laravel 9+ with Blade templates  
 **Current UI Stack:** Bootstrap 5, jQuery, FontAwesome, Tom-Select  
-**Target UI Stack:** TailwindCSS + Alpine.js (modern, lightweight)  
+**Target UI Stack:** Bootstrap 5 (enhanced) + jQuery + FontAwesome  
 **Database:** MySQL (no changes allowed)  
 **Backend:** PHP/Laravel (no functionality changes)  
 
@@ -16,6 +16,7 @@
 - Preserve all current features
 - Support RTL/LTR languages
 - Mobile-first responsive design
+- Minimize external libraries - use existing ones where possible
 
 **Performance Requirements:**
 - Sub-2s page loads
@@ -23,15 +24,15 @@
 - 60fps animations
 - Chrome 90+, Firefox 88+, Safari 14+, Edge 90+
 
-**Libraries to Evaluate:**
-- **CSS Framework:** TailwindCSS (primary) vs Bootstrap 5 (current)
-- **JavaScript:** Alpine.js (lightweight) vs jQuery (current)
-- **Animations:** AOS, Animate.css, CSS transitions
-- **Charts:** Chart.js, ApexCharts
-- **Date Pickers:** Flatpickr, Pikaday
-- **Select Dropdowns:** Choices.js, Tom-Select (current)
-- **Notifications:** Notyf, SweetAlert2
-- **Modals:** Custom with Alpine.js vs Bootstrap modals
+**Libraries to Use:**
+- **CSS Framework:** Bootstrap 5 (keep existing)
+- **JavaScript:** jQuery (keep existing) + Vanilla JS
+- **Animations:** Custom CSS keyframes
+- **Date Pickers:** Native HTML5 inputs
+- **Select Dropdowns:** Enhanced with CSS
+- **Notifications:** Custom toast system
+- **Modals:** Enhanced Bootstrap modals
+- **Icons:** FontAwesome (existing)
 
 ---
 
@@ -60,49 +61,42 @@
 
 ## Phase 0: Research & Technology Decisions
 
-### CSS Framework Decision: TailwindCSS vs Bootstrap 5
+### CSS Framework Decision: Keep Bootstrap 5
 
-**Research Task:** Evaluate TailwindCSS vs Bootstrap 5 for this project
-
-**Decision:** **TailwindCSS** - Recommended for modern UI/UX
+**Decision:** **Bootstrap 5** - Keep and enhance
 
 **Rationale:**
-- **Utility-first approach** allows rapid custom styling without writing custom CSS
-- **Smaller bundle size** when properly purged vs Bootstrap's full framework
-- **Better animation system** with built-in transitions and transforms
-- **Superior responsive design** utilities
-- **Modern design patterns** easier to implement
-- **Better performance** for the 60fps animation requirement
-- **Excellent RTL support** with built-in utilities
-- **Component extraction** possible for reusable patterns
+- **Already installed** - No additional setup needed
+- **Familiar to team** - No learning curve
+- **Sufficient for needs** - Has all required components
+- **Good performance** - When properly configured
+- **RTL support** - Built-in utilities
+- **Component library** - Rich set of pre-built components
+- **Customizable** - Can be enhanced with custom CSS
 
-**Migration Strategy:**
-- Keep Bootstrap 5 for existing components during transition
-- Implement new features with TailwindCSS
-- Gradually migrate existing components
-- Use TailwindCSS @apply directives for consistency
+**Enhancement Strategy:**
+- Keep Bootstrap 5 as base framework
+- Add custom CSS for specific enhancements
+- Override styles where needed for better UX
+- Use Bootstrap utilities combined with custom classes
 
-### JavaScript Framework Decision: Alpine.js vs jQuery
+### JavaScript Framework Decision: Keep jQuery + Add Vanilla JS
 
-**Research Task:** Evaluate Alpine.js vs jQuery for interactivity
-
-**Decision:** **Alpine.js** - Recommended for modern lightweight interactivity
+**Decision:** **jQuery + Vanilla JS** - Keep existing and enhance
 
 **Rationale:**
-- **Lightweight (~15KB)** vs jQuery (~90KB)
-- **Reactive data binding** for dynamic UI updates
-- **Component-based approach** similar to Vue.js
-- **Better performance** for 60fps animations
-- **Modern syntax** and patterns
-- **Easy to learn** for developers familiar with Vue
-- **Works well with TailwindCSS**
-- **Can coexist** with jQuery during migration
+- **jQuery already installed** - No additional overhead
+- **Team familiarity** - No learning required
+- **Vanilla JS for new features** - Modern, performant
+- **Good compatibility** - Works well with Bootstrap
+- **Sufficient for needs** - Can build all required features
+- **Easy maintenance** - Clear and understandable code
 
-**Migration Strategy:**
-- Use Alpine.js for new interactive components
-- Keep jQuery for existing functionality
-- Gradually replace jQuery interactions
-- Use Alpine.js for state management
+**Enhancement Strategy:**
+- Use jQuery for existing functionality
+- Add vanilla JS for new interactive components
+- Create reusable component functions
+- Use modern ES6+ features where supported
 
 ---
 
@@ -110,61 +104,50 @@
 
 ### 1.1 Design System Foundation
 
-**Color Palette (TailwindCSS Custom Config):**
-```javascript
-// tailwind.config.js
-theme: {
-  extend: {
-    colors: {
-      primary: {
-        50: '#f0f4ff',
-        500: '#464687', // Existing primary
-        600: '#3a3a70',
-        700: '#2e2e59',
-      },
-      secondary: {
-        50: '#e6fffa',
-        500: '#1da58d', // Existing hover
-        600: '#169080',
-        700: '#0f7b73',
-      },
-      semantic: {
-        success: '#10b981',
-        warning: '#f59e0b',
-        error: '#ef4444',
-        info: '#3b82f6',
-      }
-    }
-  }
+**Color Palette (CSS Custom Properties):**
+```css
+/* resources/css/utilities/colors.css */
+:root {
+  --bs-primary: #464687;
+  --bs-primary-hover: #3a3a70;
+  --bs-secondary: #1da58d;
+  --bs-secondary-hover: #169080;
+  --bs-success: #10b981;
+  --bs-warning: #f59e0b;
+  --bs-danger: #ef4444;
+  --bs-info: #3b82f6;
 }
 ```
 
 **Typography System:**
-```javascript
-// Google Fonts: Inter (modern, readable)
-fontFamily: {
-  sans: ['Inter', 'system-ui', 'sans-serif'],
-  display: ['Inter', 'system-ui', 'sans-serif'],
-}
-```
-
-**Spacing System:**
-```javascript
-// Consistent spacing scale
-spacing: {
-  '18': '4.5rem',
-  '88': '22rem',
+```css
+/* Use system fonts for performance */
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 ```
 
 **Animation System:**
-```javascript
-// Custom animations for 60fps performance
-animation: {
-  'fade-in': 'fadeIn 0.3s ease-in-out',
-  'slide-up': 'slideUp 0.3s ease-out',
-  'scale-in': 'scaleIn 0.2s ease-out',
+```css
+/* resources/css/utilities/animations.css */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.animate-fade-in { animation: fadeIn 0.3s ease-in-out; }
+.animate-slide-up { animation: slideUp 0.3s ease-out; }
+.animate-scale-in { animation: scaleIn 0.2s ease-out; }
 ```
 
 ### 1.2 Component Architecture
@@ -188,25 +171,23 @@ animation: {
     └── bar-chart.blade.php
 ```
 
-**Alpine.js Component Pattern:**
+**jQuery Component Pattern:**
 ```javascript
 // Reusable component pattern
-<div x-data="componentName()" x-init="init()">
-  <!-- Component template -->
-</div>
-
-<script>
-function componentName() {
+function initComponent(selector, options) {
+  const element = $(selector);
+  // Component initialization logic
   return {
-    // Component logic
-  }
+    show: () => element.show(),
+    hide: () => element.hide(),
+    // Other methods
+  };
 }
-</script>
 ```
 
 ### 1.3 Dark Mode Implementation
 
-**Strategy:** CSS custom properties + Alpine.js state management
+**Strategy:** CSS custom properties + jQuery state management
 
 ```css
 /* Dark mode variables */
@@ -215,21 +196,28 @@ function componentName() {
   --color-text-primary: #1f2937;
 }
 
-.dark {
+[data-theme="dark"] {
   --color-bg-primary: #1f2937;
   --color-text-primary: #f9fafb;
 }
 ```
 
 ```javascript
-// Alpine.js dark mode toggle
-<div x-data="{ darkMode: false }" 
-     x-init="darkMode = localStorage.getItem('darkMode') === 'true'"
-     :class="{ 'dark': darkMode }">
-  <button @click="darkMode = !darkMode; localStorage.setItem('darkMode', darkMode)">
-    Toggle Dark Mode
-  </button>
-</div>
+// jQuery dark mode toggle
+$(document).ready(function() {
+  const darkMode = localStorage.getItem('darkMode') === 'true';
+  if (darkMode) {
+    $('body').attr('data-theme', 'dark');
+  }
+  
+  $('.dark-mode-toggle').on('click', function() {
+    $('body').attr('data-theme', function(i, attr) {
+      const newTheme = attr === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('darkMode', newTheme === 'dark');
+      return newTheme;
+    });
+  });
+});
 ```
 
 ---
@@ -272,30 +260,24 @@ function componentName() {
 ```json
 {
   "devDependencies": {
-    "@tailwindcss/forms": "^0.5.7",
-    "@tailwindcss/typography": "^0.5.10",
-    "alpinejs": "^3.13.3",
-    "postcss": "^8.4.31",
-    "autoprefixer": "^10.4.16"
+    // Keep existing dependencies
+    "bootstrap": "^5.3.0",
+    "jquery": "^3.7.0",
+    "@fortawesome/fontawesome-free": "^6.5.0"
   },
   "dependencies": {
-    "chart.js": "^4.4.0",
-    "flatpickr": "^4.6.13",
-    "choices.js": "^10.2.0",
-    "notyf": "^3.10.0",
-    "aos": "^2.3.4"
+    // No new dependencies needed
   }
 }
 ```
 
 **Integration Strategy:**
-1. **TailwindCSS:** Gradual replacement of Bootstrap utilities
-2. **Alpine.js:** Replace jQuery for new interactions
-3. **Chart.js:** Dashboard analytics and visualizations
-4. **Flatpickr:** Modern date/time pickers
-5. **Choices.js:** Enhanced select dropdowns
-6. **Notyf:** Toast notification system
-7. **AOS:** Scroll animations for enhanced UX
+1. **Bootstrap 5:** Keep as base framework
+2. **jQuery:** Continue using for existing features
+3. **FontAwesome:** Use for all icon needs
+4. **Custom CSS:** Build animations and enhancements
+5. **Vanilla JS:** Create new interactive components
+6. **HTML5:** Use native features where possible
 
 ### 2.3 File Structure
 
@@ -303,13 +285,27 @@ function componentName() {
 ```
 /resources/
 ├── css/
-│   ├── app.css (TailwindCSS)
-│   ├── components.css
-│   └── animations.css
+│   ├── app.css (main Bootstrap + custom)
+│   ├── components/
+│   │   ├── buttons.css
+│   │   ├── forms.css
+│   │   ├── tables.css
+│   │   └── modals.css
+│   ├── utilities/
+│   │   ├── animations.css
+│   │   └── helpers.css
+│   └── pages/
+│       ├── dashboard.css
+│       └── orders.css
 ├── js/
-│   ├── app.js (Alpine.js components)
-│   ├── charts.js (Chart.js setup)
-│   └── utils.js (Helper functions)
+│   ├── app.js (main jQuery + custom)
+│   ├── components/
+│   │   ├── toast.js
+│   │   ├── modal.js
+│   │   └── search.js
+│   └── utils/
+│       ├── helpers.js
+│       └── validators.js
 └── views/
     ├── components/ (Blade components)
     ├── layouts/ (Layout templates)
@@ -325,34 +321,32 @@ function componentName() {
 **Button Component:**
 ```blade
 <!-- resources/views/components/ui/button.blade.php -->
-@props(['variant' => 'primary', 'size' => 'md', 'loading' => false])
+@props(['variant' => 'primary', 'size' => 'md', 'loading' => false, 'icon' => null])
 
 <button 
     {{ $attributes->merge([
-        'class' => \Illuminate\Support\Str::inline([
-            'inline-flex items-center justify-center',
-            'font-medium rounded-lg transition-all duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-offset-2',
+        'class' => 'btn d-inline-flex align-items-center gap-2 transition-all duration-200 ' . 
             match($variant, [
-                'primary' => 'bg-primary-500 hover:bg-primary-600 text-white focus:ring-primary-500',
-                'secondary' => 'bg-secondary-500 hover:bg-secondary-600 text-white focus:ring-secondary-500',
-                'outline' => 'border border-gray-300 hover:bg-gray-50 text-gray-700 focus:ring-primary-500',
-            ]),
+                'primary' => 'btn-primary',
+                'secondary' => 'btn-secondary',
+                'success' => 'btn-success',
+                'danger' => 'btn-danger',
+                'outline' => 'btn-outline-primary',
+            ]) . ' ' .
             match($size, [
-                'sm' => 'px-3 py-1.5 text-sm',
-                'md' => 'px-4 py-2 text-base',
-                'lg' => 'px-6 py-3 text-lg',
+                'sm' => 'btn-sm',
+                'md' => '',
+                'lg' => 'btn-lg',
             ]),
-            $loading ? 'opacity-75 cursor-not-allowed' : 'hover:scale-105 active:scale-95',
-        ])
+        'disabled' => $loading
     ])}}
-    {{ $loading ? 'disabled' : '' }}
 >
     @if($loading)
-        <svg class="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
+        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+    @endif
+    
+    @if($icon)
+        <i class="{{ $icon }}"></i>
     @endif
     
     {{ $slot }}
@@ -365,21 +359,18 @@ function componentName() {
 @props(['variant' => 'default', 'padding' => 'normal'])
 
 <div {{ $attributes->merge([
-    'class' => \Illuminate\Support\Str::inline([
-        'bg-white rounded-lg shadow-sm border border-gray-200',
-        'transition-all duration-200',
+    'class' => 'card shadow-sm border-0 transition-all duration-200 ' .
         match($variant, [
-            'default' => 'hover:shadow-md hover:border-gray-300',
-            'interactive' => 'hover:shadow-lg hover:scale-105 cursor-pointer',
+            'default' => 'hover:shadow-md',
+            'interactive' => 'hover:shadow-lg cursor-pointer',
             'elevated' => 'shadow-lg hover:shadow-xl',
-        ]),
+        ]) . ' ' .
         match($padding, [
             'none' => '',
-            'sm' => 'p-4',
-            'normal' => 'p-6',
-            'lg' => 'p-8',
-        ]),
-    ])
+            'sm' => 'p-3',
+            'normal' => 'p-4',
+            'lg' => 'p-5',
+        ])
 ]) }}>
     {{ $slot }}
 </div>
@@ -387,63 +378,55 @@ function componentName() {
 
 ### 3.2 Interactive Components
 
-**Modal Component with Alpine.js:**
+**Modal Component with jQuery:**
 ```blade
 <!-- resources/views/components/ui/modal.blade.php -->
 @props(['id', 'title', 'size' => 'md'])
 
-<div x-data="{ 
-    open: false,
-    show() { this.open = true; document.body.style.overflow = 'hidden' },
-    hide() { this.open = false; document.body.style.overflow = 'auto' }
-}" @show-modal.window="$refs.modal.show()" @hide-modal.window="$refs.modal.hide()">
-    
-    <!-- Button to trigger modal -->
-    <button @click="$refs.modal.show()" {{ $attributes }}>
-        {{ $triggerSlot ?? 'Open Modal' }}
-    </button>
-    
-    <!-- Modal overlay -->
-    <div x-show="open" 
-         x-transition:enter="transition ease-out duration-300"
-         x-transition:enter-start="opacity-0"
-         x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0"
-         x-ref="modal"
-         class="fixed inset-0 z-50 overflow-y-auto"
-         style="display: none;">
-        
-        <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="fixed inset-0 bg-gray-500 bg-opacity-75" @click="$refs.modal.hide()"></div>
-            
-            <div x-show="open"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 transform scale-90"
-                 x-transition:enter-end="opacity-100 transform scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 transform scale-100"
-                 x-transition:leave-end="opacity-0 transform scale-90"
-                 class="relative bg-white rounded-lg shadow-xl max-w-lg w-full"
-                 @click.stop>
-                
-                <div class="px-6 py-4 border-b border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">{{ $title }}</h3>
-                    <button @click="$refs.modal.hide()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                </div>
-                
-                <div class="px-6 py-4">
-                    {{ $slot }}
-                </div>
+<!-- Button to trigger modal -->
+<button {{ $attributes->merge(['data-bs-toggle' => 'modal', 'data-bs-target' => '#' . $id]) }}>
+    {{ $triggerSlot ?? 'Open Modal' }}
+</button>
+
+<!-- Modal -->
+<div class="modal fade" id="{{ $id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-{{ $size }}">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">{{ $title }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                {{ $slot }}
             </div>
         </div>
     </div>
 </div>
+```
+
+**JavaScript Enhancement:**
+```javascript
+// resources/js/components/modal.js
+$(document).ready(function() {
+    // Add custom animations to modals
+    $('.modal').on('show.bs.modal', function(e) {
+        $(this).find('.modal-dialog').addClass('animate-scale-in');
+    });
+    
+    // Handle custom confirm modals
+    window.showConfirmModal = function(options) {
+        const modal = $(options.selector);
+        modal.find('.confirm-title').text(options.title);
+        modal.find('.confirm-message').text(options.message);
+        
+        modal.find('.confirm-btn').off('click').on('click', function() {
+            options.onConfirm();
+            modal.modal('hide');
+        });
+        
+        modal.modal('show');
+    };
+});
 ```
 
 ### 3.3 Form Components
@@ -453,48 +436,67 @@ function componentName() {
 <!-- resources/views/components/ui/input.blade.php -->
 @props(['type' => 'text', 'label', 'error', 'icon', 'loading' => false])
 
-<div class="space-y-1">
+<div class="mb-3">
     @if($label)
-        <label :for="$id" class="block text-sm font-medium text-gray-700">
+        <label for="{{ $id ?? 'input-' . uniqid() }}" class="form-label">
             {{ $label }}
         </label>
     @endif
     
-    <div class="relative">
+    <div class="position-relative">
         @if($icon)
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    {{ $icon }}
-                </svg>
+            <div class="position-absolute start-0 top-50 translate-middle-y ps-3">
+                <i class="{{ $icon }} text-muted"></i>
             </div>
         @endif
         
         <input 
             {{ $attributes->merge([
                 'type' => $type,
-                'class' => \Illuminate\Support\Str::inline([
-                    'block w-full border-gray-300 rounded-md shadow-sm',
-                    'focus:ring-primary-500 focus:border-primary-500',
-                    'transition-colors duration-200',
-                    $icon ? 'pl-10' : 'pl-3',
-                    $error ? 'border-red-500 text-red-900 placeholder-red-300 focus:ring-red-500 focus:border-red-500' : '',
-                    $loading ? 'opacity-75' : '',
-                ])
+                'class' => 'form-control ' . ($icon ? 'ps-5' : '') . 
+                    ($error ? ' is-invalid' : '') . 
+                    ($loading ? ' opacity-75' : ''),
+                'id' => $id ?? 'input-' . uniqid()
             ])}}
         />
         
         @if($loading)
-            <div class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                <svg class="animate-spin h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
+            <div class="position-absolute end-0 top-50 translate-middle-y pe-3">
+                <div class="spinner-border spinner-border-sm" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
             </div>
         @endif
     </div>
     
     @if($error)
-        <p class="text-sm text-red-600">{{ $error }}</p>
+        <div class="invalid-feedback">
+            {{ $error }}
+        </div>
+    @endif
+</div>
+```
+
+**Search Input Component:**
+```blade
+<!-- resources/views/components/ui/search-input.blade.php -->
+@props(['placeholder' => 'Search...', 'value' => ''])
+
+<div class="position-relative">
+    <div class="position-absolute start-0 top-50 translate-middle-y ps-3">
+        <i class="fas fa-search text-muted"></i>
+    </div>
+    <input 
+        type="text" 
+        class="form-control ps-5 search-input" 
+        placeholder="{{ $placeholder }}"
+        value="{{ $value }}"
+        {{ $attributes }}
+    />
+    @if($value)
+        <button type="button" class="btn position-absolute end-0 top-50 translate-middle-y me-2 p-0 clear-search">
+            <i class="fas fa-times text-muted"></i>
+        </button>
     @endif
 </div>
 ```
@@ -510,88 +512,57 @@ function componentName() {
 <!-- resources/views/components/dashboard/stat-card.blade.php -->
 @props(['title', 'value', 'icon', 'trend', 'color' => 'primary'])
 
-<div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
-    <div class="flex items-center justify-between">
-        <div>
-            <p class="text-sm font-medium text-gray-600">{{ $title }}</p>
-            <p class="text-2xl font-bold text-gray-900">{{ $value }}</p>
-            @if($trend)
-                <p class="text-sm {{ $trend > 0 ? 'text-green-600' : 'text-red-600' }}">
-                    {{ $trend > 0 ? '↑' : '↓' }} {{ abs($trend) }}% from last month
-                </p>
-            @endif
-        </div>
-        <div class="p-3 bg-{{ $color }}-100 rounded-lg">
-            <svg class="w-6 h-6 text-{{ $color }}-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {{ $icon }}
-            </svg>
+<div class="card shadow-sm border-0 hover:shadow-md transition-shadow duration-200">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <p class="text-muted mb-1">{{ $title }}</p>
+                <h4 class="mb-0">{{ $value }}</h4>
+                @if($trend)
+                    <small class="{{ $trend > 0 ? 'text-success' : 'text-danger' }}">
+                        <i class="fas fa-arrow-{{ $trend > 0 ? 'up' : 'down' }}"></i>
+                        {{ abs($trend) }}% from last month
+                    </small>
+                @endif
+            </div>
+            <div class="bg-{{ $color }} bg-opacity-10 text-{{ $color }} rounded-circle p-3">
+                <i class="{{ $icon }} fs-4"></i>
+            </div>
         </div>
     </div>
 </div>
 ```
 
-**Chart Integration:**
-```javascript
-// resources/js/charts.js
-import { Chart, registerables } from 'chart.js';
+**Simple Chart Integration (CSS-based):**
+```blade
+<!-- resources/views/components/dashboard/simple-chart.blade.php -->
+@props(['data', 'labels', 'color' => 'primary'])
 
-Chart.register(...registerables);
-
-export function createLineChart(ctx, data, options = {}) {
-    return new Chart(ctx, {
-        type: 'line',
-        data: data,
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                x: {
-                    grid: {
-                        display: false
-                    }
-                }
-            },
-            ...options
-        }
-    });
-}
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Order Trends</h5>
+        <div class="d-flex align-items-end justify-content-around" style="height: 200px;">
+            @foreach($data as $index => $value)
+                <div class="d-flex flex-column align-items-center mx-1">
+                    <div class="bg-{{ $color }} rounded-top" 
+                         style="height: {{ $value }}%; width: 40px; transition: height 0.3s ease;"
+                         title="{{ $labels[$index] }}: {{ $value }}">
+                    </div>
+                    <small class="mt-2">{{ $labels[$index] }}</small>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
 ```
 
 ### 4.2 Real-time Updates
 
-**Alpine.js Real-time Data:**
+**jQuery Real-time Data:**
 ```javascript
-// Dashboard real-time updates
-<div x-data="dashboard()" x-init="startPolling()">
-    <div x-show="loading" class="text-center py-8">
-        <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
-    </div>
-    
-    <div x-show="!loading">
-        <!-- Dashboard content -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <stat-card title="Total Orders" :value="stats.totalOrders" icon="..." />
-            <stat-card title="Active Orders" :value="stats.activeOrders" icon="..." />
-            <stat-card title="Revenue" :value="stats.revenue" icon="..." />
-            <stat-card title="Pending" :value="stats.pending" icon="..." />
-        </div>
-    </div>
-</div>
-
-<script>
-function dashboard() {
-    return {
+// resources/js/pages/dashboard.js
+$(document).ready(function() {
+    let dashboard = {
         loading: false,
         stats: {
             totalOrders: 0,
@@ -600,25 +571,86 @@ function dashboard() {
             pending: 0
         },
         
-        async fetchStats() {
+        fetchStats: function() {
             this.loading = true;
-            try {
-                const response = await fetch('/api/dashboard/stats');
-                this.stats = await response.json();
-            } catch (error) {
-                console.error('Failed to fetch stats:', error);
-            } finally {
-                this.loading = false;
-            }
+            $('#dashboard-loading').show();
+            
+            $.get('/api/dashboard/stats')
+                .done((data) => {
+                    this.stats = data;
+                    this.updateUI();
+                })
+                .fail(() => {
+                    console.error('Failed to fetch stats');
+                })
+                .always(() => {
+                    this.loading = false;
+                    $('#dashboard-loading').hide();
+                });
         },
         
-        startPolling() {
+        updateUI: function() {
+            $('#total-orders').text(this.stats.totalOrders);
+            $('#active-orders').text(this.stats.activeOrders);
+            $('#revenue').text(this.stats.revenue);
+            $('#pending').text(this.stats.pending);
+        },
+        
+        startPolling: function() {
             this.fetchStats();
-            setInterval(() => this.fetchStats(), 30000); // Update every 30 seconds
+            setInterval(() => this.fetchStats(), 30000);
         }
-    }
-}
-</script>
+    };
+    
+    dashboard.startPolling();
+});
+```
+
+**Dashboard Template:**
+```blade
+<!-- resources/views/dashboard.blade.php -->
+<div id="dashboard-content">
+    <div id="dashboard-loading" class="text-center py-4" style="display: none;">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <div class="col-md-3">
+            <x-dashboard.stat-card 
+                title="Total Orders" 
+                value="{{ $stats->totalOrders }}" 
+                icon="fas fa-shopping-cart"
+                color="primary"
+            />
+        </div>
+        <div class="col-md-3">
+            <x-dashboard.stat-card 
+                title="Active Orders" 
+                value="{{ $stats->activeOrders }}" 
+                icon="fas fa-clock"
+                color="warning"
+            />
+        </div>
+        <div class="col-md-3">
+            <x-dashboard.stat-card 
+                title="Revenue" 
+                value="${{ $stats->revenue }}" 
+                icon="fas fa-dollar-sign"
+                color="success"
+            />
+        </div>
+        <div class="col-md-3">
+            <x-dashboard.stat-card 
+                title="Pending" 
+                value="{{ $stats->pending }}" 
+                icon="fas fa-exclamation-circle"
+                color="danger"
+            />
+        </div>
+    </div>
+</div>
 ```
 
 ---
@@ -627,27 +659,28 @@ function dashboard() {
 
 ### 5.1 Asset Optimization
 
-**TailwindCSS Purge Configuration:**
-```javascript
-// tailwind.config.js
-module.exports = {
-  content: [
-    './resources/**/*.blade.php',
-    './resources/**/*.js',
-    './resources/**/*.vue',
-  ],
-  purge: {
-    enabled: process.env.NODE_ENV === 'production',
-    options: {
-      safelist: [
-        // Keep dynamic classes
-        'bg-primary-500',
-        'text-primary-500',
-        'border-primary-500',
-      ]
-    }
-  }
-}
+**CSS Optimization:**
+```css
+/* resources/css/app.css - Organize imports */
+/* Bootstrap Core */
+@import '~bootstrap/scss/bootstrap';
+
+/* Custom Variables */
+@import 'utilities/colors';
+@import 'utilities/spacing';
+
+/* Components */
+@import 'components/buttons';
+@import 'components/forms';
+@import 'components/tables';
+@import 'components/modals';
+
+/* Animations */
+@import 'utilities/animations';
+
+/* Page-specific styles */
+@import 'pages/dashboard';
+@import 'pages/orders';
 ```
 
 **JavaScript Bundle Optimization:**
@@ -658,9 +691,9 @@ export default {
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': ['alpinejs'],
-          'charts': ['chart.js'],
-          'utils': ['flatpickr', 'choices.js']
+          'vendor': ['jquery', 'bootstrap'],
+          'components': ['./resources/js/components/*.js'],
+          'pages': ['./resources/js/pages/*.js']
         }
       }
     }
@@ -687,23 +720,31 @@ Route::get('/assets/{path}', function ($path) {
 })->where('path', '.*');
 ```
 
-**Service Worker for Offline Support:**
+**jQuery-based Caching:**
 ```javascript
-// public/sw.js
-const CACHE_NAME = 'timedryclean-v1';
-const urlsToCache = [
-    '/',
-    '/css/app.css',
-    '/js/app.js',
-    '/images/logo.png'
-];
-
-self.addEventListener('install', event => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then(cache => cache.addAll(urlsToCache))
-    );
-});
+// resources/js/utils/cache.js
+const AppCache = {
+    get: function(key) {
+        try {
+            return JSON.parse(localStorage.getItem(key));
+        } catch {
+            return null;
+        }
+    },
+    
+    set: function(key, value, ttl = 3600) {
+        const item = {
+            value: value,
+            timestamp: Date.now(),
+            ttl: ttl * 1000
+        };
+        localStorage.setItem(key, JSON.stringify(item));
+    },
+    
+    isValid: function(item) {
+        return item && (Date.now() - item.timestamp) < item.ttl;
+    }
+};
 ```
 
 ---
@@ -813,14 +854,15 @@ self.addEventListener('install', event => {
 
 ## Conclusion
 
-This implementation plan provides a comprehensive approach to modernizing the TimeDryClean UI/UX using TailwindCSS and Alpine.js while maintaining all existing functionality and database structure. The phased approach ensures minimal disruption while delivering significant improvements in user experience, performance, and maintainability.
+This implementation plan provides a comprehensive approach to modernizing the TimeDryClean UI/UX using Bootstrap 5, jQuery, and FontAwesome while maintaining all existing functionality and database structure. The phased approach ensures minimal disruption while delivering significant improvements in user experience, performance, and maintainability.
 
 The plan emphasizes:
-- **Modern design patterns** with TailwindCSS utility-first approach
-- **Lightweight interactivity** with Alpine.js
-- **Professional animations** meeting 60fps requirements
+- **Minimal library usage** - Keep existing Bootstrap 5, jQuery, and FontAwesome
+- **Organized code structure** - Clear file organization and component patterns
+- **Intuitive UI improvements** - Search icons, button icons, and smooth animations
+- **Professional animations** using CSS keyframes for 60fps performance
 - **Accessibility compliance** with WCAG AA standards
 - **Performance optimization** for sub-2s load times
-- **Gradual migration** to minimize risks
+- **Gradual enhancement** to minimize risks
 
 The result will be a modern, responsive, and highly usable interface that enhances the user experience while preserving all existing business logic and data integrity.

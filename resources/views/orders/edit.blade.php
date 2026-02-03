@@ -212,6 +212,12 @@
                     </table>
                 </div>
 
+                @if($order->canApplyDiscount())
+                    @include('components.discount-form', ['order' => $order])
+                @elseif($order->hasDiscount())
+                    @include('components.discount-display', ['order' => $order])
+                @endif
+
                 <button type="submit" class="btn btn-primary">{{ __('messages.update') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
             </div>

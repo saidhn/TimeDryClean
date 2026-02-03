@@ -16,10 +16,18 @@ class Order extends Model
         'sum_price',
         'discount_amount',
         'status',
+        'discount_type',
+        'discount_value',
+        'discount_applied_by',
+        'discount_applied_at',
     ];
 
     protected $casts = [
         'status' => 'string',
+        'sum_price' => 'decimal:2',
+        'discount_value' => 'decimal:2',
+        'discount_amount' => 'decimal:2',
+        'discount_applied_at' => 'datetime',
     ];
 
     public function user()
@@ -49,5 +57,33 @@ class Order extends Model
     public function statusTranslated()
     {
         return __('messages.' . strtolower($this->status));
+    }
+
+    public function discountAppliedBy()
+    {
+        return $this->belongsTo(User::class, 'discount_applied_by');
+    }
+
+    public function hasDiscount(): bool
+    {
+        return !is_null($this->discount_type);
+    }
+
+    public function canApplyDiscount(): bool
+    {
+        return in_array($this->status, ['draft', 'pending']);
+    }
+
+    public function getDiscountDisplayAttribute(): string
+    {
+        if (!$this->hasDiscount()) {
+            return '';
+        }
+
+        if ($this->discount_type === 'fixed') {
+            return "$" . number_format((float)$this->discount_value, 2) . " off";
+        }
+
+        return $this->discount_value . "% off ($" . number_format((float)$this->discount_amount, 2) . ")";
     }
 }

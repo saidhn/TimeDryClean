@@ -1,0 +1,118 @@
+/* Authentication Pages Styles */
+
+/* Auth layout */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--bs-primary) 0%, var(--bs-secondary) 100%);
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    background: var(--color-bg-primary);
+    border-radius: 1rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.auth-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-logo img {
+    max-width: 150px;
+    height: auto;
+}
+
+.auth-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.auth-subtitle {
+    text-align: center;
+    color: var(--color-text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* Password toggle */
+.password-toggle {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.password-toggle:hover {
+    color: var(--color-text-primary);
+}
+
+/* Remember me */
+.form-check-label {
+    cursor: pointer;
+}
+
+/* Auth links */
+.auth-links {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-links a {
+    color: var(--bs-primary);
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+/* Social login */
+.social-login {
+    margin-top: 1.5rem;
+}
+
+.social-login-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+}
+
+.social-login-divider::before,
+.social-login-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.social-login-divider span {
+    padding: 0 1rem;
+    color: var(--color-text-secondary);
+    font-size: 0.875rem;
+}
+
+.social-btn {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .auth-container {
+    background: linear-gradient(135deg, #2d2d5f 0%, #1a8a75 100%);
+}
+
+[data-theme="dark"] .auth-card {
+    background-color: var(--color-bg-primary);
+}

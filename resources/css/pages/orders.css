@@ -1,0 +1,141 @@
+/* Orders Page Styles */
+
+/* Order list */
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.order-card {
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    transition: all 0.2s ease-in-out;
+}
+
+.order-card:hover {
+    border-color: var(--bs-primary);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.order-number {
+    font-weight: 700;
+    font-size: 1.125rem;
+}
+
+.order-status {
+    font-size: 0.875rem;
+}
+
+.order-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.order-detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.order-detail-label {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.25rem;
+}
+
+.order-detail-value {
+    font-weight: 600;
+}
+
+/* Order timeline */
+.order-timeline {
+    position: relative;
+    padding-left: 2rem;
+}
+
+.order-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: var(--color-border);
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-dot {
+    position: absolute;
+    left: -1.5rem;
+    top: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+    background-color: var(--color-bg-primary);
+    border: 2px solid var(--color-border);
+}
+
+.timeline-item.active .timeline-dot {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+}
+
+.timeline-item.completed .timeline-dot {
+    background-color: var(--bs-success);
+    border-color: var(--bs-success);
+}
+
+/* Order filters */
+.order-filters {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.filter-chip {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: 2rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.filter-chip:hover {
+    border-color: var(--bs-primary);
+    background-color: var(--color-bg-secondary);
+}
+
+.filter-chip.active {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: white;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .order-card {
+    background-color: var(--color-bg-primary);
+}
+
+[data-theme="dark"] .timeline-dot {
+    background-color: var(--color-bg-primary);
+}

@@ -46,6 +46,16 @@
                 </tbody>
             </table>
 
+            <div class="mt-4">
+                @include('components.discount-summary', ['order' => $order])
+            </div>
+
+            @if($order->hasDiscount())
+            <div class="mt-3">
+                @include('components.discount-display', ['order' => $order])
+            </div>
+            @endif
+
             @if ($order->delivery_price > 0)
             <p><strong>{{ __('messages.delivery_price') }}:</strong> {{ $order->delivery_price }}</p>
             @endif
