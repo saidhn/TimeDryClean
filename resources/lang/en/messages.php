@@ -246,4 +246,14 @@ return [
     'delivery_option_required' => 'Please select at least one delivery option (Bring Order or Return Order) when a driver is selected.',
     'clear' => 'Clear',
     'delivery_price_zero_warning' => 'Please update the delivery price - it is currently set to 0.',
+    
+    // User Details
+    'user_details' => 'User Details',
+    'user_information' => 'User Information',
+    'balance_information' => 'Balance Information',
+    'total_orders' => 'Total Orders',
+    'pending_orders' => 'Pending Orders',
+    'completed_orders' => 'Completed Orders',
+    'total_spent' => 'Total Spent',
+    'recent_orders' => 'Recent Orders',
 ];

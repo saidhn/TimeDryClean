@@ -58,7 +58,11 @@
                         <td>{{ $order->user->name }}</td>
                         <td>{{ optional(optional($order->orderDelivery)->driver)->name }}</td>
                         <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                        <td>{{ $order->statusTranslated() }}</td>
+                        <td>
+                            <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">
+                                {{ $order->statusTranslated() }}
+                            </span>
+                        </td>
                         <td>{{ $order->sum_price }}</td>
                         <td>
                             <a href="{{ route('orders.show', $order->id) }}" class="btn btn-info btn-sm" title="{{ __('messages.show') }}">

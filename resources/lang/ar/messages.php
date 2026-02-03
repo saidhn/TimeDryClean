@@ -255,4 +255,14 @@ return [
     'delivery_option_required' => 'يرجى تحديد خيار توصيل واحد على الأقل (إحضار الطلب أو إرجاع الطلب) عند اختيار سائق.',
     'clear' => 'مسح',
     'delivery_price_zero_warning' => 'يرجى تحديث سعر التوصيل - تم تعيينه حالياً إلى 0.',
+    
+    // User Details
+    'user_details' => 'تفاصيل المستخدم',
+    'user_information' => 'معلومات المستخدم',
+    'balance_information' => 'معلومات الرصيد',
+    'total_orders' => 'إجمالي الطلبات',
+    'pending_orders' => 'الطلبات المعلقة',
+    'completed_orders' => 'الطلبات المكتملة',
+    'total_spent' => 'إجمالي الإنفاق',
+    'recent_orders' => 'الطلبات الأخيرة',
 ];

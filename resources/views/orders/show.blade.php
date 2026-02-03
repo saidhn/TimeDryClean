@@ -39,7 +39,7 @@
             <p><strong>{{ __('messages.client_subscription') }}:</strong> {{ $order->clientSubscription->id }}</p>
             @endif
             <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }}</p>
-            <p><strong>{{ __('messages.status') }}:</strong> {{ $order->statusTranslated() }}</p>
+            <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
 
             <h2>{{ __('messages.order_products') }}</h2>
             <table class="table">

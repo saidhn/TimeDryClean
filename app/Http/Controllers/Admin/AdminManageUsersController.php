@@ -49,6 +49,33 @@ class AdminManageUsersController extends Controller
     }
 
     /**
+     * Display the specified user with details and balance.
+     *
+     * @param int $user_id
+     * @return \Illuminate\Contracts\View\View
+     */
+    public function show($user_id)
+    {
+        $user = User::with(['address.city', 'address.province'])->findOrFail($user_id);
+        
+        // Load user's orders with their details
+        $orders = $user->orders()->with(['orderProductServices.product', 'orderProductServices.productService', 'orderDelivery.driver'])
+            ->latest()
+            ->take(10)
+            ->get();
+        
+        // Calculate order statistics
+        $orderStats = [
+            'total_orders' => $user->orders()->count(),
+            'pending_orders' => $user->orders()->where('status', 'pending')->count(),
+            'completed_orders' => $user->orders()->where('status', 'completed')->count(),
+            'total_spent' => $user->orders()->sum('sum_price'),
+        ];
+        
+        return view('admin.users.show', compact('user', 'orders', 'orderStats'));
+    }
+
+    /**
      * Show the form for editing a user.
      *
      * @param int $user_id
