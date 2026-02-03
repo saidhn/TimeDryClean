@@ -212,11 +212,8 @@
                     </table>
                 </div>
 
-                @if($order->canApplyDiscount())
-                    @include('components.discount-form', ['order' => $order])
-                @elseif($order->hasDiscount())
-                    @include('components.discount-display', ['order' => $order])
-                @endif
+                {{-- Always show discount form on edit page --}}
+                @include('components.discount-form', ['order' => $order])
 
                 <button type="submit" class="btn btn-primary">{{ __('messages.update') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
@@ -256,6 +253,12 @@
                 }
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
+                
+                // Update discount form's current subtotal
+                const currentSubtotalSpan = document.getElementById('currentSubtotal');
+                if (currentSubtotalSpan) {
+                    currentSubtotalSpan.textContent = totalPrice.toFixed(2);
+                }
             }
 
             $('#order-product-services tr').each(function() {

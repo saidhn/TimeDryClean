@@ -356,6 +356,10 @@ class OrdersController extends Controller
             'order_product_services.*.product_id' => 'required|exists:products,id',
             'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
             'order_product_services.*.quantity' => 'required|integer|min:1',
+            
+            // Discount validation
+            'discount_type' => 'nullable|in:fixed,percentage',
+            'discount_value' => 'nullable|numeric|min:0.01',
         ]);
 
         try {
@@ -372,10 +376,48 @@ class OrdersController extends Controller
                 $sum_price += $request->delivery_price;
             }
 
+            // Handle discount if provided
+            $discountAmount = 0;
+            if ($request->filled('discount_type') && $request->filled('discount_value')) {
+                $discountType = $request->discount_type;
+                $discountValue = (float) $request->discount_value;
+                
+                // Validate discount
+                if ($discountType === 'fixed') {
+                    if ($discountValue > $sum_price) {
+                        DB::rollBack();
+                        return back()->withErrors(['discount_value' => __('messages.discount_validation_exceeds_subtotal')])->withInput();
+                    }
+                    $discountAmount = $discountValue;
+                } elseif ($discountType === 'percentage') {
+                    if ($discountValue > 100) {
+                        DB::rollBack();
+                        return back()->withErrors(['discount_value' => __('messages.discount_validation_exceeds_100_percent')])->withInput();
+                    }
+                    $discountAmount = $sum_price * ($discountValue / 100);
+                }
+                
+                // Apply discount to subtotal
+                $sum_price -= $discountAmount;
+            }
+
             $orderData = $request->only(['user_id']);
             $orderData['sum_price'] = $sum_price;
             $orderData['status'] = $request->order_status; // Update the order status
+            
             $originalPrice = ($order->sum_price);
+            
+            // Handle discount fields separately
+            if ($request->filled('discount_type') && $request->filled('discount_value')) {
+                // Add or update discount fields
+                $orderData['discount_type'] = $request->discount_type;
+                $orderData['discount_value'] = $request->discount_value;
+                $orderData['discount_amount'] = $discountAmount;
+                $orderData['discount_applied_by'] = auth()->id();
+                $orderData['discount_applied_at'] = now();
+            }
+            // If discount fields are not provided, don't update them (keep existing values)
+            
             $order->update($orderData);
 
             // 2. Update Order Delivery (if applicable):
