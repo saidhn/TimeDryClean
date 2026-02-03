@@ -245,4 +245,5 @@ return [
     'driver_required' => 'Please select a driver when delivery option is selected.',
     'delivery_option_required' => 'Please select at least one delivery option (Bring Order or Return Order) when a driver is selected.',
     'clear' => 'Clear',
+    'delivery_price_zero_warning' => 'Please update the delivery price - it is currently set to 0.',
 ];

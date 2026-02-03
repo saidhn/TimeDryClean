@@ -140,6 +140,9 @@
                                 }}</label>
                             <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price"
                                    value="{{ old('delivery_price', 0) }}">
+                            <div id="price-warning" class="text-danger small mt-1" style="display: none;">
+                                <i class="fa fa-exclamation-triangle"></i> {{ __('messages.delivery_price_zero_warning') }}
+                            </div>
                         </div>
                     </div>
                     @endif
@@ -421,18 +424,27 @@
 
             const driverError = document.getElementById('driver-error');
             const clearDriverBtn = document.getElementById('clear-driver-btn');
+            const priceWarning = document.getElementById('price-warning');
             const driverRequiredMsg = '{{ __("messages.driver_required") }}';
             const deliveryOptionRequiredMsg = '{{ __("messages.delivery_option_required") }}';
 
             function validateDriverAndDelivery() {
                 const driverSelected = driverSelect.value !== "";
                 const checkboxSelected = bringOrderCheckbox.checked || returnOrderCheckbox.checked;
+                const deliveryPrice = parseFloat(deliveryPriceInput.value) || 0;
                 
                 driverError.style.display = 'none';
                 driverError.textContent = '';
                 driverSelect.classList.remove('is-invalid');
                 bringOrderCheckbox.classList.remove('is-invalid');
                 returnOrderCheckbox.classList.remove('is-invalid');
+                
+                // Show price warning if driver selected but price is 0
+                if (driverSelected && deliveryPrice === 0) {
+                    priceWarning.style.display = 'block';
+                } else {
+                    priceWarning.style.display = 'none';
+                }
                 
                 // If driver is selected but no checkbox is selected
                 if (driverSelected && !checkboxSelected) {
