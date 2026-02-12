@@ -54,7 +54,12 @@
                 <tbody>
                     @foreach($order->orderProductServices as $orderProductService)
                     <tr>
-                        <td>{{ $orderProductService->product->name }}</td>
+                        <td>
+                            @if ($orderProductService->product->image_path)
+                            <img src="{{ asset('storage/' . $orderProductService->product->image_path) }}" alt="{{ $orderProductService->product->name }}" class="img-thumbnail me-1" style="max-height: 35px; max-width: 35px;">
+                            @endif
+                            {{ $orderProductService->product->name }}
+                        </td>
                         <td>{{ $orderProductService->productService->name }}</td>
                         <td>{{ $orderProductService->quantity }}</td>
                         <td>{{ $orderProductService->productService->price * $orderProductService->quantity }}</td>
