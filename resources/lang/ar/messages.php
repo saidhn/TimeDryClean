@@ -265,4 +265,9 @@ return [
     'completed_orders' => 'الطلبات المكتملة',
     'total_spent' => 'إجمالي الإنفاق',
     'recent_orders' => 'الطلبات الأخيرة',
+
+    // Product Image
+    'image' => 'الصورة',
+    'delete_image' => 'حذف الصورة',
+    'image_deleted' => 'تم حذف الصورة بنجاح',
 ];

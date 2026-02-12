@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends Controller
@@ -50,7 +51,8 @@ class ProductController extends Controller
             $existingProduct->forceDelete(); // Permanently delete the record
         }
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:products,name'
+            'name' => 'required|string|max:255|unique:products,name',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -60,6 +62,10 @@ class ProductController extends Controller
         }
 
         $validatedData = $validator->validated(); // Get the validated data
+
+        if ($request->hasFile('image')) {
+            $validatedData['image_path'] = $request->file('image')->store('products', 'public');
+        }
 
         Product::create($validatedData); // Use the validated data
 
@@ -88,7 +94,8 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255|unique:products,name,' . $product->id
+            'name' => 'required|string|max:255|unique:products,name,' . $product->id,
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -96,8 +103,30 @@ class ProductController extends Controller
                 ->withErrors($validator)
                 ->withInput();
         }
-        $product->update($validator->validated());
+
+        $data = $validator->validated();
+
+        if ($request->hasFile('image')) {
+            if ($product->image_path) {
+                Storage::disk('public')->delete($product->image_path);
+            }
+            $data['image_path'] = $request->file('image')->store('products', 'public');
+        }
+
+        $product->update($data);
         return redirect()->route('products.index')->with('success', __('messages.updated_successfully'));
+    }
+
+    /**
+     * Remove the image from the specified product.
+     */
+    public function destroyImage(Product $product)
+    {
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+            $product->update(['image_path' => null]);
+        }
+        return redirect()->route('products.edit', $product)->with('success', __('messages.image_deleted'));
     }
 
     /**
@@ -105,6 +134,9 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
+        if ($product->image_path) {
+            Storage::disk('public')->delete($product->image_path);
+        }
         $product->delete();
         return redirect()->route('products.index')->with('success', __('messages.deleted_successfully'));
     }

@@ -32,6 +32,7 @@
                 <thead>
                     <tr>
                         <th>{{ __('messages.id') }}</th>
+                        <th>{{ __('messages.image') }}</th>
                         <th>{{ __('messages.name') }}</th>
                         <th>{{ __('messages.actions') }}</th>
                     </tr>
@@ -40,6 +41,13 @@
                     @foreach ($products as $product)
                     <tr>
                         <td>{{ $product->id }}</td>
+                        <td>
+                            @if ($product->image_path)
+                            <img src="{{ asset('storage/' . $product->image_path) }}" alt="{{ $product->name }}" class="img-thumbnail" style="max-height: 50px; max-width: 50px;">
+                            @else
+                            <span class="text-muted">-</span>
+                            @endif
+                        </td>
                         <td>{{ $product->name }}</td>
                         <td>
                             <a href="{{ route('products.show', $product) }}" class="btn btn-info btn-sm">{{ __('messages.show') }}</a>

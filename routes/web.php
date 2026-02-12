@@ -149,6 +149,7 @@ Route::middleware(['set_locale'])->group(function () {
     //-----------------------------------------------------------------------------------
     //product resource route
     Route::resource('products', ProductController::class)->middleware('auth:admin,employee,driver');
+    Route::delete('products/{product}/image', [ProductController::class, 'destroyImage'])->name('products.image.destroy')->middleware('auth:admin,employee,driver');
     //product services resource route
     Route::resource('product_services', ProductServiceController::class)->middleware('auth:admin,employee');
 

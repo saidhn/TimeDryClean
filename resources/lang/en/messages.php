@@ -256,4 +256,9 @@ return [
     'completed_orders' => 'Completed Orders',
     'total_spent' => 'Total Spent',
     'recent_orders' => 'Recent Orders',
+
+    // Product Image
+    'image' => 'Image',
+    'delete_image' => 'Delete Image',
+    'image_deleted' => 'Image deleted successfully',
 ];
