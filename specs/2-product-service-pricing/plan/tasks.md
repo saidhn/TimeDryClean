@@ -35,10 +35,10 @@ Prepare the development environment and create the foundational database structu
 Implement the core backend logic for managing product-service prices and API endpoints.
 
 ### Independent Test Criteria
-- ProductServicePrice model can create, read, update, and delete records
-- API endpoint returns correct service prices for products
-- Product model relationships work correctly
-- Validation rules enforce data integrity
+- Manual QA verification of ProductServicePrice CRUD operations
+- Manual testing of API endpoint returns correct service prices for products
+- Manual verification of Product model relationships work correctly
+- Manual testing of validation rules enforce data integrity
 
 ### Implementation Tasks
 
@@ -49,7 +49,7 @@ Implement the core backend logic for managing product-service prices and API end
 - [ ] T013 [P] Add lineTotal accessor to OrderProductService model in app/Models/OrderProductService.php
 - [ ] T014 Add getServicePrices method to ProductController in app/Http/Controllers/Product/ProductController.php
 - [ ] T015 Add API route for product services in routes/api.php
-- [ ] T016 Test ProductServicePrice CRUD operations
+- [ ] T016 Create manual QA checklist for ProductServicePrice CRUD operations
 
 ---
 

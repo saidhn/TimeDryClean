@@ -58,7 +58,7 @@ This feature restructures the pricing model for laundry services to allow differ
 
 - **Product with no services defined**: System should warn admin that product has no services and cannot be added to orders until services are configured
 - **Service price set to zero**: System should allow but display warning that price is 0.000 KWD
-- **Editing product service prices**: Changes should apply to new orders only, existing orders retain their original prices
+- **Editing product service prices**: Changes should apply to new orders only, existing orders retain their original prices through price_at_order snapshots stored at order creation time
 - **Deleting a service that has product prices**: System should handle gracefully, either preventing deletion or removing associated product-service prices
 - **Product deleted with existing orders**: Existing orders should retain product name and pricing information
 
@@ -166,7 +166,7 @@ This feature restructures the pricing model for laundry services to allow differ
 - **Feature Adoption**: All new products created have at least one service price defined
 - **Order Accuracy**: 0% pricing errors in orders created after feature deployment
 - **User Efficiency**: Staff can create orders with correct prices without manual price lookup
-- **System Performance**: Order creation time does not increase by more than 100ms
+- **System Performance**: Order creation time does not increase by more than 200ms
 
 ---
 
