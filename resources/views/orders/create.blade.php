@@ -306,8 +306,10 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        let totalPrice = 0;
+        let updateTotal;
+        
         $(document).ready(function () {
-            let totalPrice = 0;
 
             const bringOrderCheckbox = document.getElementById('bring_order');
             const returnOrderCheckbox = document.getElementById('return_order');
@@ -331,7 +333,7 @@
                 return rowPrice;
             }
 
-            function updateTotal() {
+            updateTotal = function() {
                 totalPrice = 0;
                 $('#order-product-services tr').each(function () {
                     totalPrice += calculateRowPrice($(this));
@@ -343,7 +345,7 @@
                 }
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
-            }
+            };
 
             $('#order-product-services tr').each(function () {
                 calculateRowPrice($(this));
@@ -373,7 +375,9 @@
                     return;
                 }
                 
-                fetch(`/api/products/${productId}/services`)
+                fetch(`/api/products/${productId}/services`, {
+                        credentials: 'include'
+                    })
                     .then(response => response.json())
                     .then(data => {
                         if (data.data.services.length === 0) {
