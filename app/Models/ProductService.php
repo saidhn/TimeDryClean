@@ -12,11 +12,15 @@ class ProductService extends Model
 
     protected $fillable = [
         'name',
-        'price',
     ];
 
     public function orderProductServices()
     {
         return $this->hasMany(OrderProductService::class);
+    }
+
+    public function productServicePrices()
+    {
+        return $this->hasMany(ProductServicePrice::class);
     }
 }

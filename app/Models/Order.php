@@ -88,4 +88,11 @@ class Order extends Model
 
         return $this->discount_value . "% " . __('messages.off') . " (" . $currency . " " . number_format((float)$this->discount_amount, 2) . ")";
     }
+
+    public function getItemsSubtotalAttribute(): float
+    {
+        return $this->orderProductServices->sum(function ($item) {
+            return $item->price_at_order ? ($item->price_at_order * $item->quantity) : 0;
+        });
+    }
 }

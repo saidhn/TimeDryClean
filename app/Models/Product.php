@@ -24,4 +24,21 @@ class Product extends Model
     {
         return $this->hasMany(DiscountFreeProduct::class);
     }
+
+    public function productServicePrices()
+    {
+        return $this->hasMany(ProductServicePrice::class);
+    }
+
+    public function availableServices()
+    {
+        return $this->belongsToMany(ProductService::class, 'product_service_prices')
+            ->withPivot('price')
+            ->withTimestamps();
+    }
+
+    public function hasServicePrices()
+    {
+        return $this->productServicePrices()->exists();
+    }
 }

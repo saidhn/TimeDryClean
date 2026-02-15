@@ -67,14 +67,13 @@
                                         <select name="order_product_services[{{ $i }}][product_service_id]"
                                                 class="form-control product-service-select">
                                             <option value="">{{ __('messages.select_product_service') }}</option>
-                                            @foreach($product_services as $product_service)
-                                                <option value="{{ $product_service->id }}"
-                                                    data-price="{{ $product_service->price }}" {{ old('order_product_services.'
-                                                    . $i . '.product_service_id' )==$product_service->id ? 'selected' : '' }}>
-                                                    {{ $product_service->name }}
-                                                </option>
-                                            @endforeach
                                         </select>
+                                        <small class="text-muted service-hint d-none">
+                                            <i class="fas fa-info-circle"></i> {{ __('messages.select_product') }}
+                                        </small>
+                                        <small class="text-warning no-services-warning d-none">
+                                            <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                                        </small>
                                     </td>
                                     <td>
                                         <input type="number" min="1" class="form-control quantity-input"
@@ -359,6 +358,51 @@
                 updateTotal();
             });
 
+            // Function to load services for a product via AJAX
+            function loadProductServices(productId, serviceSelect, callback) {
+                const row = serviceSelect.closest('tr');
+                const hint = row.find('.service-hint');
+                const warning = row.find('.no-services-warning');
+                
+                serviceSelect.html('<option value="">{{ __("messages.choose_service") }}</option>');
+                hint.addClass('d-none');
+                warning.addClass('d-none');
+                
+                if (!productId) {
+                    hint.removeClass('d-none');
+                    return;
+                }
+                
+                fetch(`/api/products/${productId}/services`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data.services.length === 0) {
+                            warning.removeClass('d-none');
+                        } else {
+                            data.data.services.forEach(service => {
+                                const option = $('<option></option>')
+                                    .val(service.id)
+                                    .text(`${service.name} - ${service.price} KWD`)
+                                    .attr('data-price', service.price);
+                                serviceSelect.append(option);
+                            });
+                        }
+                        if (callback) callback();
+                        updateTotal();
+                    })
+                    .catch(error => {
+                        console.error('Error loading services:', error);
+                        warning.removeClass('d-none');
+                    });
+            }
+
+            // Handle product selection change
+            $(document).on('change', '.product-select', function() {
+                const productId = $(this).val();
+                const serviceSelect = $(this).closest('tr').find('.product-service-select');
+                loadProductServices(productId, serviceSelect);
+            });
+
             $('.add-row').on('click', function () {
                 var lastRowIndex = $('#order-product-services tr').length - 1;
                 var newRow = `
@@ -373,13 +417,14 @@
                 </td>
                 <td>
                     <select name="order_product_services[${lastRowIndex + 1}][product_service_id]" class="form-control product-service-select">
-                        <option value="">{{ __('messages.select_product_service') }}</option>
-                        @foreach($product_services as $product_service)
-                            <option value="{{ $product_service->id }}" data-price="{{ $product_service->price }}">
-                                {{ $product_service->name }}
-                            </option>
-                        @endforeach
+                        <option value="">{{ __('messages.choose_service') }}</option>
                     </select>
+                    <small class="text-muted service-hint">
+                        <i class="fas fa-info-circle"></i> {{ __('messages.select_product') }}
+                    </small>
+                    <small class="text-warning no-services-warning d-none">
+                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                    </small>
                 </td>
                 <td>
                     <input type="number" min="1" class="form-control quantity-input" name="order_product_services[${lastRowIndex + 1}][quantity]" value="1">
@@ -393,28 +438,8 @@
             </tr>`;
 
                 $('#order-product-services').append(newRow);
-
-                var orders_arr = $('#order-product-services tr');
-                var orders_len = orders_arr.length;
-                if (orders_len > 1) {
-                    var selected_product = $(orders_arr[orders_len - 2]).find('.product-select').val();
-                    var selected_service = $(orders_arr[orders_len - 2]).find('.product-service-select').val();
-
-                    $(orders_arr[orders_len - 1]).find('.product-select').val(selected_product);
-                    $(orders_arr[orders_len - 1]).find('.product-service-select').val(selected_service);
-                }
-
-                $(document).on('change', '.product-select', function () { });
-
-                $(document).on('click', '.remove-row', function () {
-                    $(this).closest('tr').remove();
-                    updateTotal();
-                });
-
                 updateTotal();
             });
-
-            $(document).on('change', '.product-select', function () { });
 
             $(document).on('click', '.remove-row', function () {
                 $(this).closest('tr').remove();

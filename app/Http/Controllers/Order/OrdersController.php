@@ -9,6 +9,7 @@ use App\Models\Discount;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductService;
+use App\Models\ProductServicePrice;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -152,11 +153,24 @@ class OrdersController extends Controller
             'discount_value' => 'nullable|numeric|min:0.01',
         ]);
 
-        // Calculate sum_price (fetch prices from the database)
+        // Calculate sum_price using ProductServicePrice
         $sum_price = 0;
+        $orderProductServicesWithPrices = [];
         foreach ($request->order_product_services as $orderProductServiceData) {
-            $productService = ProductService::find($orderProductServiceData['product_service_id']); // Assuming you have a ProductService model
-            $sum_price += $productService->price * $orderProductServiceData['quantity'];
+            $productServicePrice = ProductServicePrice::where('product_id', $orderProductServiceData['product_id'])
+                ->where('product_service_id', $orderProductServiceData['product_service_id'])
+                ->first();
+            
+            if (!$productServicePrice) {
+                return back()->withErrors(['message' => __('messages.product_no_services_warning')])->withInput();
+            }
+            
+            $priceAtOrder = $productServicePrice->price;
+            $sum_price += $priceAtOrder * $orderProductServiceData['quantity'];
+            
+            $orderProductServicesWithPrices[] = array_merge($orderProductServiceData, [
+                'price_at_order' => $priceAtOrder
+            ]);
         }
 
         // Add delivery price to sum_price if applicable
@@ -256,8 +270,8 @@ class OrdersController extends Controller
                 }
             }
             
-            // Create order product services
-            foreach ($request->order_product_services as $orderProductServiceData) {
+            // Create order product services with price snapshots
+            foreach ($orderProductServicesWithPrices as $orderProductServiceData) {
                 $order->orderProductServices()->create($orderProductServiceData);
             }
 
@@ -275,7 +289,9 @@ class OrdersController extends Controller
 
             // Use the service to send the whatsapp message
             $messageBody = __('messages.order_placed_balance') . ": {$user->balance}";
-            $this->whatsAppService->sendMessage('+970592674624', $messageBody); // User's WhatsApp number
+            if ($user->mobile) {
+                $this->whatsAppService->sendMessage($user->mobile, $messageBody);
+            }
 
             DB::commit(); // Commit the transaction
 

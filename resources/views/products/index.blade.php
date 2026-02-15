@@ -34,6 +34,7 @@
                         <th>{{ __('messages.id') }}</th>
                         <th>{{ __('messages.image') }}</th>
                         <th>{{ __('messages.name') }}</th>
+                        <th>{{ __('messages.services') }}</th>
                         <th>{{ __('messages.actions') }}</th>
                     </tr>
                 </thead>
@@ -50,12 +51,25 @@
                         </td>
                         <td>{{ $product->name }}</td>
                         <td>
-                            <a href="{{ route('products.show', $product) }}" class="btn btn-info btn-sm">{{ __('messages.show') }}</a>
-                            <a href="{{ route('products.edit', $product) }}" class="btn btn-warning btn-sm">{{ __('messages.edit') }}</a>
+                            @if ($product->product_service_prices_count > 0)
+                            <span class="badge bg-success">
+                                <i class="fas fa-check-circle me-1"></i>
+                                {{ $product->product_service_prices_count }} {{ __('messages.services_configured') }}
+                            </span>
+                            @else
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-exclamation-triangle me-1"></i>
+                                {{ __('messages.no_services_configured') }}
+                            </span>
+                            @endif
+                        </td>
+                        <td>
+                            <a href="{{ route('products.show', $product) }}" class="btn btn-info btn-sm"><i class="fas fa-eye"></i></a>
+                            <a href="{{ route('products.edit', $product) }}" class="btn btn-warning btn-sm"><i class="fas fa-edit"></i></a>
                             <form action="{{ route('products.destroy', $product) }}" method="POST" style="display: inline-block;">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{__("messages.confirm_deletion")}}')">{{ __('messages.delete') }}</button>
+                                <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('{{__("messages.confirm_deletion")}}')"><i class="fas fa-trash"></i></button>
                             </form>
                         </td>
                     </tr>

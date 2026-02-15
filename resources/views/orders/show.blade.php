@@ -62,7 +62,7 @@
                         </td>
                         <td>{{ $orderProductService->productService->name }}</td>
                         <td>{{ $orderProductService->quantity }}</td>
-                        <td>{{ $orderProductService->productService->price * $orderProductService->quantity }}</td>
+                        <td>{{ $orderProductService->price_at_order ? number_format($orderProductService->price_at_order * $orderProductService->quantity, 3) : '-' }} KWD</td>
                     </tr>
                     @endforeach
                 </tbody>
