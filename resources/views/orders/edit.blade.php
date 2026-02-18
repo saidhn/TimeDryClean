@@ -266,10 +266,8 @@
 
                 const currentSubtotalSpan = document.getElementById('currentSubtotal');
                 if (currentSubtotalSpan) {
-                    const existingDiscount = parseFloat(currentSubtotalSpan.getAttribute('data-discount') || '0');
-                    const originalSubtotal = totalPrice + existingDiscount;
-                    currentSubtotalSpan.textContent = originalSubtotal.toFixed(2);
-                    currentSubtotalSpan.setAttribute('data-value', originalSubtotal.toFixed(2));
+                    currentSubtotalSpan.textContent = totalPrice.toFixed(2);
+                    currentSubtotalSpan.setAttribute('data-value', totalPrice.toFixed(2));
                 }
             }
 

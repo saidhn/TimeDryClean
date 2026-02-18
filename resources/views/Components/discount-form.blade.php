@@ -34,7 +34,7 @@
                            id="discountValue" 
                            name="discount_value"
                            value="{{ $order->discount_value ?? '' }}"
-                           step="0.1" 
+                           step="0.01" 
                            min="0.01"
                            placeholder="0.00"
                            aria-label="Discount value">
@@ -42,14 +42,10 @@
                 </div>
                 <div class="form-text" id="discountHelp">
                     @php
-                        $originalSubtotal = $order->hasDiscount() 
-                            ? $order->sum_price + $order->discount_amount 
-                            : $order->sum_price;
-                        $existingDiscount = $order->discount_amount ?? 0;
+                        $rawSubtotal = $order->sum_price ?? 0;
                     @endphp
                     {{ __('messages.order_subtotal') }}: $<span id="currentSubtotal" 
-                        data-value="{{ number_format($originalSubtotal, 2, '.', '') }}"
-                        data-discount="{{ number_format($existingDiscount, 2, '.', '') }}">{{ number_format($originalSubtotal, 2) }}</span>
+                        data-value="{{ number_format($rawSubtotal, 2, '.', '') }}">{{ number_format($rawSubtotal, 2) }}</span>
                 </div>
             </div>
         </div>

@@ -436,9 +436,23 @@ class OrdersController extends Controller
 
             // 1. Update Order:
             $sum_price = 0;
+            $orderProductServicesWithPrices = [];
             foreach ($request->order_product_services as $orderProductServiceData) {
-                $productService = ProductService::find($orderProductServiceData['product_service_id']);
-                $sum_price += $productService->price * $orderProductServiceData['quantity'];
+                $productServicePrice = ProductServicePrice::where('product_id', $orderProductServiceData['product_id'])
+                    ->where('product_service_id', $orderProductServiceData['product_service_id'])
+                    ->first();
+                
+                if (!$productServicePrice) {
+                    DB::rollBack();
+                    return back()->withErrors(['message' => __('messages.product_no_services_warning')])->withInput();
+                }
+                
+                $priceAtOrder = $productServicePrice->price;
+                $sum_price += $priceAtOrder * $orderProductServiceData['quantity'];
+                
+                $orderProductServicesWithPrices[] = array_merge($orderProductServiceData, [
+                    'price_at_order' => $priceAtOrder
+                ]);
             }
 
             if ($driverRequired == 'required') {
