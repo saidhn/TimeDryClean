@@ -47,8 +47,16 @@ class UserSeeder extends Seeder
         ];
 
         foreach ($users as $userData) {
-            $user = User::create($userData);
-            if ($addresses->isNotEmpty()) {
+            $user = User::firstOrCreate(
+                ['mobile' => $userData['mobile']],
+                [
+                    'name' => $userData['name'],
+                    'email' => $userData['email'],
+                    'password' => $userData['password'],
+                    'user_type' => $userData['user_type'],
+                ]
+            );
+            if ($addresses->isNotEmpty() && !$user->address_id) {
                 $randomAddress = $addresses->random();
                 $user->address_id = $randomAddress->id;
                 $user->save();

@@ -3,19 +3,21 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Models\ProductService; // Import your ProductService model
+use App\Models\ProductService;
 
 class ProductServiceSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        $productServices = [
-            ['name' => 'غسيل عادي - Normal Wash'],
-            ['name' => 'غسيل مستعجل - Express Wash'],
-            ['name' => 'كوي عادي - Normal Ironing'],
-            ['name' => 'كوي مستعجل - Express Ironing'],
+        $services = [
+            ['name' => 'غسيل عادي + كوي - Normal Wash & Iron'],
+            ['name' => 'غسيل مستعجل + كوي - Express Wash & Iron'],
+            ['name' => 'كوي عادي - Normal Iron'],
+            ['name' => 'كوي مستعجل - Express Iron'],
         ];
 
-        ProductService::insert($productServices);
+        foreach ($services as $service) {
+            ProductService::firstOrCreate($service);
+        }
     }
 }
