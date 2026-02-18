@@ -52,15 +52,10 @@
                                 1); $i++)
                                 <tr>
                                     <td>
-                                    <select name="order_product_services[{{ $i }}][product_id]"
-                                                class="form-control product-select">
+                                        <select name="order_product_services[{{ $i }}][product_id]"
+                                                class="form-control product-select"
+                                                data-old-value="{{ old('order_product_services.' . $i . '.product_id') }}">
                                             <option value="">{{ __('messages.select_product') }}</option>
-                                            @foreach($products as $product)
-                                                <option value="{{ $product->id }}" {{ old('order_product_services.' . $i
-                                                    . '.product_id' )==$product->id ? 'selected' : '' }}>
-                                                    {{ $product->name }}
-                                                </option>
-                                            @endforeach
                                         </select>
                                     </td>
                                     <td>
@@ -73,6 +68,9 @@
                                         </small>
                                         <small class="text-warning no-services-warning d-none">
                                             <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                                        </small>
+                                        <small class="text-warning duplicate-warning d-none">
+                                            <i class="fas fa-exclamation-triangle"></i> {{ __('messages.duplicate_product_service') }}
                                         </small>
                                     </td>
                                     <td>
@@ -331,6 +329,101 @@
 
             const form = document.getElementById('create-order-form');
 
+            // Product data for TomSelect
+            const productsData = @json($products->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'image' => $p->image_path ? asset('storage/' . $p->image_path) : null
+            ]));
+
+            // Store TomSelect instances for products
+            const productSelects = {};
+
+            // Function to initialize TomSelect on a product select element
+            function initProductSelect(selectElement, rowIndex) {
+                const $select = $(selectElement);
+                const selectId = 'product-select-' + rowIndex;
+                $select.attr('id', selectId);
+
+                const ts = new TomSelect(selectElement, {
+                    valueField: 'id',
+                    labelField: 'name',
+                    searchField: ['name'],
+                    options: productsData,
+                    placeholder: '{{ __('messages.select_product') }}',
+                    render: {
+                        option: function(item, escape) {
+                            const imgHtml = item.image
+                                ? `<img src="${escape(item.image)}" alt="" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">`
+                                : `<div class="me-2 d-inline-flex align-items-center justify-content-center bg-light" style="width: 40px; height: 40px; border-radius: 4px;"><i class="fas fa-box text-muted"></i></div>`;
+                            return `
+                                <div class="d-flex align-items-center py-1">
+                                    ${imgHtml}
+                                    <div>
+                                        <div class="fw-medium">${escape(item.name)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        },
+                        item: function(item, escape) {
+                            const imgHtml = item.image
+                                ? `<img src="${escape(item.image)}" alt="" class="me-2" style="width: 24px; height: 24px; object-fit: cover; border-radius: 3px;">`
+                                : `<i class="fas fa-box me-2 text-muted"></i>`;
+                            return `<div class="d-flex align-items-center">${imgHtml}<span>${escape(item.name)}</span></div>`;
+                        }
+                    }
+                });
+
+                productSelects[rowIndex] = ts;
+                ts.on('change', function(value) {
+                    const serviceSelect = $select.closest('tr').find('.product-service-select');
+                    loadProductServices(value, serviceSelect);
+                    checkDuplicates();
+                });
+
+                return ts;
+            }
+
+            // Initialize existing product selects
+            $('#order-product-services tr').each(function(index) {
+                const productSelect = $(this).find('.product-select')[0];
+                const oldValue = $(this).find('.product-select').data('old-value');
+                if (productSelect) {
+                    const ts = initProductSelect(productSelect, index);
+                    if (oldValue) {
+                        ts.setValue(oldValue);
+                    }
+                }
+            });
+
+            // Check for duplicate product+service combinations
+            function checkDuplicates() {
+                const combinations = [];
+                let hasDuplicates = false;
+
+                $('#order-product-services tr').each(function() {
+                    const row = $(this);
+                    const productId = row.find('.product-select').val();
+                    const serviceId = row.find('.product-service-select').val();
+                    const warningEl = row.find('.duplicate-warning');
+
+                    if (productId && serviceId) {
+                        const combo = productId + '-' + serviceId;
+                        if (combinations.includes(combo)) {
+                            warningEl.removeClass('d-none');
+                            hasDuplicates = true;
+                        } else {
+                            warningEl.addClass('d-none');
+                            combinations.push(combo);
+                        }
+                    } else {
+                        warningEl.addClass('d-none');
+                    }
+                });
+
+                return hasDuplicates;
+            }
+
             function calculateRowPrice(row) {
                 const quantity = parseInt(row.find('.quantity-input').val()) || 1;
                 const price = parseFloat(row.find('.product-service-select option:selected').data('price')) || 0;
@@ -351,6 +444,11 @@
                 }
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
+
+                // Update discount preview if discount form exists
+                if (typeof validateDiscount === 'function') {
+                    validateDiscount();
+                }
             };
 
             $('#order-product-services tr').each(function () {
@@ -364,6 +462,7 @@
 
             $('#order-product-services').on('change', '.product-service-select', function () {
                 updateTotal();
+                checkDuplicates();
             });
 
             // Function to load services for a product via AJAX
@@ -406,27 +505,20 @@
                     });
             }
 
-            // Handle product selection change
-            $(document).on('change', '.product-select', function() {
-                const productId = $(this).val();
-                const serviceSelect = $(this).closest('tr').find('.product-service-select');
-                loadProductServices(productId, serviceSelect);
-            });
+            // Handle product selection change - now handled by TomSelect
+            // The TomSelect onChange event handles loading services
 
             $('.add-row').on('click', function () {
-                var lastRowIndex = $('#order-product-services tr').length - 1;
+                var lastRowIndex = $('#order-product-services tr').length;
                 var newRow = `
             <tr>
                 <td>
-                    <select name="order_product_services[${lastRowIndex + 1}][product_id]" class="form-control product-select">
+                    <select name="order_product_services[${lastRowIndex}][product_id]" class="form-control product-select">
                         <option value="">{{ __('messages.select_product') }}</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
-                        @endforeach
                     </select>
                 </td>
                 <td>
-                    <select name="order_product_services[${lastRowIndex + 1}][product_service_id]" class="form-control product-service-select">
+                    <select name="order_product_services[${lastRowIndex}][product_service_id]" class="form-control product-service-select">
                         <option value="">{{ __('messages.choose_service') }}</option>
                     </select>
                     <small class="text-muted service-hint">
@@ -435,9 +527,12 @@
                     <small class="text-warning no-services-warning d-none">
                         <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
                     </small>
+                    <small class="text-warning duplicate-warning d-none">
+                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.duplicate_product_service') }}
+                    </small>
                 </td>
                 <td>
-                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[${lastRowIndex + 1}][quantity]" value="1">
+                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[${lastRowIndex}][quantity]" value="1">
                 </td>
                 <td class="unit_price">
                     <span class="price-display">0</span>
@@ -448,12 +543,25 @@
             </tr>`;
 
                 $('#order-product-services').append(newRow);
+                // Initialize TomSelect on the new product select
+                const newRowElement = $('#order-product-services tr').last();
+                const newProductSelect = newRowElement.find('.product-select')[0];
+                if (newProductSelect) {
+                    initProductSelect(newProductSelect, lastRowIndex);
+                }
                 updateTotal();
             });
 
             $(document).on('click', '.remove-row', function () {
+                const rowIndex = $(this).closest('tr').index();
+                // Destroy TomSelect instance before removing row
+                if (productSelects[rowIndex]) {
+                    productSelects[rowIndex].destroy();
+                    delete productSelects[rowIndex];
+                }
                 $(this).closest('tr').remove();
                 updateTotal();
+                checkDuplicates();
             });
 
 
@@ -547,7 +655,7 @@
                 const tomSelect = userSelectEl?.tomselect;
                 const userValue = tomSelect ? tomSelect.getValue() : (userSelectEl?.value || '');
                 if (userSelectEl && userErrorEl && !userValue) {
-                    userErrorEl.innerHTML = '<strong>{{ __('messages.select_user') }}</strong>';
+                    userErrorEl.innerHTML = '<strong><i class="fas fa-exclamation-circle"></i> {{ __('messages.user_required') }}</strong>';
                     userSelectEl.closest('.ts-wrapper')?.classList.add('is-invalid');
                     hasError = true;
                 } else if (userSelectEl && userErrorEl) {

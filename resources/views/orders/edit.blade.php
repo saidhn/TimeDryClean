@@ -183,9 +183,6 @@
                                         data-selected-qty="{{ $orderProductService->quantity }}"
                                         data-selected-price="{{ $orderProductService->price_at_order ?? 0 }}">
                                         <option value="">{{ __('messages.select_product') }}</option>
-                                        @foreach($products as $product)
-                                        <option value="{{ $product->id }}" {{ $orderProductService->product_id == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
-                                        @endforeach
                                     </select>
                                 </td>
                                 <td>
@@ -194,6 +191,9 @@
                                     </select>
                                     <small class="text-warning no-services-warning d-none">
                                         <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                                    </small>
+                                    <small class="text-warning duplicate-warning d-none">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.duplicate_product_service') }}
                                     </small>
                                 </td>
                                 <td>
@@ -242,6 +242,89 @@
             const driverSelect = document.getElementById('driver-select');
             const deliveryPriceInput = document.getElementById('delivery_price');
             const form = document.getElementById('edit-order-form');
+
+            // Product data for TomSelect
+            const productsData = @json($products->map(fn($p) => [
+                'id' => $p->id,
+                'name' => $p->name,
+                'image' => $p->image_path ? asset('storage/' . $p->image_path) : null
+            ]));
+
+            // Store TomSelect instances for products
+            const productSelects = {};
+
+            // Function to initialize TomSelect on a product select element
+            function initProductSelect(selectElement, rowIndex) {
+                const $select = $(selectElement);
+                const selectId = 'product-select-' + rowIndex;
+                $select.attr('id', selectId);
+
+                const ts = new TomSelect(selectElement, {
+                    valueField: 'id',
+                    labelField: 'name',
+                    searchField: ['name'],
+                    options: productsData,
+                    placeholder: '{{ __('messages.select_product') }}',
+                    render: {
+                        option: function(item, escape) {
+                            const imgHtml = item.image
+                                ? `<img src="${escape(item.image)}" alt="" class="me-2" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">`
+                                : `<div class="me-2 d-inline-flex align-items-center justify-content-center bg-light" style="width: 40px; height: 40px; border-radius: 4px;"><i class="fas fa-box text-muted"></i></div>`;
+                            return `
+                                <div class="d-flex align-items-center py-1">
+                                    ${imgHtml}
+                                    <div>
+                                        <div class="fw-medium">${escape(item.name)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        },
+                        item: function(item, escape) {
+                            const imgHtml = item.image
+                                ? `<img src="${escape(item.image)}" alt="" class="me-2" style="width: 24px; height: 24px; object-fit: cover; border-radius: 3px;">`
+                                : `<i class="fas fa-box me-2 text-muted"></i>`;
+                            return `<div class="d-flex align-items-center">${imgHtml}<span>${escape(item.name)}</span></div>`;
+                        }
+                    }
+                });
+
+                productSelects[rowIndex] = ts;
+                ts.on('change', function(value) {
+                    const serviceSelect = $select.closest('tr').find('.product-service-select');
+                    loadProductServices(value, serviceSelect);
+                    checkDuplicates();
+                });
+
+                return ts;
+            }
+
+            // Check for duplicate product+service combinations
+            function checkDuplicates() {
+                const combinations = [];
+                let hasDuplicates = false;
+
+                $('#order-product-services tr').each(function() {
+                    const row = $(this);
+                    const productId = row.find('.product-select').val();
+                    const serviceId = row.find('.product-service-select').val();
+                    const warningEl = row.find('.duplicate-warning');
+
+                    if (productId && serviceId) {
+                        const combo = productId + '-' + serviceId;
+                        if (combinations.includes(combo)) {
+                            warningEl.removeClass('d-none');
+                            hasDuplicates = true;
+                        } else {
+                            warningEl.addClass('d-none');
+                            combinations.push(combo);
+                        }
+                    } else {
+                        warningEl.addClass('d-none');
+                    }
+                });
+
+                return hasDuplicates;
+            }
 
             function calculateRowPrice(row) {
                 const quantity = parseInt(row.find('.quantity-input').val()) || 1;
@@ -304,13 +387,21 @@
                     });
             }
 
-            // Load services for all existing rows on page load
-            $('#order-product-services tr').each(function() {
+            // Load services for all existing rows on page load and initialize TomSelect
+            $('#order-product-services tr').each(function(index) {
                 const row = $(this);
-                const productSelect = row.find('.product-select');
+                const productSelectEl = row.find('.product-select')[0];
                 const serviceSelect = row.find('.product-service-select');
-                const productId = productSelect.data('selected-product');
-                const serviceId = productSelect.data('selected-service');
+                const productId = $(productSelectEl).data('selected-product');
+                const serviceId = $(productSelectEl).data('selected-service');
+
+                // Initialize TomSelect on product select
+                if (productSelectEl) {
+                    const ts = initProductSelect(productSelectEl, index);
+                    if (productId) {
+                        ts.setValue(productId);
+                    }
+                }
 
                 if (productId) {
                     loadProductServices(productId, serviceSelect, function() {
@@ -318,15 +409,13 @@
                             serviceSelect.val(serviceId);
                         }
                         updateTotal();
+                        checkDuplicates();
                     });
                 }
             });
 
-            // Handle product change
-            $('#order-product-services').on('change', '.product-select', function() {
-                const serviceSelect = $(this).closest('tr').find('.product-service-select');
-                loadProductServices($(this).val(), serviceSelect);
-            });
+            // Handle product change - now handled by TomSelect
+            // The TomSelect onChange event handles loading services
 
             $('#order-product-services').on('input', '.quantity-input', function() {
                 updateTotal();
@@ -334,6 +423,7 @@
 
             $('#order-product-services').on('change', '.product-service-select', function() {
                 updateTotal();
+                checkDuplicates();
             });
 
             $('.add-row').on('click', function() {
@@ -343,9 +433,6 @@
                 <td>
                     <select name="order_product_services[${lastRowIndex}][product_id]" class="form-control product-select">
                         <option value="">{{ __('messages.select_product') }}</option>
-                        @foreach($products as $product)
-                            <option value="{{ $product->id }}">{{ $product->name }}</option>
-                        @endforeach
                     </select>
                 </td>
                 <td>
@@ -354,6 +441,9 @@
                     </select>
                     <small class="text-warning no-services-warning d-none">
                         <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                    </small>
+                    <small class="text-warning duplicate-warning d-none">
+                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.duplicate_product_service') }}
                     </small>
                 </td>
                 <td>
@@ -367,12 +457,25 @@
                 </td>
             </tr>`;
                 $('#order-product-services').append(newRow);
+                // Initialize TomSelect on the new product select
+                const newRowElement = $('#order-product-services tr').last();
+                const newProductSelect = newRowElement.find('.product-select')[0];
+                if (newProductSelect) {
+                    initProductSelect(newProductSelect, lastRowIndex);
+                }
                 updateTotal();
             });
 
             $(document).on('click', '.remove-row', function() {
+                const rowIndex = $(this).closest('tr').index();
+                // Destroy TomSelect instance before removing row
+                if (productSelects[rowIndex]) {
+                    productSelects[rowIndex].destroy();
+                    delete productSelects[rowIndex];
+                }
                 $(this).closest('tr').remove();
                 updateTotal();
+                checkDuplicates();
             });
 
 

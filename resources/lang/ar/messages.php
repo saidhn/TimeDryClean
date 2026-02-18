@@ -314,4 +314,16 @@ return [
     'validation_order_status_invalid' => 'حالة الطلب المحددة غير صالحة.',
     'validation_delivery_price_required' => 'يرجى إدخال سعر التوصيل.',
     'validation_delivery_price_numeric' => 'يجب أن يكون سعر التوصيل رقماً.',
+
+    // Order Warnings
+    'duplicate_product_service' => 'هذا المنتج والخدمة موجودان بالفعل في الطلب.',
+    'user_required' => 'يرجى اختيار مستخدم لهذا الطلب.',
+
+    // Dashboard Cards
+    'employee_dashboard' => 'لوحة تحكم الموظف',
+    'invoice_data' => 'بيانات الفواتير',
+    'total_income' => 'إجمالي الدخل',
+    'create_new_order' => 'إنشاء طلب جديد',
+    'view_invoice_statistics' => 'عرض إحصائيات الفواتير',
+    'view_income_reports' => 'عرض تقارير الدخل',
 ];

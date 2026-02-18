@@ -305,4 +305,16 @@ return [
     'validation_order_status_invalid' => 'The selected order status is invalid.',
     'validation_delivery_price_required' => 'Please enter the delivery price.',
     'validation_delivery_price_numeric' => 'The delivery price must be a number.',
+
+    // Order Warnings
+    'duplicate_product_service' => 'This product and service combination already exists in the order.',
+    'user_required' => 'Please select a user for this order.',
+
+    // Dashboard Cards
+    'employee_dashboard' => 'Employee Dashboard',
+    'invoice_data' => 'Invoice Data',
+    'total_income' => 'Total Income',
+    'create_new_order' => 'Create a new order',
+    'view_invoice_statistics' => 'View invoice statistics',
+    'view_income_reports' => 'View income reports',
 ];
