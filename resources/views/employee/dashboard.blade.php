@@ -25,28 +25,32 @@
 
         <!-- Invoice Data Card -->
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm dashboard-card">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-file-invoice-dollar fa-3x text-success"></i>
+            <a href="{{ route('employee.invoice-data') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm dashboard-card">
+                    <div class="card-body text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-file-invoice-dollar fa-3x text-success"></i>
+                        </div>
+                        <h5 class="card-title text-dark">{{ __('messages.invoice_data') }}</h5>
+                        <p class="card-text text-muted">{{ __('messages.view_invoice_statistics') }}</p>
                     </div>
-                    <h5 class="card-title text-dark">{{ __('messages.invoice_data') }}</h5>
-                    <p class="card-text text-muted">{{ __('messages.view_invoice_statistics') }}</p>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Total Income Card -->
         <div class="col-md-4">
-            <div class="card h-100 border-0 shadow-sm dashboard-card">
-                <div class="card-body text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-chart-line fa-3x text-info"></i>
+            <a href="{{ route('employee.total-income') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm dashboard-card">
+                    <div class="card-body text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-chart-line fa-3x text-info"></i>
+                        </div>
+                        <h5 class="card-title text-dark">{{ __('messages.total_income') }}</h5>
+                        <p class="card-text text-muted">{{ __('messages.view_income_reports') }}</p>
                     </div>
-                    <h5 class="card-title text-dark">{{ __('messages.total_income') }}</h5>
-                    <p class="card-text text-muted">{{ __('messages.view_income_reports') }}</p>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 </div>

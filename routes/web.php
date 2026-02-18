@@ -102,6 +102,8 @@ Route::middleware(['set_locale'])->group(function () {
 
             // Dashboard
             Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+            Route::get('/total-income', [AdminDashboardController::class, 'totalIncome'])->name('admin.total-income');
+            Route::get('/invoice-data', [AdminDashboardController::class, 'invoiceData'])->name('admin.invoice-data');
 
             // Users
             Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
@@ -142,6 +144,8 @@ Route::middleware(['set_locale'])->group(function () {
 
     Route::prefix('employee')->middleware('auth:employee')->group(function () {
         Route::get('/dashboard', [EmployeeDashboardController::class, 'index'])->name('employee.dashboard');
+        Route::get('/total-income', [EmployeeDashboardController::class, 'totalIncome'])->name('employee.total-income');
+        Route::get('/invoice-data', [EmployeeDashboardController::class, 'invoiceData'])->name('employee.invoice-data');
     });
 
     //-----------------------------------------------------------------------------------
