@@ -144,7 +144,15 @@ class ProductAndPriceSeeder extends Seeder
         // 4. Insert products and their prices
         // -------------------------------------------------------
         foreach ($products as [$name, $p1, $p2, $p3, $p4]) {
-            $product = Product::firstOrCreate(['name' => $name]);
+            $product = Product::firstOrCreate(
+                ['name' => $name],
+                ['image_path' => 'products/logo.png']
+            );
+            
+            // If already exists but has no image, update it
+            if (!$product->image_path) {
+                $product->update(['image_path' => 'products/logo.png']);
+            }
 
             $prices = [
                 $s1 => $p1,

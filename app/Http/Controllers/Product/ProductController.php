@@ -99,6 +99,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
+        $product->load(['productServicePrices.productService']);
         return view('products.show', compact('product'));
     }
 
