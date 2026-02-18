@@ -53,6 +53,15 @@
                 </thead>
                 <tbody>
                     @foreach($order->orderProductServices as $orderProductService)
+                    @php
+                        $displayPrice = $orderProductService->price_at_order;
+                        if (!$displayPrice) {
+                            $psp = \App\Models\ProductServicePrice::where('product_id', $orderProductService->product_id)
+                                ->where('product_service_id', $orderProductService->product_service_id)
+                                ->first();
+                            $displayPrice = $psp ? $psp->price : 0;
+                        }
+                    @endphp
                     <tr>
                         <td>
                             @if ($orderProductService->product->image_path)
@@ -62,7 +71,7 @@
                         </td>
                         <td>{{ $orderProductService->productService->name }}</td>
                         <td>{{ $orderProductService->quantity }}</td>
-                        <td>{{ $orderProductService->price_at_order ? number_format($orderProductService->price_at_order * $orderProductService->quantity, 3) : '-' }} KWD</td>
+                        <td>{{ number_format($displayPrice * $orderProductService->quantity, 3) }} KWD</td>
                     </tr>
                     @endforeach
                 </tbody>

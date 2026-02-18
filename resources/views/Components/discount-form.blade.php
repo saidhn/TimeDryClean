@@ -102,12 +102,23 @@ document.addEventListener('DOMContentLoaded', function() {
     let validationTimeout;
     
     function updateInputDisplay() {
+        const isFixed = typeFixed && typeFixed.checked;
         const isPercentage = typePercentage && typePercentage.checked;
+        const hasTypeSelected = isFixed || isPercentage;
+        
         if (prefix) prefix.classList.toggle('d-none', isPercentage);
         if (suffix) suffix.classList.toggle('d-none', !isPercentage);
         if (valueInput) {
             valueInput.placeholder = isPercentage ? '0.00' : '0.00';
             valueInput.max = isPercentage ? '100' : '999999.99';
+            valueInput.disabled = !hasTypeSelected;
+        }
+        
+        // Clear value and hide preview/errors if no type selected
+        if (!hasTypeSelected) {
+            if (valueInput) valueInput.value = '';
+            if (preview) preview.classList.add('d-none');
+            if (errors) errors.classList.add('d-none');
         }
     }
     

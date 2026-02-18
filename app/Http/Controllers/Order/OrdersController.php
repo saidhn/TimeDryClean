@@ -586,7 +586,7 @@ class OrdersController extends Controller
 
             // 3. Update Order Product Services:
             $order->orderProductServices()->delete();
-            foreach ($request->order_product_services as $orderProductServiceData) {
+            foreach ($orderProductServicesWithPrices as $orderProductServiceData) {
                 $order->orderProductServices()->create($orderProductServiceData);
             }
 

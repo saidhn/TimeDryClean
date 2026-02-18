@@ -543,13 +543,16 @@
 
                 const userSelectEl = document.getElementById('user-select');
                 const userErrorEl = document.getElementById('user-select-error');
-                if (userSelectEl && userErrorEl && !userSelectEl.value) {
+                // Get value from TomSelect instance if available, otherwise fallback to native value
+                const tomSelect = userSelectEl?.tomselect;
+                const userValue = tomSelect ? tomSelect.getValue() : (userSelectEl?.value || '');
+                if (userSelectEl && userErrorEl && !userValue) {
                     userErrorEl.innerHTML = '<strong>{{ __('messages.select_user') }}</strong>';
-                    userSelectEl.closest('.ts-wrapper') && userSelectEl.closest('.ts-wrapper').classList.add('is-invalid');
+                    userSelectEl.closest('.ts-wrapper')?.classList.add('is-invalid');
                     hasError = true;
                 } else if (userSelectEl && userErrorEl) {
                     userErrorEl.innerHTML = '';
-                    userSelectEl.closest('.ts-wrapper') && userSelectEl.closest('.ts-wrapper').classList.remove('is-invalid');
+                    userSelectEl.closest('.ts-wrapper')?.classList.remove('is-invalid');
                 }
 
                 if (!validateDriverAndDelivery()) {
@@ -559,7 +562,7 @@
 
                 if (hasError) {
                     event.preventDefault();
-                    if (userSelectEl && !userSelectEl.value) {
+                    if (userSelectEl && !userValue) {
                         document.getElementById('user-select-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 }
@@ -610,11 +613,25 @@
         let validationTimeout;
         
         function updateInputDisplay() {
-            const isPercentage = typePercentage.checked;
-            prefix.classList.toggle('d-none', isPercentage);
-            suffix.classList.toggle('d-none', !isPercentage);
-            valueInput.placeholder = isPercentage ? '0.00' : '0.00';
-            valueInput.max = isPercentage ? '100' : '999999.99';
+            const isFixed = typeFixed && typeFixed.checked;
+            const isPercentage = typePercentage && typePercentage.checked;
+            const hasTypeSelected = isFixed || isPercentage;
+            
+            if (prefix) prefix.classList.toggle('d-none', isPercentage);
+            if (suffix) suffix.classList.toggle('d-none', !isPercentage);
+            if (valueInput) {
+                valueInput.placeholder = isPercentage ? '0.00' : '0.00';
+                valueInput.max = isPercentage ? '100' : '999999.99';
+                valueInput.disabled = !hasTypeSelected;
+            }
+            
+            // Clear value and hide preview if no type selected
+            if (!hasTypeSelected) {
+                if (valueInput) valueInput.value = '';
+                if (preview) preview.classList.add('d-none');
+                if (errors) errors.classList.add('d-none');
+                errors.classList.add('d-none');
+            }
         }
         
         function validateDiscount() {
@@ -656,6 +673,17 @@
                 if (isValid) {
                     errors.classList.add('d-none');
                     preview.classList.remove('d-none');
+                    
+                    // Update preview values
+                    const discountedSubtotal = subtotal - discountAmount;
+                    document.getElementById('previewDiscountAmount').textContent = discountAmount.toFixed(2) + ' KWD';
+                    document.getElementById('previewSubtotal').textContent = discountedSubtotal.toFixed(2) + ' KWD';
+                    document.getElementById('previewTotal').textContent = discountedSubtotal.toFixed(2) + ' KWD';
+                    document.getElementById('previewSavings').textContent = discountAmount.toFixed(2) + ' KWD';
+                } else {
+                    preview.classList.add('d-none');
+                    errors.classList.remove('d-none');
+                    errors.innerHTML = '<ul class="mb-0"><li>' + errorMessages.join('</li><li>') + '</li></ul>';
                 }
             }, 500);
         }
