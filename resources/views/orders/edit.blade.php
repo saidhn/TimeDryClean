@@ -113,7 +113,7 @@
                     <div class="mt-3 mb-3 col-md-2">
                         <label for="province_id" class="form-label">{{ __('messages.province') }}</label>
                         <select id="province_id" class="form-control @error('province_id') is-invalid @enderror"
-                            name="province_id" required>
+                            name="province_id">
                             <option value="">{{__('messages.select_province')}}</option>
                             @foreach ($provinces as $province)
                             <option value="{{ $province->id }}" {{ optional(optional($order->orderDelivery)->address)->province_id==$province->id ? 'selected' : ''
@@ -128,8 +128,7 @@
                     </div>
                     <div class="mt-3 mb-3 col-md-2">
                         <label for="city_id" class="form-label">{{ __('messages.city') }}</label>
-                        <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id"
-                            required>
+                        <select id="city_id" class="form-control @error('city_id') is-invalid @enderror" name="city_id">
                             <option value="">{{__('messages.city')}}</option>
                         </select>
                         @error('city_id')
@@ -178,7 +177,11 @@
                             @foreach($order->orderProductServices as $key => $orderProductService)
                             <tr>
                                 <td>
-                                    <select name="order_product_services[{{ $key }}][product_id]" class="form-control product-select">
+                                    <select name="order_product_services[{{ $key }}][product_id]" class="form-control product-select"
+                                        data-selected-product="{{ $orderProductService->product_id }}"
+                                        data-selected-service="{{ $orderProductService->product_service_id }}"
+                                        data-selected-qty="{{ $orderProductService->quantity }}"
+                                        data-selected-price="{{ $orderProductService->price_at_order ?? 0 }}">
                                         <option value="">{{ __('messages.select_product') }}</option>
                                         @foreach($products as $product)
                                         <option value="{{ $product->id }}" {{ $orderProductService->product_id == $product->id ? 'selected' : '' }}>{{ $product->name }}</option>
@@ -188,12 +191,10 @@
                                 <td>
                                     <select name="order_product_services[{{ $key }}][product_service_id]" class="form-control product-service-select">
                                         <option value="">{{ __('messages.select_product_service') }}</option>
-                                        @foreach($product_services as $product_service)
-                                        <option value="{{ $product_service->id }}" data-price="{{ $product_service->price }}" {{ $orderProductService->product_service_id == $product_service->id ? 'selected' : '' }}>
-                                            {{ $product_service->name }}
-                                        </option>
-                                        @endforeach
                                     </select>
+                                    <small class="text-warning no-services-warning d-none">
+                                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                                    </small>
                                 </td>
                                 <td>
                                     <input type="number" min="1" class="form-control quantity-input" name="order_product_services[{{ $key }}][quantity]" value="{{ $orderProductService->quantity }}">
@@ -262,9 +263,7 @@
                 }
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
-                
-                // Update discount form's current subtotal
-                // If order has existing discount, add it back to show original subtotal
+
                 const currentSubtotalSpan = document.getElementById('currentSubtotal');
                 if (currentSubtotalSpan) {
                     const existingDiscount = parseFloat(currentSubtotalSpan.getAttribute('data-discount') || '0');
@@ -274,10 +273,62 @@
                 }
             }
 
+            // Load services via AJAX (same as create page)
+            function loadProductServices(productId, serviceSelect, callback) {
+                const row = serviceSelect.closest('tr');
+                const warning = row.find('.no-services-warning');
+
+                serviceSelect.html('<option value="">{{ __("messages.select_product_service") }}</option>');
+                warning.addClass('d-none');
+
+                if (!productId) return;
+
+                fetch(`/api/products/${productId}/services`, { credentials: 'include' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data.services.length === 0) {
+                            warning.removeClass('d-none');
+                        } else {
+                            data.data.services.forEach(service => {
+                                const option = $('<option></option>')
+                                    .val(service.id)
+                                    .text(`${service.name} - ${service.price} {{ __('messages.currency_symbol') }}`)
+                                    .attr('data-price', service.price);
+                                serviceSelect.append(option);
+                            });
+                        }
+                        if (callback) callback();
+                        updateTotal();
+                    })
+                    .catch(error => {
+                        console.error('Error loading services:', error);
+                        warning.removeClass('d-none');
+                    });
+            }
+
+            // Load services for all existing rows on page load
             $('#order-product-services tr').each(function() {
-                calculateRowPrice($(this));
+                const row = $(this);
+                const productSelect = row.find('.product-select');
+                const serviceSelect = row.find('.product-service-select');
+                const productId = productSelect.data('selected-product');
+                const serviceId = productSelect.data('selected-service');
+
+                if (productId) {
+                    loadProductServices(productId, serviceSelect, function() {
+                        if (serviceId) {
+                            serviceSelect.val(serviceId);
+                        }
+                        updateTotal();
+                    });
+                }
             });
-            updateTotal();
+
+            // Handle product change
+            $('#order-product-services').on('change', '.product-select', function() {
+                const serviceSelect = $(this).closest('tr').find('.product-service-select');
+                loadProductServices($(this).val(), serviceSelect);
+            });
 
             $('#order-product-services').on('input', '.quantity-input', function() {
                 updateTotal();
@@ -288,11 +339,11 @@
             });
 
             $('.add-row').on('click', function() {
-                var lastRowIndex = $('#order-product-services tr').length - 1;
+                var lastRowIndex = $('#order-product-services tr').length;
                 var newRow = `
             <tr>
                 <td>
-                    <select name="order_product_services[${lastRowIndex + 1}][product_id]" class="form-control product-select">
+                    <select name="order_product_services[${lastRowIndex}][product_id]" class="form-control product-select">
                         <option value="">{{ __('messages.select_product') }}</option>
                         @foreach($products as $product)
                             <option value="{{ $product->id }}">{{ $product->name }}</option>
@@ -300,17 +351,15 @@
                     </select>
                 </td>
                 <td>
-                    <select name="order_product_services[${lastRowIndex + 1}][product_service_id]" class="form-control product-service-select">
+                    <select name="order_product_services[${lastRowIndex}][product_service_id]" class="form-control product-service-select">
                         <option value="">{{ __('messages.select_product_service') }}</option>
-                        @foreach($product_services as $product_service)
-                            <option value="{{ $product_service->id }}" data-price="{{ $product_service->price }}">
-                                {{ $product_service->name }}
-                            </option>
-                        @endforeach
                     </select>
+                    <small class="text-warning no-services-warning d-none">
+                        <i class="fas fa-exclamation-triangle"></i> {{ __('messages.no_services_configured') }}
+                    </small>
                 </td>
                 <td>
-                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[${lastRowIndex + 1}][quantity]" value="1">
+                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[${lastRowIndex}][quantity]" value="1">
                 </td>
                 <td class="unit_price">
                     <span class="price-display">0</span>
@@ -319,30 +368,9 @@
                     <button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>
                 </td>
             </tr>`;
-
                 $('#order-product-services').append(newRow);
-
-                var orders_arr = $('#order-product-services tr');
-                var orders_len = orders_arr.length;
-                if (orders_len > 1) {
-                    var selected_product = $(orders_arr[orders_len - 2]).find('.product-select').val();
-                    var selected_service = $(orders_arr[orders_len - 2]).find('.product-service-select').val();
-
-                    $(orders_arr[orders_len - 1]).find('.product-select').val(selected_product);
-                    $(orders_arr[orders_len - 1]).find('.product-service-select').val(selected_service);
-                }
-
-                $(document).on('change', '.product-select', function() {});
-
-                $(document).on('click', '.remove-row', function() {
-                    $(this).closest('tr').remove();
-                    updateTotal();
-                });
-
                 updateTotal();
             });
-
-            $(document).on('change', '.product-select', function() {});
 
             $(document).on('click', '.remove-row', function() {
                 $(this).closest('tr').remove();
@@ -393,8 +421,11 @@
             }
 
             function toggleDriverRequired() {
-                driverSelect.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                deliveryPriceInput.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                const deliveryRequired = bringOrderCheckbox.checked || returnOrderCheckbox.checked;
+                driverSelect.required = deliveryRequired;
+                deliveryPriceInput.required = deliveryRequired;
+                document.getElementById('province_id').required = deliveryRequired;
+                document.getElementById('city_id').required = deliveryRequired;
                 driverSelect.setCustomValidity("");
                 validateDriverAndDelivery();
             }

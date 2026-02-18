@@ -25,11 +25,11 @@
                                     class="form-control @error('user_id') is-invalid @enderror" required>
                                 <option value="">{{ __('messages.select_user') }}</option>
                             </select>
-                            @error('user_id')
-                                <span class="invalid-feedback" role="alert">
+                            <div id="user-select-error" class="invalid-feedback d-block">
+                                @error('user_id')
                                     <strong>{{ $message }}</strong>
-                                </span>
-                            @enderror
+                                @enderror
+                            </div>
                         </div>
                     </div>
                     @else
@@ -304,6 +304,12 @@
 </div>
 
 
+<style>
+    .ts-wrapper.is-invalid .ts-control {
+        border-color: #dc3545;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+</style>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let totalPrice = 0;
@@ -533,9 +539,29 @@
 
             form.addEventListener('submit', function (event) {
                 toggleDriverRequired();
+                let hasError = false;
+
+                const userSelectEl = document.getElementById('user-select');
+                const userErrorEl = document.getElementById('user-select-error');
+                if (userSelectEl && userErrorEl && !userSelectEl.value) {
+                    userErrorEl.innerHTML = '<strong>{{ __('messages.select_user') }}</strong>';
+                    userSelectEl.closest('.ts-wrapper') && userSelectEl.closest('.ts-wrapper').classList.add('is-invalid');
+                    hasError = true;
+                } else if (userSelectEl && userErrorEl) {
+                    userErrorEl.innerHTML = '';
+                    userSelectEl.closest('.ts-wrapper') && userSelectEl.closest('.ts-wrapper').classList.remove('is-invalid');
+                }
+
                 if (!validateDriverAndDelivery()) {
-                    event.preventDefault();
+                    hasError = true;
                     driverSelect.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                if (hasError) {
+                    event.preventDefault();
+                    if (userSelectEl && !userSelectEl.value) {
+                        document.getElementById('user-select-error').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
                 }
             });
         });
@@ -718,8 +744,22 @@
             .then(response => response.json())
             .then(json => {
                 if (json.data && json.data.length) {
-                    clientSelect.addOptions(json.data); // Add the initial data to TomSelect
+                    clientSelect.addOptions(json.data);
                 }
+                @if(old('user_id'))
+                const oldUserId = '{{ old('user_id') }}';
+                fetch(`/users/search?q=${encodeURIComponent(oldUserId)}&user_type={{App\Enums\UserType::CLIENT}}`)
+                    .then(r => r.json())
+                    .then(json => {
+                        if (json.data && json.data.length) {
+                            const user = json.data.find(u => String(u.id) === String(oldUserId));
+                            if (user) {
+                                clientSelect.addOption(user);
+                                clientSelect.setValue(oldUserId, true);
+                            }
+                        }
+                    });
+                @endif
             })
             .catch(error => {
                 console.error("Error loading initial clients:", error);

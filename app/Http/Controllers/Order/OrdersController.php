@@ -129,29 +129,53 @@ class OrdersController extends Controller
             $driverRequired = 'required';
         }
         // Validate the request data (add validation for delivery and driver)
-        $request->validate([
+        $rules = [
             'user_id' => 'required|exists:users,id',
-            'return_order' => 'nullable|in:on', // Validate return_order checkbox
-            'bring_order' => 'nullable|in:on',  // Validate bring_order checkbox
-
-            // 'delivery_price' => $driverRequired . '|numeric|min:0', // Conditional validation
-            'driver_id' => $driverRequired . '|exists:users,id', //required (only when at least bring_order or return_order are checked)
+            'return_order' => 'nullable|in:on',
+            'bring_order' => 'nullable|in:on',
+            'driver_id' => $driverRequired . '|exists:users,id',
             'province_id' => $driverRequired . '|exists:provinces,id',
             'city_id' => $driverRequired . '|exists:cities,id',
-            'street' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
-            'building' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
-            'floor' => $driverRequired . '|integer', //required (only when at least bring_order or return_order are checked)
-            'apartment_number' => $driverRequired . '|string|max:255', //required (only when at least bring_order or return_order are checked)
-
+            'street' => $driverRequired . '|string|max:255',
+            'building' => $driverRequired . '|string|max:255',
+            'floor' => $driverRequired . '|integer',
+            'apartment_number' => $driverRequired . '|string|max:255',
             'order_product_services' => 'required|array',
             'order_product_services.*.product_id' => 'required|exists:products,id',
             'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
             'order_product_services.*.quantity' => 'required|integer|min:1',
-            
-            // Discount validation
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
-        ]);
+        ];
+
+        $messages = [
+            'user_id.required' => __('messages.validation_user_required'),
+            'user_id.exists'   => __('messages.validation_user_exists'),
+            'driver_id.required' => __('messages.validation_driver_required'),
+            'driver_id.exists'   => __('messages.validation_driver_exists'),
+            'province_id.required' => __('messages.validation_province_required'),
+            'city_id.required'     => __('messages.validation_city_required'),
+            'street.required'      => __('messages.validation_street_required'),
+            'building.required'    => __('messages.validation_building_required'),
+            'floor.required'       => __('messages.validation_floor_required'),
+            'floor.integer'        => __('messages.validation_floor_integer'),
+            'apartment_number.required' => __('messages.validation_apartment_required'),
+            'order_product_services.required' => __('messages.validation_products_required'),
+            'order_product_services.array'    => __('messages.validation_products_required'),
+        ];
+
+        $productServices = $request->input('order_product_services', []);
+        foreach ($productServices as $index => $item) {
+            $row = $index + 1;
+            $messages["order_product_services.{$index}.product_id.required"]         = __('messages.validation_product_required', ['row' => $row]);
+            $messages["order_product_services.{$index}.product_id.exists"]           = __('messages.validation_product_exists', ['row' => $row]);
+            $messages["order_product_services.{$index}.product_service_id.required"] = __('messages.validation_service_required', ['row' => $row]);
+            $messages["order_product_services.{$index}.product_service_id.exists"]   = __('messages.validation_service_exists', ['row' => $row]);
+            $messages["order_product_services.{$index}.quantity.required"]           = __('messages.validation_quantity_required', ['row' => $row]);
+            $messages["order_product_services.{$index}.quantity.min"]                = __('messages.validation_quantity_min', ['row' => $row]);
+        }
+
+        $request->validate($rules, $messages);
 
         // Calculate sum_price using ProductServicePrice
         $sum_price = 0;
@@ -347,7 +371,7 @@ class OrdersController extends Controller
             $driverRequired = 'required';
         }
 
-        $request->validate([
+        $editRules = [
             'user_id' => 'required|exists:users,id',
             'return_order' => 'nullable|in:on',
             'bring_order' => 'nullable|in:on',
@@ -370,11 +394,42 @@ class OrdersController extends Controller
             'order_product_services.*.product_id' => 'required|exists:products,id',
             'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
             'order_product_services.*.quantity' => 'required|integer|min:1',
-            
-            // Discount validation
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
-        ]);
+        ];
+
+        $editMessages = [
+            'user_id.required' => __('messages.validation_user_required'),
+            'user_id.exists'   => __('messages.validation_user_exists'),
+            'driver_id.required' => __('messages.validation_driver_required'),
+            'driver_id.exists'   => __('messages.validation_driver_exists'),
+            'delivery_price.required' => __('messages.validation_delivery_price_required'),
+            'delivery_price.numeric'  => __('messages.validation_delivery_price_numeric'),
+            'order_status.required' => __('messages.validation_order_status_required'),
+            'order_status.in'       => __('messages.validation_order_status_invalid'),
+            'province_id.required' => __('messages.validation_province_required'),
+            'city_id.required'     => __('messages.validation_city_required'),
+            'street.required'      => __('messages.validation_street_required'),
+            'building.required'    => __('messages.validation_building_required'),
+            'floor.required'       => __('messages.validation_floor_required'),
+            'floor.integer'        => __('messages.validation_floor_integer'),
+            'apartment_number.required' => __('messages.validation_apartment_required'),
+            'order_product_services.required' => __('messages.validation_products_required'),
+            'order_product_services.array'    => __('messages.validation_products_required'),
+        ];
+
+        $productServicesEdit = $request->input('order_product_services', []);
+        foreach ($productServicesEdit as $index => $item) {
+            $row = $index + 1;
+            $editMessages["order_product_services.{$index}.product_id.required"]         = __('messages.validation_product_required', ['row' => $row]);
+            $editMessages["order_product_services.{$index}.product_id.exists"]           = __('messages.validation_product_exists', ['row' => $row]);
+            $editMessages["order_product_services.{$index}.product_service_id.required"] = __('messages.validation_service_required', ['row' => $row]);
+            $editMessages["order_product_services.{$index}.product_service_id.exists"]   = __('messages.validation_service_exists', ['row' => $row]);
+            $editMessages["order_product_services.{$index}.quantity.required"]           = __('messages.validation_quantity_required', ['row' => $row]);
+            $editMessages["order_product_services.{$index}.quantity.min"]                = __('messages.validation_quantity_min', ['row' => $row]);
+        }
+
+        $request->validate($editRules, $editMessages);
 
         try {
             DB::beginTransaction();
