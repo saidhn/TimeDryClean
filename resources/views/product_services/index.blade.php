@@ -28,7 +28,6 @@
         <thead>
             <tr>
                 <th>{{ __('messages.name') }}</th>
-                <th>{{ __('messages.price') }}</th>
                 <th>{{ __('messages.actions') }}</th>
             </tr>
         </thead>
@@ -36,7 +35,6 @@
             @foreach ($productServices as $productService)
             <tr>
                 <td>{{ $productService->name }}</td>
-                <td>{{ $productService->price }}</td>
                 <td>
                     <a href="{{ route('product_services.show', $productService) }}" class="btn btn-info btn-sm">{{ __('messages.view') }}</a>
                     <a href="{{ route('product_services.edit', $productService) }}" class="btn btn-warning btn-sm">{{ __('messages.edit') }}</a>
