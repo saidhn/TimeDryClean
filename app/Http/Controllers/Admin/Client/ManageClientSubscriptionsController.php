@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientSubscription;
 use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ManageClientSubscriptionsController extends Controller
 {
@@ -39,8 +41,8 @@ class ManageClientSubscriptionsController extends Controller
             'user_id' => [
                 'required',
                 'exists:users,id',
-                function ($attribute, $value, $fail) { //make sure the user is a client
-                    $user = \App\Models\User::find($value); // Or use User::where('id', $value)->first(); for efficiency
+                function ($attribute, $value, $fail) {
+                    $user = User::find($value);
                     if (!$user || $user->user_type !== 'client') {
                         $fail(__('validation.the_user_must_be_a_client'));
                     }
@@ -48,7 +50,17 @@ class ManageClientSubscriptionsController extends Controller
             ],
             'subscription_id' => 'required|exists:subscriptions,id',
         ]);
-        ClientSubscription::create($validatedData);
+
+        DB::transaction(function () use ($validatedData) {
+            $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+            $clientSubscription = ClientSubscription::create([
+                'user_id' => $validatedData['user_id'],
+                'subscription_id' => $validatedData['subscription_id'],
+                'activated_at' => now(),
+            ]);
+            $user = User::findOrFail($validatedData['user_id']);
+            $user->increment('balance', $subscription->benefit);
+        });
 
         return redirect()->route('client_subscriptions.index')->with('success', __('messages.created_successfully'));
     }

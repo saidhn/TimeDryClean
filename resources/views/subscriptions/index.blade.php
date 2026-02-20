@@ -32,10 +32,9 @@
                 <thead>
                     <tr>
                         <th>{{ __('messages.id') }}</th>
-                        <th>{{ __('messages.paid') }}</th> {{-- Add other relevant columns --}}
+                        <th>{{ __('messages.paid') }}</th>
                         <th>{{ __('messages.benefit') }}</th>
-                        <th>{{ __('messages.start_date') }}</th>
-                        <th>{{ __('messages.end_date') }}</th>
+                        <th>{{ __('messages.period') }}</th>
                         <th>{{ __('messages.actions') }}</th>
                     </tr>
                 </thead>
@@ -45,8 +44,7 @@
                         <td>{{ $subscription->id }}</td>
                         <td>{{ $subscription->paid }}</td>
                         <td>{{ $subscription->benefit }}</td>
-                        <td>{{ $subscription->start_date }}</td>
-                        <td>{{ $subscription->end_date }}</td>
+                        <td>{{ $subscription->period_label }}</td>
                         <td>
                             <a href="{{ route('subscriptions.show', $subscription) }}" class="btn btn-info btn-sm">
                                 <i class="fas fa-eye"></i> {{ __('messages.show') }}

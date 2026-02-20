@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Subscription;
 
 use App\Http\Controllers\Controller;
 use App\Models\Subscription;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class SubscriptionController extends Controller
@@ -19,15 +18,17 @@ class SubscriptionController extends Controller
         $subscriptions = Subscription::query();
 
         if ($search) {
-            $subscriptions->where('id', $search)
-                ->orWhere('paid', $search)
-                ->orWhere('benefit', $search)
-                ->orWhere('start_date', 'LIKE', "%$search%")
-                ->orWhere('end_date', 'LIKE', "%$search%");
+            $subscriptions->where(function ($query) use ($search) {
+                $query->where('id', $search)
+                    ->orWhere('paid', $search)
+                    ->orWhere('benefit', $search)
+                    ->orWhere('period_duration', $search)
+                    ->orWhere('period_unit', 'LIKE', "%$search%");
+            });
         }
         $subscriptions = $subscriptions->paginate(10);
 
-        return view('subscriptions.index', compact('subscriptions')); // Correct order
+        return view('subscriptions.index', compact('subscriptions'));
     }
 
     /**
@@ -35,10 +36,7 @@ class SubscriptionController extends Controller
      */
     public function create()
     {
-        $startDate = Carbon::now()->toDateString(); // Current date
-        $endDate = Carbon::now()->addYear()->toDateString(); // One year from now
-
-        return view('subscriptions.create', compact('startDate', 'endDate'));
+        return view('subscriptions.create');
     }
 
     /**
@@ -47,10 +45,10 @@ class SubscriptionController extends Controller
     public function store(Request $request)
     {
         $validatedData = $request->validate([
-            'paid' => 'required|numeric|between:0,99999999.99', // Decimal validation
-            'benefit' => 'required|numeric|between:0,99999999.99', // Decimal validation
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
+            'paid' => 'required|numeric|between:0,99999999.99',
+            'benefit' => 'required|numeric|between:0,99999999.99',
+            'period_duration' => 'required|integer|min:1|max:366',
+            'period_unit' => 'required|in:day,week,month,year',
         ]);
 
         Subscription::create($validatedData);
@@ -80,10 +78,10 @@ class SubscriptionController extends Controller
     public function update(Request $request, Subscription $subscription)
     {
         $validatedData = $request->validate([
-            'paid' => 'required|numeric|between:0,99999999.99', // Decimal validation
-            'benefit' => 'required|numeric|between:0,99999999.99', // Decimal validation
-            'start_date' => 'required|date',
-            'end_date' => 'required|date',
+            'paid' => 'required|numeric|between:0,99999999.99',
+            'benefit' => 'required|numeric|between:0,99999999.99',
+            'period_duration' => 'required|integer|min:1|max:366',
+            'period_unit' => 'required|in:day,week,month,year',
         ]);
 
         $subscription->update($validatedData);

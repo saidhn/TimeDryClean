@@ -4,34 +4,29 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class SubscriptionSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
+     * Period defines how long the user can benefit from the subscription (e.g., 1 month, 2 months).
      */
     public function run()
     {
-        $currentDate = Carbon::now();
-        $endDate = $currentDate->copy()->addYear();
-
         $subscriptions = [
-            ['paid' => 20, 'benefit' => 30],
-            ['paid' => 30, 'benefit' => 45],
-            ['paid' => 40, 'benefit' => 60],
+            ['paid' => 20, 'benefit' => 30, 'period_duration' => 1, 'period_unit' => 'month'],
+            ['paid' => 30, 'benefit' => 45, 'period_duration' => 1, 'period_unit' => 'month'],
+            ['paid' => 40, 'benefit' => 60, 'period_duration' => 2, 'period_unit' => 'month'],
         ];
 
         foreach ($subscriptions as $subscription) {
             DB::table('subscriptions')->insert([
                 'paid' => $subscription['paid'],
                 'benefit' => $subscription['benefit'],
-                'start_date' => $currentDate,
-                'end_date' => $endDate,
-                'created_at' => now(), // Important: Add timestamps
-                'updated_at' => now(), // Important: Add timestamps
+                'period_duration' => $subscription['period_duration'],
+                'period_unit' => $subscription['period_unit'],
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
     }

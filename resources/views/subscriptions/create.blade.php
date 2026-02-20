@@ -14,19 +14,24 @@
 
         <div class="mb-3">
             <label for="benefit" class="form-label">{{ __('messages.benefit') }}</label>
-            <input type="number" step="0.01" name="benefit" id="benefit" class="form-control" value="0.00"> {{-- Use number input with step --}}
+            <input type="number" step="0.01" name="benefit" id="benefit" class="form-control" value="0.00">
         </div>
 
-        <div class="mb-3">
-            <label for="start_date" class="form-label">{{ __('messages.start_date') }}</label>
-            <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $startDate }}" required>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="period_duration" class="form-label">{{ __('messages.period_duration') }}</label>
+                <input type="number" min="1" max="366" name="period_duration" id="period_duration" class="form-control" value="1" required>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="period_unit" class="form-label">{{ __('messages.period_unit') }}</label>
+                <select name="period_unit" id="period_unit" class="form-control" required>
+                    <option value="day">{{ __('messages.period_day_plural') }}</option>
+                    <option value="week">{{ __('messages.period_week_plural') }}</option>
+                    <option value="month" selected>{{ __('messages.period_month_plural') }}</option>
+                    <option value="year">{{ __('messages.period_year_plural') }}</option>
+                </select>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label for="end_date" class="form-label">{{ __('messages.end_date') }}</label>
-            <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $endDate }}" required>
-        </div>
-
 
         <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
     </form>

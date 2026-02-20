@@ -9,8 +9,10 @@ use App\Models\ClientSubscription;
 use App\Models\Order;
 use App\Models\OrderDelivery;
 use App\Models\Subscription;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
@@ -62,8 +64,18 @@ class ClientController extends Controller
         $validatedData = $request->validate([
             'subscription_id' => 'required|exists:subscriptions,id',
         ]);
-        $validatedData["user_id"] = auth()->user()->id;
-        ClientSubscription::create($validatedData);
+        $validatedData['user_id'] = auth()->id();
+
+        DB::transaction(function () use ($validatedData) {
+            $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+            ClientSubscription::create([
+                'user_id' => $validatedData['user_id'],
+                'subscription_id' => $validatedData['subscription_id'],
+                'activated_at' => now(),
+            ]);
+            $user = User::findOrFail($validatedData['user_id']);
+            $user->increment('balance', $subscription->benefit);
+        });
 
         return redirect()->route('client.clientSubscription.index')->with('success', __('messages.created_successfully'));
     }
