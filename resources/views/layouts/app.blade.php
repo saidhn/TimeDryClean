@@ -44,16 +44,24 @@
 
                     @guest
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('client.login') }}">{{__('messages.client_login')}}</a>
+                        <a class="nav-link {{ request()->routeIs('client.login') ? 'active' : '' }}" href="{{ route('client.login') }}">
+                            <i class="fas fa-user-circle me-1"></i>{{ __('messages.client_login') }}
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('driver.login') }}">{{__('messages.driver_login')}}</a>
+                        <a class="nav-link {{ request()->routeIs('driver.login') ? 'active' : '' }}" href="{{ route('driver.login') }}">
+                            <i class="fas fa-truck me-1"></i>{{ __('messages.driver_login') }}
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('employee.login') }}">{{__('messages.employee_login')}}</a>
+                        <a class="nav-link {{ request()->routeIs('employee.login') ? 'active' : '' }}" href="{{ route('employee.login') }}">
+                            <i class="fas fa-user-tie me-1"></i>{{ __('messages.employee_login') }}
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('admin.login') }}">{{__('messages.admin_login')}}</a>
+                        <a class="nav-link {{ request()->routeIs('admin.login') ? 'active' : '' }}" href="{{ route('admin.login') }}">
+                            <i class="fas fa-shield-halved me-1"></i>{{ __('messages.admin_login') }}
+                        </a>
                     </li>
                     @if (Route::has('register'))
                     <li class="nav-item">
@@ -84,7 +92,7 @@
         </div>
     </header>
 
-    <div class="container mt-5">
+    <div class="container py-4 py-md-5">
         @yield('content')
     </div>
     @stack('scripts')
