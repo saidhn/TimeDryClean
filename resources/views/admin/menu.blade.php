@@ -55,14 +55,6 @@
 <li class="nav-item">
     <a class="nav-link" href="{{ route('admin.users.byNumber') }}">{{ __('messages.whatsapp_message') }}</a>
 </li>
-<li class="nav-item dropdown">
-    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownSettings" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-        {{ __('messages.settings') }}
-    </a>
-    <ul class="dropdown-menu" aria-labelledby="navbarDropdownSettings">
-        <li><a class="dropdown-item" href="{{ route('admin.notifications.index') }}">{{ __('messages.notification_templates') }}</a></li>
-    </ul>
-</li>
 <li class="nav-item">
     <a class="nav-link" href="{{ route('admin.logout') }}" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
         {{ __('messages.logout') }}
