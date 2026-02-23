@@ -13,14 +13,14 @@
                     <p class="lead">
                         {{ __('messages.your_balance_is') }}:
                         <strong class="{{ $client->balance < 0 ? 'text-danger' : 'text-success' }}">
-                            {{ number_format($client->balance, 2) }}
+                            {{ number_format($client->balance, 3) }}
                         </strong>
                     </p>
 
                     @if ($client->balance < 0)
                         <div class="mt-4">
-                            <a href="#" class="btn btn-lg btn-danger shadow-sm">
-                                <i class="fas fa-credit-card"></i> {{ __('messages.make_payment') }}
+                            <a href="{{ route('client.payment.create') }}" class="btn btn-lg btn-danger shadow-sm">
+                                <i class="fas fa-credit-card"></i> {{ __('messages.make_payment') }} (KNET)
                             </a>
                             <p class="mt-2 text-muted">
                                 {{ __('messages.balance_negative_message') }}

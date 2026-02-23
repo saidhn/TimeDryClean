@@ -112,6 +112,9 @@ return [
     'period_year_plural' => 'years',
     'subscription_expired' => 'Expired',
     'subscription_active' => 'Active',
+    'subscription_client_has_active' => 'This client already has an active subscription. They can only have one active subscription at a time.',
+    'subscription_client_used_plan' => 'This client cannot subscribe to this plan again. They have already used this subscription and its period has ended.',
+    'subscription_no_available_plans' => 'You have no subscription plans available. You already have an active subscription, or you have used all plans.',
     'create_subscription' => 'Create Subscription',
     'edit_subscription' => 'Edit Subscription',
     'subscription_details' => 'Subscription Details',
@@ -133,7 +136,8 @@ return [
     'order_details' => 'Order Details',
     'order_created_successfully' => 'Order Created Successfully.',
     'order_updated_successfully' => 'Order Updated Successfully',
-    'order_update_balance' => 'Balance is updated',
+    'order_update_balance' => 'Your order was updated. Your new balance is: :balance',
+    'order_deleted_balance' => 'Your order was cancelled. Your balance has been refunded. New balance: :balance',
     'search_order' => 'Search Orders',
     'street' => 'Street',
     'building' => 'Building',
@@ -198,6 +202,7 @@ return [
     'current_balance' => 'Current Balance',
     'you_have_a_credit_of' => 'You have a credit of',
     'make_payment' => 'Make Payment',
+    'pay_via_knet' => 'Pay securely via KNET (Kuwait)',
     'you_owe' => 'You owe',
     'your_balance_is' => 'Your balance is',
     'balance_negative_message' => 'Your balance is negative. Please make a payment to continue.',
@@ -224,7 +229,6 @@ return [
     'new_subtotal' => 'New Subtotal',
     'new_total' => 'New Total',
     'savings' => 'Savings',
-    'save' => 'Save',
     'clear_discount' => 'Clear Discount',
     'remove_discount' => 'Remove Discount',
     'discount_applied_by' => 'Discount Applied By',
@@ -294,6 +298,10 @@ return [
     'choose_service' => 'Choose a service...',
     'service_price' => 'Service Price',
     'enable_service' => 'Enable Service',
+
+    // Order form errors
+    'please_fix_errors' => 'Please fix the following errors before submitting:',
+    'order_error_try_again' => 'An error occurred while creating the order. Please check your input and try again.',
 
     // Order Validation Messages
     'validation_user_required' => 'Please select a user for this order.',
@@ -369,4 +377,34 @@ return [
     'all_statuses' => 'All Statuses',
     'filter_results' => 'Filter',
     'clear_filters' => 'Clear',
+
+    // Notification templates (WhatsApp)
+    'subscription_balance_added' => 'Subscription benefit added! Your new balance is: :balance',
+    'driver_delivery_completed' => 'Delivery completed. Delivery fee :amount KWD added to your balance. New balance: :balance',
+
+    // Client settings
+    'settings' => 'Settings',
+    'notification_language' => 'Notification Language',
+    'notification_language_help' => 'Choose the language for WhatsApp and transaction notifications',
+    'settings_updated' => 'Settings updated successfully',
+
+    // Admin notifications
+    'notification_templates' => 'Notification Messages',
+    'notification_templates_help' => 'Customize WhatsApp notification messages sent to users',
+    'message_key' => 'Message Key',
+    'message_arabic' => 'Message (Arabic)',
+    'message_english' => 'Message (English)',
+
+    // Payment
+    'payment_amount' => 'Payment Amount',
+    'pay_now' => 'Pay Now',
+    'payment_successful' => 'Payment Successful',
+    'payment_failed' => 'Payment Failed',
+    'payment_thank_you' => 'Thank you! Your payment has been processed successfully.',
+    'payment_failed_message' => 'Your payment could not be processed. Please try again.',
+    'payment_method_label' => 'Payment Method',
+    'payment_reference' => 'Reference',
+    'try_again' => 'Try Again',
+    'payment_completed' => 'Payment of :amount KWD received. Your new balance is: :balance',
+    'payment_history' => 'Payment History',
 ];

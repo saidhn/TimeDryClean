@@ -4,6 +4,17 @@
 <div class="container">
     <h1>{{ __('messages.add_balance') }}</h1>
 
+    @if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+    @endif
+
+    @if($subscriptions->isEmpty())
+    <div class="alert alert-info">
+        {{ __('messages.subscription_no_available_plans') }}
+    </div>
+    @else
     <form action="{{ route('client.client_subscriptions.store') }}" method="POST">
         @csrf
         @if(isset($clientSubscription))
@@ -22,5 +33,6 @@
 
         <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
     </form>
+    @endif
 </div>
 @endsection

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             ProductAndPriceSeeder::class,
             UserSeeder::class,
             SubscriptionSeeder::class,
+            NotificationTemplateSeeder::class,
             OrderSeeder::class,
             // Add other seeders here
         ]);

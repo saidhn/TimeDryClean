@@ -13,7 +13,6 @@ use App\Models\ProductServicePrice;
 use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Twilio\Rest\Client; // If using Twilio for WhatsApp
 use Illuminate\Support\Facades\DB; // For database transactions
 use Illuminate\Support\Facades\Log; // For logging errors
 use App\Enums\OrderStatus; // Import the enum class
@@ -21,15 +20,15 @@ use App\Models\Address;
 use App\Models\City;
 use App\Models\OrderDelivery;
 use App\Models\Province;
-use App\Services\WhatsAppService;
+use App\Services\NotificationService;
 
 class OrdersController extends Controller
 {
-    protected $whatsAppService;
+    protected $notificationService;
 
-    public function __construct(WhatsAppService $whatsAppService)
+    public function __construct(NotificationService $notificationService)
     {
-        $this->whatsAppService = $whatsAppService;
+        $this->notificationService = $notificationService;
     }
     /**
      * Display a listing of the resource.
@@ -124,10 +123,22 @@ class OrdersController extends Controller
      */
     public function store(Request $request)
     {
-        $driverRequired = 'nullable';
-        if ($request->has('bring_order') || $request->has('return_order')) {
-            $driverRequired = 'required';
+        // When delivery is not selected, clear delivery fields so they are not validated
+        $deliverySelected = $request->has('bring_order') || $request->has('return_order');
+        if (!$deliverySelected) {
+            $request->merge([
+                'driver_id' => null,
+                'province_id' => null,
+                'city_id' => null,
+                'street' => null,
+                'building' => null,
+                'floor' => null,
+                'apartment_number' => null,
+                'delivery_price' => null,
+            ]);
         }
+
+        $driverRequired = $deliverySelected ? 'required' : 'nullable';
         // Validate the request data (add validation for delivery and driver)
         $rules = [
             'user_id' => 'required|exists:users,id',
@@ -214,9 +225,10 @@ class OrdersController extends Controller
             $sum_price += $request->delivery_price;
         }
 
-        // Handle discount if provided
+        // Handle discount if provided (only for non-client users)
         $discountAmount = 0;
-        if ($request->filled('discount_type') && $request->filled('discount_value')) {
+        $isClient = auth()->guard('client')->check();
+        if (!$isClient && $request->filled('discount_type') && $request->filled('discount_value')) {
             $discountType = $request->discount_type;
             $discountValue = (float) $request->discount_value;
             
@@ -245,8 +257,8 @@ class OrdersController extends Controller
             $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
             $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
             
-            // Add discount fields if applicable
-            if ($discountAmount > 0) {
+            // Add discount fields if applicable (never for clients)
+            if (!$isClient && $discountAmount > 0) {
                 $orderData['discount_type'] = $request->discount_type;
                 $orderData['discount_value'] = $request->discount_value;
                 $orderData['discount_amount'] = $discountAmount;
@@ -311,11 +323,8 @@ class OrdersController extends Controller
             $user->balance -= $orderCost; // Allow negative balance
             $user->save();
 
-            // Use the service to send the whatsapp message
-            $messageBody = __('messages.order_placed_balance') . ": {$user->balance}";
-            if ($user->mobile) {
-                $this->whatsAppService->sendMessage($user->mobile, $messageBody);
-            }
+            // Send WhatsApp notification with user's preferred language
+            $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
 
             DB::commit(); // Commit the transaction
 
@@ -324,7 +333,13 @@ class OrdersController extends Controller
             DB::rollBack(); // Rollback on error
 
             Log::error("Error creating order: " . $e->getMessage()); // Log the error
-            return back()->withErrors(['message' => 'An error occurred while creating the order. Please try again later.' . $e->getMessage()])->withInput(); // Show a user-friendly error message
+
+            // User-friendly error message - do not expose technical details to clients
+            $userMessage = app()->isProduction()
+                ? __('messages.order_error_try_again')
+                : __('messages.order_error_try_again') . ' (' . $e->getMessage() . ')';
+
+            return back()->withErrors(['message' => $userMessage])->withInput();
         }
     }
 
@@ -599,9 +614,8 @@ class OrdersController extends Controller
             $user->balance = $user->balance - ($orderCost - $originalPrice);
             $user->save();
 
-            // 5. Send WhatsApp Message (if needed):
-            $messageBody = __('messages.order_update_balance') . ": {$user->balance}";
-            $this->whatsAppService->sendMessage('+970592674624', $messageBody);
+            // 5. Send WhatsApp notification with user's preferred language
+            $this->notificationService->sendTransactionNotification($user, 'order_update_balance', ['balance' => $user->balance]);
 
             DB::commit();
             return redirect()->route('orders.index')->with('success', __('messages.order_updated_successfully'));
@@ -629,24 +643,8 @@ class OrdersController extends Controller
             $user->balance += $orderCost; // Allow negative balance
             $user->save();
 
-            // Send WhatsApp Message (using Twilio example):
-            $sid = config('services.twilio.sid'); // Get from your config
-            $token = config('services.twilio.token'); // Get from your config
-            $from = config('services.twilio.whatsapp_from'); // Your Twilio WhatsApp number
-            $to = '+970592674624'; // User's WhatsApp number (E.164 format!)
-
-            $twilio = new Client($sid, $token);
-
-            $message = $twilio->messages
-                ->create(
-                    "whatsapp:{$to}", // Send to user's WhatsApp
-                    [
-                        "from" => "whatsapp:{$from}",
-                        "body" => __('messages.order_deleted_balance') . ": {$user->balance}"
-                    ]
-                );
-
-            Log::info("WhatsApp message sent successfully. SID: " . $message->sid);
+            // Send WhatsApp notification with user's preferred language
+            $this->notificationService->sendTransactionNotification($user, 'order_deleted_balance', ['balance' => $user->balance]);
 
             DB::commit();
 

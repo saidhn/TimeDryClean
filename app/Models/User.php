@@ -18,7 +18,8 @@ class User extends Authenticatable
         'password',
         'user_type',
         'address_id',
-        'mobile'
+        'mobile',
+        'notification_language',
     ];
 
     protected $hidden = [

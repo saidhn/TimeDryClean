@@ -47,4 +47,31 @@ class ClientSubscription extends Model
         $activated = $this->activated_at ?? $this->created_at;
         return $activated ? $this->subscription->getPeriodEndFrom($activated) : null;
     }
+
+    /**
+     * Check if a user has any active subscription (within benefit period).
+     */
+    public static function userHasActiveSubscription(int $userId, ?int $excludeId = null): bool
+    {
+        $query = static::where('user_id', $userId)->with('subscription');
+        if ($excludeId !== null) {
+            $query->where('id', '!=', $excludeId);
+        }
+        return $query->get()->contains(fn ($cs) => $cs->isActive());
+    }
+
+    /**
+     * Check if a user has ever had this subscription and it has expired.
+     * (They cannot subscribe to the same plan again once the period ended.)
+     */
+    public static function userHasExpiredSubscription(int $userId, int $subscriptionId, ?int $excludeId = null): bool
+    {
+        $query = static::where('user_id', $userId)
+            ->where('subscription_id', $subscriptionId)
+            ->with('subscription');
+        if ($excludeId !== null) {
+            $query->where('id', '!=', $excludeId);
+        }
+        return $query->get()->contains(fn ($cs) => !$cs->isActive());
+    }
 }

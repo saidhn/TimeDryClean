@@ -5,12 +5,16 @@
     <h3>{{ __('messages.create_order') }}</h3>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <ul>
+        <div class="alert alert-danger alert-dismissible fade show shadow" role="alert" id="order-errors-alert">
+            <h5 class="alert-heading mb-2">
+                <i class="fas fa-exclamation-triangle me-2"></i>{{ __('messages.please_fix_errors') }}
+            </h5>
+            <ul class="mb-0 ps-3">
                 @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
+                    <li class="mb-1"><strong>{{ $error }}</strong></li>
                 @endforeach
             </ul>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
     <form id="create-order-form" action="{{ route('orders.store') }}" method="POST">
@@ -216,6 +220,7 @@
                     </div>
                 </div>
 
+                @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
                 <div class="discount-form-container card mb-3">
                     <div class="card-header">
                         <h5 class="mb-0">
@@ -293,6 +298,7 @@
                         </form>
                     </div>
                 </div>
+                @endif
 
                 <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
@@ -307,7 +313,17 @@
         border-color: #dc3545;
         box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
     }
+    #order-errors-alert {
+        border-left: 4px solid #dc3545;
+    }
 </style>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('order-errors-alert')) {
+            document.getElementById('order-errors-alert').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let totalPrice = 0;
@@ -439,7 +455,9 @@
                 });
 
                 if (bringOrderCheckbox.checked || returnOrderCheckbox.checked) {
-                    const deliveryPrice = parseFloat(deliveryPriceInput.value) || 0;
+                    const deliveryPrice = deliveryPriceInput
+                        ? (parseFloat(deliveryPriceInput.value) || 0)
+                        : (bringOrderCheckbox.checked ? 1 : 0) + (returnOrderCheckbox.checked ? 1 : 0);
                     totalPrice += deliveryPrice;
                 }
 
@@ -572,35 +590,34 @@
             const deliveryOptionRequiredMsg = '{{ __("messages.delivery_option_required") }}';
 
             function validateDriverAndDelivery() {
-                const driverSelected = driverSelect.value !== "";
+                const driverSelected = driverSelect && driverSelect.value !== "";
                 const checkboxSelected = bringOrderCheckbox.checked || returnOrderCheckbox.checked;
-                const deliveryPrice = parseFloat(deliveryPriceInput.value) || 0;
+                const deliveryPrice = deliveryPriceInput ? (parseFloat(deliveryPriceInput.value) || 0) : 0;
                 
-                driverError.style.display = 'none';
-                driverError.textContent = '';
-                driverSelect.classList.remove('is-invalid');
+                if (driverError) { driverError.style.display = 'none'; driverError.textContent = ''; }
+                if (driverSelect) driverSelect.classList.remove('is-invalid');
                 bringOrderCheckbox.classList.remove('is-invalid');
                 returnOrderCheckbox.classList.remove('is-invalid');
                 
-                // Show price warning if driver selected but price is 0
-                if (driverSelected && deliveryPrice === 0) {
-                    priceWarning.style.display = 'block';
-                } else {
-                    priceWarning.style.display = 'none';
+                // Show price warning if driver selected but price is 0 (admin/employee only)
+                if (priceWarning) {
+                    if (driverSelected && deliveryPrice === 0) {
+                        priceWarning.style.display = 'block';
+                    } else {
+                        priceWarning.style.display = 'none';
+                    }
                 }
                 
                 // If driver is selected but no checkbox is selected
                 if (driverSelected && !checkboxSelected) {
-                    driverError.textContent = deliveryOptionRequiredMsg;
-                    driverError.style.display = 'block';
+                    if (driverError) { driverError.textContent = deliveryOptionRequiredMsg; driverError.style.display = 'block'; }
                     return false;
                 }
                 
                 // If checkbox is selected but no driver is selected
                 if (checkboxSelected && !driverSelected) {
-                    driverError.textContent = driverRequiredMsg;
-                    driverError.style.display = 'block';
-                    driverSelect.classList.add('is-invalid');
+                    if (driverError) { driverError.textContent = driverRequiredMsg; driverError.style.display = 'block'; }
+                    if (driverSelect) driverSelect.classList.add('is-invalid');
                     return false;
                 }
                 
@@ -608,25 +625,26 @@
             }
 
             function toggleDriverRequired() {
-                driverSelect.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                deliveryPriceInput.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                province_id.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                city_id.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                street.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                building.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                floor.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
-                apartment_number.required = (bringOrderCheckbox.checked || returnOrderCheckbox.checked);
+                const deliveryRequired = bringOrderCheckbox.checked || returnOrderCheckbox.checked;
+                if (driverSelect) driverSelect.required = deliveryRequired;
+                if (deliveryPriceInput) deliveryPriceInput.required = deliveryRequired;
+                if (province_id) province_id.required = deliveryRequired;
+                if (city_id) city_id.required = deliveryRequired;
+                if (street) street.required = deliveryRequired;
+                if (building) building.required = deliveryRequired;
+                if (floor) floor.required = deliveryRequired;
+                if (apartment_number) apartment_number.required = deliveryRequired;
 
-                driverSelect.setCustomValidity("");
+                if (driverSelect) driverSelect.setCustomValidity("");
                 validateDriverAndDelivery();
             }
 
             // Clear driver button functionality
-            clearDriverBtn.addEventListener('click', function() {
+            if (clearDriverBtn) clearDriverBtn.addEventListener('click', function() {
                 // Clear TomSelect if available
                 if (typeof driverSelectTS !== 'undefined' && driverSelectTS) {
                     driverSelectTS.clear();
-                } else {
+                } else if (driverSelect) {
                     driverSelect.value = '';
                 }
                 bringOrderCheckbox.checked = false;
@@ -639,11 +657,11 @@
 
             bringOrderCheckbox.addEventListener('change', toggleDriverRequired);
             returnOrderCheckbox.addEventListener('change', toggleDriverRequired);
-            driverSelect.addEventListener('change', validateDriverAndDelivery);
+            if (driverSelect) driverSelect.addEventListener('change', validateDriverAndDelivery);
 
             bringOrderCheckbox.addEventListener('change', updateTotal);
             returnOrderCheckbox.addEventListener('change', updateTotal);
-            deliveryPriceInput.addEventListener('input', updateTotal);
+            if (deliveryPriceInput) deliveryPriceInput.addEventListener('input', updateTotal);
 
             form.addEventListener('submit', function (event) {
                 toggleDriverRequired();
@@ -706,6 +724,7 @@
             citySelect.value = {{ old('city_id')??'-1' }};
         }
 
+        @if(Auth::guard('admin')->check() || Auth::guard('employee')->check() || Auth::guard('driver')->check())
         // Discount form functionality for create page
         const discountForm = document.getElementById('discountFormCreate');
         const typeFixed = document.getElementById('discountTypeFixed');
@@ -825,6 +844,7 @@
         };
         
         updateInputDisplay();
+        @endif
     });
 </script>
 

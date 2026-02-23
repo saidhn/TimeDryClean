@@ -7,11 +7,15 @@ use App\Models\Client;
 use App\Models\ClientSubscription;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ManageClientSubscriptionsController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
     /**
      * Display a listing of the resource.
      */
@@ -46,9 +50,21 @@ class ManageClientSubscriptionsController extends Controller
                     if (!$user || $user->user_type !== 'client') {
                         $fail(__('validation.the_user_must_be_a_client'));
                     }
+                    if (ClientSubscription::userHasActiveSubscription((int) $value)) {
+                        $fail(__('messages.subscription_client_has_active'));
+                    }
                 },
             ],
-            'subscription_id' => 'required|exists:subscriptions,id',
+            'subscription_id' => [
+                'required',
+                'exists:subscriptions,id',
+                function ($attribute, $value, $fail) use ($request) {
+                    $userId = (int) $request->input('user_id');
+                    if (ClientSubscription::userHasExpiredSubscription($userId, (int) $value)) {
+                        $fail(__('messages.subscription_client_used_plan'));
+                    }
+                },
+            ],
         ]);
 
         DB::transaction(function () use ($validatedData) {
@@ -60,6 +76,8 @@ class ManageClientSubscriptionsController extends Controller
             ]);
             $user = User::findOrFail($validatedData['user_id']);
             $user->increment('balance', $subscription->benefit);
+            $user->refresh();
+            $this->notificationService->sendTransactionNotification($user, 'subscription_balance_added', ['balance' => $user->balance]);
         });
 
         return redirect()->route('client_subscriptions.index')->with('success', __('messages.created_successfully'));
@@ -92,14 +110,26 @@ class ManageClientSubscriptionsController extends Controller
             'user_id' => [
                 'required',
                 'exists:users,id',
-                function ($attribute, $value, $fail) { //make sure the user is a client
-                    $user = \App\Models\User::find($value); // Or use User::where('id', $value)->first(); for efficiency
+                function ($attribute, $value, $fail) use ($clientSubscription) {
+                    $user = User::find($value);
                     if (!$user || $user->user_type !== 'client') {
                         $fail(__('validation.the_user_must_be_a_client'));
                     }
+                    if (ClientSubscription::userHasActiveSubscription((int) $value, $clientSubscription->id)) {
+                        $fail(__('messages.subscription_client_has_active'));
+                    }
                 },
             ],
-            'subscription_id' => 'required|exists:subscriptions,id',
+            'subscription_id' => [
+                'required',
+                'exists:subscriptions,id',
+                function ($attribute, $value, $fail) use ($request, $clientSubscription) {
+                    $userId = (int) $request->input('user_id');
+                    if (ClientSubscription::userHasExpiredSubscription($userId, (int) $value, $clientSubscription->id)) {
+                        $fail(__('messages.subscription_client_used_plan'));
+                    }
+                },
+            ],
         ]);
 
         $clientSubscription->update($validatedData);

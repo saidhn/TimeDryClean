@@ -5,8 +5,8 @@ namespace Database\Seeders;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Product;
-use App\Models\ProductService;
-use App\Models\OrderProductService; // Import the pivot model
+use App\Models\ProductServicePrice;
+use App\Models\OrderProductService;
 use App\Enums\OrderStatus;
 use Illuminate\Database\Seeder;
 use Faker\Factory as Faker;
@@ -17,19 +17,12 @@ class OrderSeeder extends Seeder
     {
         $faker = Faker::create();
         $clients = User::where('user_type', 'client')->get();
-        $products = Product::all();
-        $productServices = ProductService::all();
+        $productServicePrices = ProductServicePrice::with('product', 'productService')->get();
 
-        $this->command->info('Products count: ' . $products->count());
-        $this->command->info('Product Services count: ' . $productServices->count());
+        $this->command->info('ProductServicePrices count: ' . $productServicePrices->count());
 
-        if ($products->isEmpty()) {
-            $this->command->error('Error: Products table is empty.');
-            return;
-        }
-
-        if ($productServices->isEmpty()) {
-            $this->command->error('Error: Product Services table is empty.');
+        if ($productServicePrices->isEmpty()) {
+            $this->command->error('Error: ProductServicePrices table is empty. Run ProductAndPriceSeeder first.');
             return;
         }
 
@@ -42,7 +35,7 @@ class OrderSeeder extends Seeder
             $client = $clients->random();
             $order = Order::create([
                 'user_id' => $client->id,
-                'discount_id' => null, // Discount is always null
+                'discount_id' => null,
                 'sum_price' => 0,
                 'discount_amount' => 0,
                 'status' => $faker->randomElement([
@@ -55,27 +48,21 @@ class OrderSeeder extends Seeder
             ]);
 
             $totalPrice = 0;
-            $randomProducts = [];
+            $count = rand(1, min(5, $productServicePrices->count()));
+            $selectedPrices = $productServicePrices->random($count);
 
-            if ($products->isNotEmpty()) {
-                $randomProducts = $products->random(rand(1, min(5, $products->count())));
-            }
+            foreach ($selectedPrices as $priceRow) {
+                $quantity = rand(1, 3);
+                $lineTotal = $priceRow->price * $quantity;
+                $totalPrice += $lineTotal;
 
-            foreach ($randomProducts as $product) {
-                if ($productServices->isNotEmpty()) {
-                    $quantity = rand(1, 3);
-                    $service = $productServices->random();
-
-                    // Create OrderProductService record directly
-                    OrderProductService::create([
-                        'order_id' => $order->id,
-                        'product_id' => $product->id,
-                        'product_service_id' => $service->id,
-                        'quantity' => $quantity,
-                    ]);
-
-                    $totalPrice += $service->price * $quantity;
-                }
+                OrderProductService::create([
+                    'order_id' => $order->id,
+                    'product_id' => $priceRow->product_id,
+                    'product_service_id' => $priceRow->product_service_id,
+                    'quantity' => $quantity,
+                    'price_at_order' => $priceRow->price,
+                ]);
             }
 
             $order->sum_price = $totalPrice;

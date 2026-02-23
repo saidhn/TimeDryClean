@@ -40,4 +40,15 @@ return [
         'token' => env('TWILIO_TOKEN'),
         'whatsapp_from' => env('TWILIO_WHATSAPP_FROM'),
     ],
+
+    'knet' => [
+        'transportal_id' => env('KNET_TRANSPORTAL_ID'),
+        'transportal_password' => env('KNET_TRANSPORTAL_PASSWORD'),
+        'terminal_resource_key' => env('KNET_TERMINAL_RESOURCE_KEY'),
+        'terminal_uri' => env('KNET_TERMINAL_URI', 'https://kpaytest.com.kw/kpg/PaymentHTTP.htm'),
+        'currency' => env('KNET_CURRENCY', '414'), // KWD
+        'decimals' => env('KNET_DECIMALS', '3'),
+        'action' => env('KNET_ACTION', '1'),
+        'debug' => env('KNET_DEBUG', true),
+    ],
 ];

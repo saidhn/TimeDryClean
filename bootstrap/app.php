@@ -13,9 +13,26 @@ $app = Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->redirectGuestsTo('client/login');
+        $middleware->validateCsrfTokens(except: [
+            'payment/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Exception handling configuration
+        $exceptions->renderable(function (\Illuminate\Database\QueryException $e, $request) {
+            $pdo = $e->getPrevious();
+            $isConnectionError = $pdo instanceof \PDOException
+                && in_array($pdo->getCode(), ['HY000', '2002', '1045', '1049', '08S01']);
+
+            if ($isConnectionError) {
+                $detail = app()->isProduction()
+                    ? null
+                    : $pdo->getMessage();
+
+                return response()->view('errors.database', [
+                    'detail' => $detail,
+                ], 503);
+            }
+        });
     })->create();
 
 // Register Route Middleware HERE (Correct way in Laravel 11)

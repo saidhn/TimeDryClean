@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers\Client;
 
-use App\Enums\DeliveryStatus;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\ClientSubscription;
 use App\Models\Order;
-use App\Models\OrderDelivery;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
     public function showOrders()
     {
         $orders = Order::where('user_id', Auth::id())->latest()->paginate(10);
@@ -45,26 +47,46 @@ class ClientController extends Controller
     public function clientSubscriptionsIndex()
     {
         if (auth()->check() && auth()->user() && auth()->user()->user_type === 'client') {
-            // If the user is a client, get only their subscriptions
-            $clientSubscriptions = ClientSubscription::where('user_id', auth()->id())->paginate(10);
+            $userId = auth()->id();
+            $clientSubscriptions = ClientSubscription::where('user_id', $userId)->paginate(10);
+            $hasActiveSubscription = ClientSubscription::userHasActiveSubscription($userId);
         } else {
-            // If the user is not a client (e.g., admin), get all subscriptions
             $clientSubscriptions = ClientSubscription::paginate(10);
+            $hasActiveSubscription = false;
         }
 
-        return view('client.client_subscriptions.index', compact('clientSubscriptions'));
+        return view('client.client_subscriptions.index', compact('clientSubscriptions', 'hasActiveSubscription'));
     }
     public function clientSubscriptionsCreate()
     {
-        $subscriptions = Subscription::all();
+        $userId = auth()->id();
+        if (ClientSubscription::userHasActiveSubscription($userId)) {
+            return redirect()->route('client.clientSubscription.index')
+                ->with('error', __('messages.subscription_client_has_active'));
+        }
+        $subscriptions = Subscription::all()->filter(
+            fn ($s) => !ClientSubscription::userHasExpiredSubscription($userId, (int) $s->id)
+        );
         return view('client.client_subscriptions.create', compact('subscriptions'));
     }
     public function clientSubscriptionsStore(Request $request)
     {
+        $userId = auth()->id();
         $validatedData = $request->validate([
-            'subscription_id' => 'required|exists:subscriptions,id',
+            'subscription_id' => [
+                'required',
+                'exists:subscriptions,id',
+                function ($attribute, $value, $fail) use ($userId) {
+                    if (ClientSubscription::userHasActiveSubscription($userId)) {
+                        $fail(__('messages.subscription_client_has_active'));
+                    }
+                    if (ClientSubscription::userHasExpiredSubscription($userId, (int) $value)) {
+                        $fail(__('messages.subscription_client_used_plan'));
+                    }
+                },
+            ],
         ]);
-        $validatedData['user_id'] = auth()->id();
+        $validatedData['user_id'] = $userId;
 
         DB::transaction(function () use ($validatedData) {
             $subscription = Subscription::findOrFail($validatedData['subscription_id']);
@@ -75,6 +97,8 @@ class ClientController extends Controller
             ]);
             $user = User::findOrFail($validatedData['user_id']);
             $user->increment('balance', $subscription->benefit);
+            $user->refresh();
+            $this->notificationService->sendTransactionNotification($user, 'subscription_balance_added', ['balance' => $user->balance]);
         });
 
         return redirect()->route('client.clientSubscription.index')->with('success', __('messages.created_successfully'));
@@ -82,28 +106,24 @@ class ClientController extends Controller
     public function clientBillsIndex()
     {
         $userId = Auth::id();
+        $client = Auth::user();
 
-        $orders = Order::where('user_id', $userId)->paginate(10);
+        $orders = Order::where('user_id', $userId)
+            ->with(['orderProductServices.product', 'orderProductServices.productService', 'orderDelivery'])
+            ->latest()
+            ->paginate(10);
 
-        // Calculate total billed from orders and order_deliveries
-        $totalBilledFromOrders = Order::where('user_id', $userId)
+        // Total billed: order.sum_price already includes products + delivery - discount
+        $totalBilled = Order::where('user_id', $userId)
             ->whereNot('status', OrderStatus::CANCELLED)
             ->sum('sum_price');
 
-        $totalBilledFromDeliveries = OrderDelivery::whereNot('status', DeliveryStatus::CANCELLED) // <-- Or use whereNot
-        ->whereHas('order', function ($query) use ($userId) {
-            $query->where('user_id', $userId);
-        })->sum('price');
+        $totalPaid = \App\Models\Payment::where('user_id', $userId)
+            ->completed()
+            ->sum('amount');
 
-        $totalBilled = $totalBilledFromOrders + $totalBilledFromDeliveries;
-
-        // example: Payment::where('user_id', $userId)->sum('amount');
-        // replace with actual payment table and column names.
-        $totalPaid = 0;
-
-        $currentBalance = $totalPaid - $totalBilled;
-
-        return view('client.bills.index', compact('orders', 'totalBilled', 'totalPaid', 'currentBalance'));
+        // Use user.balance as source of truth (updated on orders, subscriptions, payments)
+        return view('client.bills.index', compact('orders', 'totalBilled', 'totalPaid', 'client'));
     }
     
 

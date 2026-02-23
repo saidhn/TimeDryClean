@@ -9,10 +9,19 @@
         {{ session('success') }}
     </div>
     @endif
+    @if (session('error'))
+    <div class="alert alert-danger">
+        {{ session('error') }}
+    </div>
+    @endif
 
     <div class="toolbar mb-3">
+        @if(!($hasActiveSubscription ?? false))
         <a href="{{ route('client.clientSubscription.create') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus"></i> {{ __('messages.add_balance') }}</a>
+        @else
+        <span class="text-muted">{{ __('messages.subscription_client_has_active') }}</span>
+        @endif
     </div>
     <div class="mt-4">
 

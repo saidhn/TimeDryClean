@@ -114,6 +114,9 @@ return [
     'period_year_plural' => 'سنوات',
     'subscription_expired' => 'منتهي',
     'subscription_active' => 'نشط',
+    'subscription_client_has_active' => 'هذا الزبون لديه اشتراك نشط بالفعل. لا يمكن أن يكون له أكثر من اشتراك نشط في نفس الوقت.',
+    'subscription_client_used_plan' => 'لا يمكن لهذا الزبون الاشتراك في هذه الخطة مرة أخرى. لقد استخدم هذا الاشتراك سابقاً وانتهت مدته.',
+    'subscription_no_available_plans' => 'لا توجد خطط اشتراك متاحة. لديك اشتراك نشط بالفعل، أو أنك استخدمت جميع الخطط.',
     'create_subscription' => 'انشاء الاشتراك',
     'edit_subscription' => 'تعديل الاشتراك',
     'subscription_details' => 'تفاصيل الاشتراك',
@@ -135,8 +138,8 @@ return [
     'order_details' => 'تفاصيل الطلب',
     'order_created_successfully' => 'تم انشاء الطلب بنجاح.',
     'order_updated_successfully' => 'تم تحديث الطلب بنجاح',
-    'order_update_balance' => 'تم تحديث الرصيد',
-    'order_placed_balance' => 'تم انشاء الطلب، الرصيد الحالي',
+    'order_update_balance' => 'تم تحديث طلبك. رصيدك الجديد هو: :balance',
+    'order_deleted_balance' => 'تم إلغاء طلبك. تم استرداد الرصيد. الرصيد الجديد: :balance',
     'search_order' => 'بحث عن طلب',
     'street' => 'الشارع',
     'building' => 'المبنى',
@@ -207,6 +210,7 @@ return [
     'current_balance' => 'الرصيد الحالي',
     'you_have_a_credit_of' => 'رصيدك الحالي',
     'make_payment' => 'قم بالدفع',
+    'pay_via_knet' => 'الدفع الآمن عبر كي نت (الكويت)',
     'you_owe' => 'انت مدين ب',
     'your_balance_is' => 'رصيدك هو',
     'balance_negative_message' => 'رصيدك الحالي بالسالب. الرجاء القيام بالدفع.',
@@ -233,7 +237,6 @@ return [
     'new_subtotal' => 'المجموع الفرعي الجديد',
     'new_total' => 'الإجمالي الجديد',
     'savings' => 'المدخرات',
-    'save' => 'وفر',
     'clear_discount' => 'مسح الخصم',
     'remove_discount' => 'إزالة الخصم',
     'discount_applied_by' => 'تم تطبيق الخصم بواسطة',
@@ -303,6 +306,10 @@ return [
     'choose_service' => 'اختر خدمة...',
     'service_price' => 'سعر الخدمة',
     'enable_service' => 'تفعيل الخدمة',
+
+    // Order form errors
+    'please_fix_errors' => 'يرجى تصحيح الأخطاء التالية قبل الإرسال:',
+    'order_error_try_again' => 'حدث خطأ أثناء إنشاء الطلب. يرجى التحقق من المدخلات والمحاولة مرة أخرى.',
 
     // Order Validation Messages
     'validation_user_required' => 'يرجى اختيار مستخدم لهذا الطلب.',
@@ -378,4 +385,34 @@ return [
     'all_statuses' => 'جميع الحالات',
     'filter_results' => 'تصفية',
     'clear_filters' => 'مسح',
+
+    // Notification templates (WhatsApp)
+    'subscription_balance_added' => 'تمت إضافة مكافأة الاشتراك! رصيدك الجديد: :balance',
+    'driver_delivery_completed' => 'تم التوصيل. تمت إضافة رسوم التوصيل :amount د.ك لرصيدك. الرصيد الجديد: :balance',
+
+    // Client settings
+    'settings' => 'الإعدادات',
+    'notification_language' => 'لغة الإشعارات',
+    'notification_language_help' => 'اختر اللغة لإشعارات الواتساب والمعاملات',
+    'settings_updated' => 'تم تحديث الإعدادات بنجاح',
+
+    // Admin notifications
+    'notification_templates' => 'رسائل الإشعارات',
+    'notification_templates_help' => 'تخصيص رسائل إشعارات الواتساب المرسلة للمستخدمين',
+    'message_key' => 'مفتاح الرسالة',
+    'message_arabic' => 'الرسالة (عربي)',
+    'message_english' => 'الرسالة (إنجليزي)',
+
+    // Payment
+    'payment_amount' => 'مبلغ الدفع',
+    'pay_now' => 'ادفع الآن',
+    'payment_successful' => 'تمت عملية الدفع بنجاح',
+    'payment_failed' => 'فشلت عملية الدفع',
+    'payment_thank_you' => 'شكراً لك! تم معالجة الدفع بنجاح.',
+    'payment_failed_message' => 'لم يتم معالجة الدفع. يرجى المحاولة مرة أخرى.',
+    'payment_method_label' => 'طريقة الدفع',
+    'payment_reference' => 'المرجع',
+    'try_again' => 'حاول مرة أخرى',
+    'payment_completed' => 'تم استلام دفعة بمبلغ :amount د.ك. رصيدك الجديد: :balance',
+    'payment_history' => 'سجل المدفوعات',
 ];

@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Driver;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DriverController extends Controller
 {
+    public function __construct(
+        protected NotificationService $notificationService
+    ) {}
     /**
      * show current orders that needs delivery (not completed and not canceled)
      */
@@ -47,6 +51,11 @@ class DriverController extends Controller
             $driver = Auth::user();
             $driver->increment('balance', $order->orderDelivery->price);
             $driver->save();
+            $driver->refresh();
+            $this->notificationService->sendTransactionNotification($driver, 'driver_delivery_completed', [
+                'amount' => $order->orderDelivery->price,
+                'balance' => $driver->balance,
+            ]);
         }
         $order->update(['status' => $status]);
         return redirect()->back()->with('success', __('messages.updated_successfully'));

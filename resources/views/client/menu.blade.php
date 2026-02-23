@@ -38,6 +38,11 @@
         {{ __('messages.balance') }}
     </a>
 </li>
+<li class="nav-item">
+    <a class="nav-link" href="{{ route('client.settings') }}">
+        {{ __('messages.settings') }}
+    </a>
+</li>
 
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown4" role="button" data-bs-toggle="dropdown" aria-expanded="false">

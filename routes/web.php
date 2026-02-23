@@ -3,6 +3,7 @@
 use App\Enums\UserType;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminManageUsersController;
+use App\Http\Controllers\Admin\AdminNotificationSettingsController;
 use App\Http\Controllers\Admin\Client\ManageClientSubscriptionsController;
 use App\Http\Controllers\Product\ProductController;
 use App\Http\Controllers\Auth\AdminAuthController;
@@ -75,15 +76,24 @@ Route::middleware(['set_locale'])->group(function () {
         Route::put('/profile', [ClientProfileController::class, 'update'])->name('client.profile.update');
 
         Route::get('/settings', [ClientSettingsController::class, 'index'])->name('client.settings');
+        Route::put('/settings', [ClientSettingsController::class, 'update'])->name('client.settings.update');
         //orders
         Route::get('/client/orders', [ClientController::class, 'showOrders'])->name('client.orders.index');
         Route::get('/client/orders/create', [ClientController::class, 'createOrder'])->name('client.orders.create');
         Route::post('/client/orders', [ClientController::class, 'storeOrder'])->name('client.orders.store');
-        //blance
+        //balance
         Route::get('/client/balance', [ClientController::class, 'balanceIndex'])->name('client.balance.index');
-        // Route::get('/payment/create', 'PaymentController@create')->name('payment.create');
+        
+        // Payment routes
+        Route::get('/payment/create', [\App\Http\Controllers\Client\PaymentController::class, 'create'])->name('client.payment.create');
+        Route::post('/payment', [\App\Http\Controllers\Client\PaymentController::class, 'store'])->name('client.payment.store');
+        Route::get('/payment/test-gateway', [\App\Http\Controllers\Client\PaymentController::class, 'testGateway'])->name('client.payment.test-gateway');
+        Route::get('/payment/complete', [\App\Http\Controllers\Client\PaymentController::class, 'complete'])->name('client.payment.complete');
 
     });
+
+    // KNET callback (must be accessible without auth for KNET to POST back)
+    Route::match(['get', 'post'], '/payment/callback', [\App\Http\Controllers\Client\PaymentController::class, 'callback'])->name('client.payment.callback');
 
     //-----------------------------------------------------------------------------------
     //--------------------------------    Admin Routes    ------------------------------
@@ -124,6 +134,10 @@ Route::middleware(['set_locale'])->group(function () {
             // });
             Route::get('/users-numbers', [AdminManageUsersController::class, 'byNumber'])->name('admin.users.byNumber');
             Route::post('/users-whatsapp', [AdminManageUsersController::class, 'sendWhatsapp'])->name('admin.users.sendWhatsapp');
+
+            // Notification templates (admin settings)
+            Route::get('/settings/notifications', [AdminNotificationSettingsController::class, 'index'])->name('admin.notifications.index');
+            Route::put('/settings/notifications', [AdminNotificationSettingsController::class, 'update'])->name('admin.notifications.update');
         });
     });
     //-----------------------------------------------------------------------------------
