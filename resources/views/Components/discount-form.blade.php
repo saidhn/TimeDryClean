@@ -10,13 +10,13 @@
                 <label class="form-label">{{ __('messages.discount_type') }}</label>
                 <div class="btn-group w-100" role="group">
                     <input type="radio" class="btn-check" name="discount_type" id="discountTypeFixed" value="fixed" 
-                           {{ $order->discount_type === 'fixed' ? 'checked' : '' }}>
+                           {{ old('discount_type', $order->discount_type) === 'fixed' ? 'checked' : '' }}>
                     <label class="btn btn-outline-primary" for="discountTypeFixed">
                         <i class="fas fa-dollar-sign"></i> {{ __('messages.fixed_amount') }}
                     </label>
                     
                     <input type="radio" class="btn-check" name="discount_type" id="discountTypePercentage" value="percentage"
-                           {{ $order->discount_type === 'percentage' ? 'checked' : '' }}>
+                           {{ old('discount_type', $order->discount_type) === 'percentage' ? 'checked' : '' }}>
                     <label class="btn btn-outline-primary" for="discountTypePercentage">
                         <i class="fas fa-percent"></i> {{ __('messages.percentage') }}
                     </label>
@@ -33,7 +33,7 @@
                            class="form-control" 
                            id="discountValue" 
                            name="discount_value"
-                           value="{{ $order->discount_value ?? '' }}"
+                           value="{{ old('discount_value', $order->discount_value ?? '') }}"
                            step="0.01" 
                            min="0.01"
                            placeholder="0.00"

@@ -28,7 +28,7 @@
                             <select id="user-select" name="user_id" class="form-control @error('user_id') is-invalid @enderror" required>
                                 <option value="">{{ __('messages.select_user') }}</option>
                                 @foreach($clients as $user)
-                                <option value="{{ $user->id }}" {{ $order->user_id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                <option value="{{ $user->id }}" {{ old('user_id', $order->user_id) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
                             </select>
                             @error('user_id')
@@ -42,20 +42,20 @@
                         <div class="form-group">
                             <label for="order_status">{{ __('messages.order_status') }}</label>
                             <select class="form-control" id="order_status" name="order_status">
-                                <option value="{{ $order->status }}" selected>{{ $order->statusTranslated() }}</option>
-                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $order->status === \App\Enums\OrderStatus::PENDING ? 'disabled' : '' }}>
+                                @php $selectedStatus = old('order_status', $order->status); @endphp
+                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PENDING ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::PENDING ? 'disabled' : '' }}>
                                     {{ __('messages.pending') }}
                                 </option>
-                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $order->status === \App\Enums\OrderStatus::PROCESSING ? 'disabled' : '' }}>
+                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PROCESSING ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::PROCESSING ? 'disabled' : '' }}>
                                     {{ __('messages.processing') }}
                                 </option>
-                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $order->status === \App\Enums\OrderStatus::SHIPPED ? 'disabled' : '' }}>
+                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $selectedStatus === \App\Enums\OrderStatus::SHIPPED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::SHIPPED ? 'disabled' : '' }}>
                                     {{ __('messages.shipped') }}
                                 </option>
-                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $order->status === \App\Enums\OrderStatus::COMPLETED ? 'disabled' : '' }}>
+                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $selectedStatus === \App\Enums\OrderStatus::COMPLETED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::COMPLETED ? 'disabled' : '' }}>
                                     {{ __('messages.completed') }}
                                 </option>
-                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $order->status === \App\Enums\OrderStatus::CANCELLED ? 'disabled' : '' }}>
+                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $selectedStatus === \App\Enums\OrderStatus::CANCELLED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::CANCELLED ? 'disabled' : '' }}>
                                     {{ __('messages.cancelled') }}
                                 </option>
                             </select>
@@ -66,13 +66,13 @@
                         <div class="form-group">
                             <label for="bring_order">{{ __('messages.delivery') }}</label>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order" {{ isset($order->orderDelivery) && ($order->orderDelivery->direction == App\Enums\DeliveryDirection::BOTH || $order->orderDelivery->direction == App\Enums\DeliveryDirection::ORDER_TO_WORK) ? 'checked' : '' }}>
+                                <input class="form-check-input" type="checkbox" name="bring_order" id="bring_order" {{ ($errors->any() ? old('bring_order') : (isset($order->orderDelivery) && ($order->orderDelivery->direction == App\Enums\DeliveryDirection::BOTH || $order->orderDelivery->direction == App\Enums\DeliveryDirection::ORDER_TO_WORK))) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="bring_order">
                                     {{ __('messages.bring_order') }}
                                 </label>
                             </div>
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order" {{ isset($order->orderDelivery) && ($order->orderDelivery->direction == App\Enums\DeliveryDirection::BOTH || $order->orderDelivery->direction == App\Enums\DeliveryDirection::WORK_TO_ORDER) ? 'checked' : '' }}>
+                                <input class="form-check-input" type="checkbox" name="return_order" id="return_order" {{ ($errors->any() ? old('return_order') : (isset($order->orderDelivery) && ($order->orderDelivery->direction == App\Enums\DeliveryDirection::BOTH || $order->orderDelivery->direction == App\Enums\DeliveryDirection::WORK_TO_ORDER))) ? 'checked' : '' }}>
                                 <label class="form-check-label" for="return_order">
                                     {{ __('messages.return_order') }}
                                 </label>
@@ -82,7 +82,7 @@
                     <div class="col-md-3">
                         <div class="form-group">
                             <label class="form-check-label" for="delivery_price">{{ __('messages.delivery_price') }}</label>
-                            <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price" value="{{ $order->orderDelivery->price ?? 0 }}">
+                            <input type="number" min="0" class="form-control" id="delivery_price" name="delivery_price" value="{{ old('delivery_price', $order->orderDelivery->price ?? 0) }}">
                             <div id="price-warning" class="text-danger small mt-1" style="display: none;">
                                 <i class="fa fa-exclamation-triangle"></i> {{ __('messages.delivery_price_zero_warning') }}
                             </div>
@@ -94,7 +94,7 @@
                             <select id="driver-select" name="driver_id" class="form-control @error('driver_id') is-invalid @enderror">
                                 <option value="">{{ __('messages.select_driver') }}</option>
                                 @foreach($drivers as $user) {{-- Assuming users are your drivers --}}
-                                <option value="{{ $user->id }}" {{ isset($order->orderDelivery) && optional($order->orderDelivery->driver)->id == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
+                                <option value="{{ $user->id }}" {{ old('driver_id', optional($order->orderDelivery)->user_id) == $user->id ? 'selected' : '' }}>{{ $user->name }}</option>
                                 @endforeach
                             </select>
                             @error('driver_id')
@@ -116,8 +116,7 @@
                             name="province_id">
                             <option value="">{{__('messages.select_province')}}</option>
                             @foreach ($provinces as $province)
-                            <option value="{{ $province->id }}" {{ optional(optional($order->orderDelivery)->address)->province_id==$province->id ? 'selected' : ''
-                                }}>{{ $province->name }}</option>
+                            <option value="{{ $province->id }}" {{ old('province_id', optional(optional($order->orderDelivery)->address)->province_id) == $province->id ? 'selected' : '' }}>{{ $province->name }}</option>
                             @endforeach
                         </select>
                         @error('province_id')
@@ -140,24 +139,24 @@
 
                     <div class="mt-3 mb-3 col-md-2">
                         <label class="form-label" for="street">{{__('messages.street')}}</label>
-                        <input class="form-control" type="text" name="street" id="street" value="{{ optional($order->orderDelivery)->street }}">
+                        <input class="form-control" type="text" name="street" id="street" value="{{ old('street', optional($order->orderDelivery)->street) }}">
                     </div>
 
                     <div class="mt-3 mb-3 col-md-2">
                         <label class="form-label" for="building">{{__('messages.building')}}</label>
                         <input class="form-control" type="text" name="building" id="building"
-                            value="{{ optional($order->orderDelivery)->building }}">
+                            value="{{ old('building', optional($order->orderDelivery)->building) }}">
                     </div>
 
                     <div class="mt-3 mb-3 col-md-2">
                         <label class="form-label" for="floor">{{__('messages.floor')}}</label>
-                        <input class="form-control" type="number" name="floor" id="floor" value="{{ optional($order->orderDelivery)->floor }}">
+                        <input class="form-control" type="number" name="floor" id="floor" value="{{ old('floor', optional($order->orderDelivery)->floor) }}">
                     </div>
 
                     <div class="mt-3 mb-3 col-md-2">
                         <label class="form-label" for="apartment_number">{{__('messages.appartment_number')}}</label>
                         <input class="form-control" type="text" name="apartment_number" id="apartment_number"
-                            value="{{ optional($order->orderDelivery)->apartment_number }}">
+                            value="{{ old('apartment_number', optional($order->orderDelivery)->apartment_number) }}">
                     </div>
                 </div>
 
@@ -174,14 +173,39 @@
                             </tr>
                         </thead>
                         <tbody id="order-product-services">
-                            @foreach($order->orderProductServices as $key => $orderProductService)
+                            @php
+                                $productServicesRows = old('order_product_services');
+                                if ($productServicesRows === null) {
+                                    $productServicesRows = $order->orderProductServices->map(fn($ops) => [
+                                        'product_id' => $ops->product_id,
+                                        'product_service_id' => $ops->product_service_id,
+                                        'quantity' => $ops->quantity,
+                                        'price_at_order' => $ops->price_at_order ?? 0,
+                                    ])->values()->all();
+                                } else {
+                                    $rows = [];
+                                    foreach ($productServicesRows as $row) {
+                                        $price = \App\Models\ProductServicePrice::where('product_id', $row['product_id'] ?? 0)
+                                            ->where('product_service_id', $row['product_service_id'] ?? 0)
+                                            ->first()?->price ?? 0;
+                                        $rows[] = [
+                                            'product_id' => $row['product_id'] ?? null,
+                                            'product_service_id' => $row['product_service_id'] ?? null,
+                                            'quantity' => $row['quantity'] ?? 1,
+                                            'price_at_order' => $price,
+                                        ];
+                                    }
+                                    $productServicesRows = $rows;
+                                }
+                            @endphp
+                            @foreach($productServicesRows as $key => $row)
                             <tr>
                                 <td>
                                     <select name="order_product_services[{{ $key }}][product_id]" class="form-control product-select"
-                                        data-selected-product="{{ $orderProductService->product_id }}"
-                                        data-selected-service="{{ $orderProductService->product_service_id }}"
-                                        data-selected-qty="{{ $orderProductService->quantity }}"
-                                        data-selected-price="{{ $orderProductService->price_at_order ?? 0 }}">
+                                        data-selected-product="{{ $row['product_id'] }}"
+                                        data-selected-service="{{ $row['product_service_id'] }}"
+                                        data-selected-qty="{{ $row['quantity'] }}"
+                                        data-selected-price="{{ $row['price_at_order'] ?? 0 }}">
                                         <option value="">{{ __('messages.select_product') }}</option>
                                     </select>
                                 </td>
@@ -197,7 +221,7 @@
                                     </small>
                                 </td>
                                 <td>
-                                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[{{ $key }}][quantity]" value="{{ $orderProductService->quantity }}">
+                                    <input type="number" min="1" class="form-control quantity-input" name="order_product_services[{{ $key }}][quantity]" value="{{ $row['quantity'] }}">
                                 </td>
                                 <td class="unit_price">
                                     <span class="price-display">0</span>
@@ -596,9 +620,13 @@
             }
         }
         
-        // Initialize city select on page load if province is selected
-        @if(optional(optional($order->orderDelivery)->address)->province_id)
-            updateAddress(provinceSelect.value, {{ optional(optional($order->orderDelivery)->address)->city_id ?? 'null' }});
+        // Initialize city select on page load if province is selected (use old() when validation failed)
+        @php
+            $initProvinceId = old('province_id', optional(optional($order->orderDelivery)->address)->province_id);
+            $initCityId = old('city_id', optional(optional($order->orderDelivery)->address)->city_id);
+        @endphp
+        @if($initProvinceId)
+            updateAddress('{{ $initProvinceId }}', {{ $initCityId ?? 'null' }});
         @endif
     });
 </script>

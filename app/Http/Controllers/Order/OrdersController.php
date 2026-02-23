@@ -622,7 +622,7 @@ class OrdersController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("Error updating order: " . $e->getMessage());
-            return back()->withErrors(['message' => 'An error occurred while updating the order. Please try again later. ' . $e->getMessage()]);
+            return back()->withErrors(['message' => 'An error occurred while updating the order. Please try again later. ' . $e->getMessage()])->withInput();
         }
     }
 
