@@ -43,21 +43,11 @@
                             <label for="order_status">{{ __('messages.order_status') }}</label>
                             <select class="form-control" id="order_status" name="order_status">
                                 @php $selectedStatus = old('order_status', $order->status); @endphp
-                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PENDING ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::PENDING ? 'disabled' : '' }}>
-                                    {{ __('messages.pending') }}
-                                </option>
-                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PROCESSING ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::PROCESSING ? 'disabled' : '' }}>
-                                    {{ __('messages.processing') }}
-                                </option>
-                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $selectedStatus === \App\Enums\OrderStatus::SHIPPED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::SHIPPED ? 'disabled' : '' }}>
-                                    {{ __('messages.shipped') }}
-                                </option>
-                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $selectedStatus === \App\Enums\OrderStatus::COMPLETED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::COMPLETED ? 'disabled' : '' }}>
-                                    {{ __('messages.completed') }}
-                                </option>
-                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $selectedStatus === \App\Enums\OrderStatus::CANCELLED ? 'selected' : '' }} {{ $order->status === \App\Enums\OrderStatus::CANCELLED ? 'disabled' : '' }}>
-                                    {{ __('messages.cancelled') }}
-                                </option>
+                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PENDING ? 'selected' : '' }}>{{ __('messages.pending') }}</option>
+                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PROCESSING ? 'selected' : '' }}>{{ __('messages.processing') }}</option>
+                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $selectedStatus === \App\Enums\OrderStatus::SHIPPED ? 'selected' : '' }}>{{ __('messages.shipped') }}</option>
+                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $selectedStatus === \App\Enums\OrderStatus::COMPLETED ? 'selected' : '' }}>{{ __('messages.completed') }}</option>
+                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $selectedStatus === \App\Enums\OrderStatus::CANCELLED ? 'selected' : '' }}>{{ __('messages.cancelled') }}</option>
                             </select>
                         </div>
                     </div>
