@@ -7,7 +7,7 @@
             </h6>
             <div class="discount-details">
                 <p class="mb-1">
-                    <strong>{{ __('messages.discount_type') }}:</strong> 
+                    <strong>{{ __('messages.discount_type') }}:</strong>
                     @if($order->discount_type === 'fixed')
                         <span class="badge bg-primary">{{ __('messages.fixed_amount') }}</span>
                     @else
@@ -15,7 +15,7 @@
                     @endif
                 </p>
                 <p class="mb-1">
-                    <strong>{{ __('messages.discount_value') }}:</strong> 
+                    <strong>{{ __('messages.discount_value') }}:</strong>
                     @if($order->discount_type === 'fixed')
                         {{ __('messages.currency_symbol') }} {{ number_format($order->discount_value, 2) }}
                     @else
@@ -23,7 +23,7 @@
                     @endif
                 </p>
                 <p class="mb-1">
-                    <strong>{{ __('messages.discount_amount_calculated') }}:</strong> 
+                    <strong>{{ __('messages.discount_amount_calculated') }}:</strong>
                     <span class="text-success fw-bold">-{{ __('messages.currency_symbol') }} {{ number_format($order->discount_amount, 2) }}</span>
                 </p>
                 @if($order->discountAppliedBy)
@@ -33,7 +33,7 @@
                 @endif
                 @if($order->discount_applied_at)
                 <p class="mb-0">
-                    <strong>{{ __('messages.discount_history_applied_at') }}:</strong> 
+                    <strong>{{ __('messages.discount_history_applied_at') }}:</strong>
                     <small class="text-muted">{{ $order->discount_applied_at->format('M d, Y g:i A') }}</small>
                 </p>
                 @endif
