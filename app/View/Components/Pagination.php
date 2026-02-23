@@ -3,16 +3,14 @@
 namespace App\View\Components;
 
 use Illuminate\View\Component;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator; // Import the paginator class
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class Pagination extends Component
 {
-    public LengthAwarePaginator $paginator; // Make the paginator property public
+    public LengthAwarePaginator $paginator;
 
     /**
      * Create a new component instance.
-     *
-     * @return void
      */
     public function __construct(LengthAwarePaginator $paginator)
     {
@@ -21,8 +19,6 @@ class Pagination extends Component
 
     /**
      * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\Contracts\View\View|\Closure|string
      */
     public function render()
     {
