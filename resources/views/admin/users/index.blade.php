@@ -18,6 +18,9 @@
                         </g>
                     </svg><!--end::Svg Icon--></span>
                 {{ __('messages.add') }}</a>
+            <a href="{{ route('admin.users.balance') }}" class="btn btn-outline-info btn-sm ms-2">
+                {{ __('messages.users_by_balance') }}
+            </a>
         </div>
         {{-- Search Form --}}
         <div class="mb-3">
