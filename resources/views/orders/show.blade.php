@@ -41,6 +41,10 @@
             <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }}</p>
             <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
 
+            @if($order->notes)
+            <p><strong>{{ __('messages.order_notes') }}:</strong> {{ $order->notes }}</p>
+            @endif
+
             <h2>{{ __('messages.order_products') }}</h2>
             <table class="table">
                 <thead>

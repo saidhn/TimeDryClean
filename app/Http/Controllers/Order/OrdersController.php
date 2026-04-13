@@ -157,6 +157,7 @@ class OrdersController extends Controller
             'order_product_services.*.quantity' => 'required|integer|min:1',
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
         ];
 
         $messages = [
@@ -256,6 +257,7 @@ class OrdersController extends Controller
             $orderData = $request->only(['user_id']); // Start with user_id
             $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
             $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
+            $orderData['notes'] = $request->input('notes') ?: null;
             
             // Add discount fields if applicable (never for clients)
             if (!$isClient && $discountAmount > 0) {
@@ -411,6 +413,7 @@ class OrdersController extends Controller
             'order_product_services.*.quantity' => 'required|integer|min:1',
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
+            'notes' => 'nullable|string|max:1000',
         ];
 
         $editMessages = [
@@ -502,6 +505,7 @@ class OrdersController extends Controller
             $orderData = $request->only(['user_id']);
             $orderData['sum_price'] = $sum_price;
             $orderData['status'] = $request->order_status; // Update the order status
+            $orderData['notes'] = $request->input('notes') ?: null;
             
             $originalPrice = ($order->sum_price);
             

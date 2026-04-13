@@ -16,6 +16,7 @@ class Order extends Model
         'sum_price',
         'discount_amount',
         'status',
+        'notes',
         'discount_type',
         'discount_value',
         'discount_applied_by',

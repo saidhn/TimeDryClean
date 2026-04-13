@@ -152,6 +152,8 @@ return [
     'recommend_driver' => 'Recommend Driver',
     'order_assigned_successfully' => 'Order assigned successfully.',
     'order_status' => 'Order Status',
+    'order_notes' => 'Notes',
+    'order_notes_placeholder' => 'Optional notes about this order...',
     'balance' => 'Balance',
     'title' => 'Title',
     'message' => 'Message',

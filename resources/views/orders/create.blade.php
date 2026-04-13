@@ -300,6 +300,17 @@
                 </div>
                 @endif
 
+                <div class="form-group mt-3 mb-3">
+                    <label for="notes">{{ __('messages.order_notes') }}</label>
+                    <textarea id="notes" name="notes" rows="3"
+                        class="form-control @error('notes') is-invalid @enderror"
+                        placeholder="{{ __('messages.order_notes_placeholder') }}"
+                    >{{ old('notes') }}</textarea>
+                    @error('notes')
+                        <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                    @enderror
+                </div>
+
                 <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
             </div>

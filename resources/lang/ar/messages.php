@@ -154,6 +154,8 @@ return [
     'recommend_driver' => 'اقترح سائق',
     'order_assigned_successfully' => 'تم توجيه الطلب بنجاح.',
     'order_status' => 'حالة الطلب',
+    'order_notes' => 'ملاحظات',
+    'order_notes_placeholder' => 'ملاحظات اختيارية حول هذا الطلب...',
     'balance' => 'الرصيد',
     'contact_messages' => 'رسائل التواصل',
     'no_contact_messages' => 'لا توجد رسائل تواصل',
