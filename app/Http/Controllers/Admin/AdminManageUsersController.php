@@ -284,6 +284,43 @@ class AdminManageUsersController extends Controller
         return view('admin.users.user_numbers', compact('users', 'filteredUsers'));
     }
 
+    public function balance(Request $request)
+    {
+        $search = $request->get('search');
+        $userTypes = $request->get('user_type', []);
+        $balanceFilter = $request->get('balance_filter', 'all');
+
+        $users = User::query();
+
+        if ($search) {
+            $users->where(function ($query) use ($search) {
+                $query->where('name', 'LIKE', "%$search%")
+                    ->orWhere('id', $search)
+                    ->orWhere('mobile', 'LIKE', "%$search%")
+                    ->orWhere('email', 'LIKE', "%$search%");
+            });
+        }
+
+        if (!empty($userTypes)) {
+            $users->whereIn('user_type', $userTypes);
+        }
+
+        if ($balanceFilter === 'positive') {
+            $users->where('balance', '>', 0);
+        } elseif ($balanceFilter === 'negative') {
+            $users->where('balance', '<', 0);
+        } elseif ($balanceFilter === 'zero') {
+            $users->where('balance', '=', 0);
+        }
+
+        $users = $users->paginate(10)->appends($request->query());
+
+        return view('admin.users.balance', [
+            'users' => $users,
+            'balanceFilter' => $balanceFilter,
+        ]);
+    }
+
     public function sendWhatsapp(Request $request)
     {
         if (!$request->has('send_negative_balance')) {

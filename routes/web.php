@@ -117,6 +117,7 @@ Route::middleware(['set_locale'])->group(function () {
 
             // Users
             Route::get('/users', [AdminManageUsersController::class, 'index'])->name('admin.users.index');
+            Route::get('/users/balance', [AdminManageUsersController::class, 'balance'])->name('admin.users.balance');
             Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
             Route::post('/users', [AdminManageUsersController::class, 'store'])->name('admin.users.store');
             Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');

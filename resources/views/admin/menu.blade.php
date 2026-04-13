@@ -1,7 +1,11 @@
-<li class="nav-item">
-    <a class="nav-link" href="{{ route('admin.users.index') }}">
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUsers" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         {{ __('messages.users') }}
     </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownUsers">
+        <li><a class="dropdown-item" href="{{ route('admin.users.index') }}">{{ __('messages.manage_users') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('admin.users.balance') }}">{{ __('messages.users_by_balance') }}</a></li>
+    </ul>
 </li>
 <li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="{{ route('orders.index') }}" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
