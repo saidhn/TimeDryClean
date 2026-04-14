@@ -100,9 +100,17 @@ class KnetService
             )),
         ]);
 
-        // If payment successful, add to user balance
+        // If payment successful, credit the appropriate balance
         if ($paymentStatus === 'completed') {
-            $payment->user->increment('balance', $payment->amount);
+            $details = json_decode($payment->details, true) ?? [];
+            if (($details['type'] ?? null) === 'points_package' && isset($details['purchase_id'])) {
+                $purchase = \App\Models\UserPointsPackage::find($details['purchase_id']);
+                if ($purchase) {
+                    app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
+                }
+            } else {
+                $payment->user->increment('balance', $payment->amount);
+            }
         }
 
         return [
@@ -110,6 +118,40 @@ class KnetService
             'payment_status' => $paymentStatus,
             'tracking_id' => $trackingId,
             'redirect_url' => route('client.payment.complete', ['tracking_id' => $trackingId]),
+        ];
+    }
+
+    /**
+     * Create a points package payment and get redirect URL
+     */
+    public function createPointsPackagePayment(float $amount, int $userId, int $purchaseId): array
+    {
+        $trackingId = 'TRK-PTS-' . time() . '-' . Str::random(8);
+
+        $payment = Payment::create([
+            'user_id' => $userId,
+            'amount' => $amount,
+            'payment_method' => 'KNET',
+            'transaction_id' => $trackingId,
+            'status' => 'pending',
+            'details' => json_encode([
+                'tracking_id' => $trackingId,
+                'type' => 'points_package',
+                'purchase_id' => $purchaseId,
+            ]),
+        ]);
+
+        if ($this->config['debug']) {
+            $paymentUri = route('client.payment.test-gateway', ['tracking_id' => $trackingId]);
+        } else {
+            $paymentUri = $this->getKnetPaymentUrl($amount, $trackingId);
+        }
+
+        return [
+            'status' => 'success',
+            'tracking_id' => $trackingId,
+            'payment_uri' => $paymentUri,
+            'payment_id' => $payment->id,
         ];
     }
 

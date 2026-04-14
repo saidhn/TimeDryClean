@@ -311,6 +311,32 @@
                     @enderror
                 </div>
 
+                @if(Auth::guard('admin')->check() || Auth::guard('employee')->check())
+                <div class="card mb-3 border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <strong><i class="fas fa-credit-card me-2"></i>{{ __('messages.payment_method_label') }}</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex gap-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payMoney"
+                                       value="money" {{ old('payment_method', 'money') === 'money' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="payMoney">
+                                    <i class="fas fa-money-bill me-1"></i>{{ __('messages.pay_with_money') }}
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payPoints"
+                                       value="points" {{ old('payment_method') === 'points' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="payPoints">
+                                    <i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>
                 <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.cancel') }}</a>
             </div>

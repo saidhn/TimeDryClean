@@ -39,6 +39,14 @@
             <p><strong>{{ __('messages.client_subscription') }}:</strong> {{ $order->clientSubscription->id }}</p>
             @endif
             <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }}</p>
+            <p><strong>{{ __('messages.payment_method_label') }}:</strong>
+                @if(($order->payment_method ?? 'money') === 'points')
+                    <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}</span>
+                    &nbsp;<span class="text-muted small">({{ number_format($order->points_used ?? 0, 2) }} pts {{ __('messages.points_used') }})</span>
+                @else
+                    <span class="badge bg-success"><i class="fas fa-money-bill me-1"></i>{{ __('messages.pay_with_money') }}</span>
+                @endif
+            </p>
             <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
 
             @if($order->notes)

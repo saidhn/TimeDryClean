@@ -13,6 +13,7 @@ class Product extends Model
     protected $fillable = [
         'name',
         'image_path',
+        'points_price',
     ];
 
     public function orderProductServices()

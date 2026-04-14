@@ -39,6 +39,11 @@
     </a>
 </li>
 <li class="nav-item">
+    <a class="nav-link" href="{{ route('client.points.index') }}">
+        <i class="fas fa-star me-1"></i>{{ __('messages.my_points') }}
+    </a>
+</li>
+<li class="nav-item">
     <a class="nav-link" href="{{ route('client.settings') }}">
         {{ __('messages.settings') }}
     </a>

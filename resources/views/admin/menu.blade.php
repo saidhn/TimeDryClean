@@ -8,6 +8,16 @@
     </ul>
 </li>
 <li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownPoints" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        {{ __('messages.points_system') }}
+    </a>
+    <ul class="dropdown-menu" aria-labelledby="navbarDropdownPoints">
+        <li><a class="dropdown-item" href="{{ route('points.packages.index') }}">{{ __('messages.manage_points_packages') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('points.assign.form') }}">{{ __('messages.assign_points') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('points.history') }}">{{ __('messages.points_purchase_history') }}</a></li>
+    </ul>
+</li>
+<li class="nav-item dropdown">
     <a class="nav-link dropdown-toggle" href="{{ route('orders.index') }}" id="navbarDropdown1" role="button" data-bs-toggle="dropdown" aria-expanded="false">
         {{ __('messages.orders') }}
     </a>

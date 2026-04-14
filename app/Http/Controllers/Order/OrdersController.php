@@ -158,6 +158,7 @@ class OrdersController extends Controller
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'nullable|in:money,points',
         ];
 
         $messages = [
@@ -191,7 +192,10 @@ class OrdersController extends Controller
 
         // Calculate sum_price using ProductServicePrice
         $sum_price = 0;
+        $paymentMethod = $request->input('payment_method', 'money');
+
         $orderProductServicesWithPrices = [];
+        $total_points = 0;
         foreach ($request->order_product_services as $orderProductServiceData) {
             $productServicePrice = ProductServicePrice::where('product_id', $orderProductServiceData['product_id'])
                 ->where('product_service_id', $orderProductServiceData['product_service_id'])
@@ -203,10 +207,20 @@ class OrdersController extends Controller
             
             $priceAtOrder = $productServicePrice->price;
             $sum_price += $priceAtOrder * $orderProductServiceData['quantity'];
-            
-            $orderProductServicesWithPrices[] = array_merge($orderProductServiceData, [
-                'price_at_order' => $priceAtOrder
-            ]);
+
+            $item = array_merge($orderProductServiceData, ['price_at_order' => $priceAtOrder]);
+
+            if ($paymentMethod === 'points') {
+                $product = Product::find($orderProductServiceData['product_id']);
+                if (!$product || $product->points_price === null) {
+                    return back()->withErrors(['message' => __('messages.product_no_points_price_warning')])->withInput();
+                }
+                $pointsAtOrder = (float) $product->points_price;
+                $total_points += $pointsAtOrder * $orderProductServiceData['quantity'];
+                $item['points_at_order'] = $pointsAtOrder;
+            }
+
+            $orderProductServicesWithPrices[] = $item;
         }
 
         // Add delivery price to sum_price if applicable
@@ -258,6 +272,10 @@ class OrdersController extends Controller
             $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
             $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
             $orderData['notes'] = $request->input('notes') ?: null;
+            $orderData['payment_method'] = $paymentMethod;
+            if ($paymentMethod === 'points') {
+                $orderData['points_used'] = $total_points;
+            }
             
             // Add discount fields if applicable (never for clients)
             if (!$isClient && $discountAmount > 0) {
@@ -313,20 +331,27 @@ class OrdersController extends Controller
                 $order->orderProductServices()->create($orderProductServiceData);
             }
 
-            // Update User Balance:
+            // Update User Balance or Points:
             $user = User::find($request->user_id);
             if (!$user) {
                 throw new \Exception("User not found."); // Handle user not found
             }
 
-            // Calculate the total order cost (including delivery if applicable)
-            $orderCost = $order->sum_price;  // Assuming sum_price is already calculated
+            $orderCost = $order->sum_price;
 
-            $user->balance -= $orderCost; // Allow negative balance
-            $user->save();
-
-            // Send WhatsApp notification with user's preferred language
-            $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
+            if ($paymentMethod === 'points') {
+                if ($user->points_balance < $total_points) {
+                    DB::rollBack();
+                    return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
+                }
+                $user->points_balance -= $total_points;
+                $user->save();
+                $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
+            } else {
+                $user->balance -= $orderCost;
+                $user->save();
+                $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
+            }
 
             DB::commit(); // Commit the transaction
 
@@ -414,6 +439,7 @@ class OrdersController extends Controller
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
+            'payment_method' => 'nullable|in:money,points',
         ];
 
         $editMessages = [
@@ -454,6 +480,8 @@ class OrdersController extends Controller
 
             // 1. Update Order:
             $sum_price = 0;
+            $editPaymentMethod = $request->input('payment_method', $order->payment_method ?? 'money');
+            $total_points_edit = 0;
             $orderProductServicesWithPrices = [];
             foreach ($request->order_product_services as $orderProductServiceData) {
                 $productServicePrice = ProductServicePrice::where('product_id', $orderProductServiceData['product_id'])
@@ -467,10 +495,21 @@ class OrdersController extends Controller
                 
                 $priceAtOrder = $productServicePrice->price;
                 $sum_price += $priceAtOrder * $orderProductServiceData['quantity'];
-                
-                $orderProductServicesWithPrices[] = array_merge($orderProductServiceData, [
-                    'price_at_order' => $priceAtOrder
-                ]);
+
+                $item = array_merge($orderProductServiceData, ['price_at_order' => $priceAtOrder]);
+
+                if ($editPaymentMethod === 'points') {
+                    $product = Product::find($orderProductServiceData['product_id']);
+                    if (!$product || $product->points_price === null) {
+                        DB::rollBack();
+                        return back()->withErrors(['message' => __('messages.product_no_points_price_warning')])->withInput();
+                    }
+                    $pointsAtOrder = (float) $product->points_price;
+                    $total_points_edit += $pointsAtOrder * $orderProductServiceData['quantity'];
+                    $item['points_at_order'] = $pointsAtOrder;
+                }
+
+                $orderProductServicesWithPrices[] = $item;
             }
 
             if ($driverRequired == 'required') {
@@ -506,6 +545,8 @@ class OrdersController extends Controller
             $orderData['sum_price'] = $sum_price;
             $orderData['status'] = $request->order_status; // Update the order status
             $orderData['notes'] = $request->input('notes') ?: null;
+            $orderData['payment_method'] = $editPaymentMethod;
+            $orderData['points_used'] = ($editPaymentMethod === 'points') ? $total_points_edit : 0;
             
             $originalPrice = ($order->sum_price);
             
@@ -609,13 +650,32 @@ class OrdersController extends Controller
                 $order->orderProductServices()->create($orderProductServiceData);
             }
 
-            // 4. Update User Balance (if needed - be careful with this logic):
+            // 4. Update User Balance or Points:
             $user = User::find($request->user_id);
             if (!$user) {
                 throw new \Exception("User not found.");
             }
             $orderCost = $order->sum_price;
-            $user->balance = $user->balance - ($orderCost - $originalPrice);
+            $originalPaymentMethod = $order->getOriginal('payment_method') ?? $order->payment_method ?? 'money';
+            $originalPointsUsed = (float) ($order->getOriginal('points_used') ?? $order->points_used ?? 0);
+
+            // Reverse original charge
+            if ($originalPaymentMethod === 'points') {
+                $user->points_balance += $originalPointsUsed;
+            } else {
+                $user->balance += $originalPrice;
+            }
+
+            // Apply new charge
+            if ($editPaymentMethod === 'points') {
+                if ($user->points_balance < $total_points_edit) {
+                    DB::rollBack();
+                    return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
+                }
+                $user->points_balance -= $total_points_edit;
+            } else {
+                $user->balance -= $orderCost;
+            }
             $user->save();
 
             // 5. Send WhatsApp notification with user's preferred language
@@ -636,15 +696,22 @@ class OrdersController extends Controller
         try {
             DB::beginTransaction();
 
-            $order->delete();
-
             $user = User::find($order->user_id);
             if (!$user) {
                 throw new \Exception("User not found.");
             }
 
             $orderCost = $order->sum_price;
-            $user->balance += $orderCost; // Allow negative balance
+            $deletedPaymentMethod = $order->payment_method ?? 'money';
+            $deletedPointsUsed = (float) ($order->points_used ?? 0);
+
+            $order->delete();
+
+            if ($deletedPaymentMethod === 'points') {
+                $user->points_balance += $deletedPointsUsed;
+            } else {
+                $user->balance += $orderCost;
+            }
             $user->save();
 
             // Send WhatsApp notification with user's preferred language

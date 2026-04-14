@@ -57,6 +57,7 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:products,name',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'points_price' => 'nullable|numeric|min:0',
             'services' => 'nullable|array',
             'services.*.enabled' => 'nullable|boolean',
             'services.*.price' => 'nullable|numeric|min:0|max:9999.999',
@@ -77,6 +78,7 @@ class ProductController extends Controller
         $product = Product::create([
             'name' => $validatedData['name'],
             'image_path' => $validatedData['image_path'] ?? null,
+            'points_price' => $validatedData['points_price'] ?? null,
         ]);
 
         if (isset($validatedData['services'])) {
@@ -121,6 +123,7 @@ class ProductController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255|unique:products,name,' . $product->id,
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'points_price' => 'nullable|numeric|min:0',
             'services' => 'nullable|array',
             'services.*.enabled' => 'nullable|boolean',
             'services.*.price' => 'nullable|numeric|min:0|max:9999.999',
@@ -144,6 +147,7 @@ class ProductController extends Controller
         $product->update([
             'name' => $data['name'],
             'image_path' => $data['image_path'] ?? $product->image_path,
+            'points_price' => $data['points_price'] ?? null,
         ]);
 
         if (isset($data['services'])) {

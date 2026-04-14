@@ -22,6 +22,8 @@ use App\Http\Controllers\Order\OrderAssignmentController;
 use App\Http\Controllers\Order\OrdersController;
 use App\Http\Controllers\ProductService\ProductServiceController;
 use App\Http\Controllers\Subscription\SubscriptionController;
+use App\Http\Controllers\Points\PointsPackageController;
+use App\Http\Controllers\Points\ClientPointsController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
@@ -238,6 +240,24 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/orders_assign', [OrderAssignmentController::class, 'showAssignmentForm'])->name('orders.assign.form');
         Route::post('/orders_assign', [OrderAssignmentController::class, 'assignOrder'])->name('orders.assign');
         Route::get('/orders_recommend/{order}/recommend-driver', [OrderAssignmentController::class, 'recommendDriver'])->name('orders.recommend.driver');
+    });
+
+    //-----------------------------------------------------------------------------------
+    //--------------------------------      points        -------------------------------
+    //-----------------------------------------------------------------------------------
+    Route::resource('points/packages', PointsPackageController::class)
+        ->names('points.packages')
+        ->middleware('auth:admin,employee');
+
+    Route::middleware('auth:admin,employee')->group(function () {
+        Route::get('/points/assign', [ClientPointsController::class, 'assignForm'])->name('points.assign.form');
+        Route::post('/points/assign', [ClientPointsController::class, 'assign'])->name('points.assign');
+        Route::get('/points/history', [ClientPointsController::class, 'history'])->name('points.history');
+    });
+
+    Route::middleware('auth:client')->prefix('client')->group(function () {
+        Route::get('/points', [ClientPointsController::class, 'index'])->name('client.points.index');
+        Route::post('/points/buy', [ClientPointsController::class, 'buy'])->name('client.points.buy');
     });
 
     //-----------------------------------------------------------------------------------

@@ -20,6 +20,8 @@ class User extends Authenticatable
         'address_id',
         'mobile',
         'notification_language',
+        'balance',
+        'points_balance',
     ];
 
     protected $hidden = [
@@ -63,5 +65,10 @@ class User extends Authenticatable
     public function orders()
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function userPointsPackages()
+    {
+        return $this->hasMany(UserPointsPackage::class);
     }
 }

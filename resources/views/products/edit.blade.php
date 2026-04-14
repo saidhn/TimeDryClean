@@ -132,6 +132,30 @@
                             @endif
                         </div>
 
+                        <div class="border-top pt-4 mt-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="fw-bold mb-0">
+                                    <i class="fas fa-star me-2"></i>
+                                    {{ __('messages.points_price') }}
+                                </h6>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="points_price" class="form-label">{{ __('messages.points_per_unit') }}</label>
+                                <div class="input-group">
+                                    <input type="number" id="points_price" name="points_price"
+                                           class="form-control @error('points_price') is-invalid @enderror"
+                                           value="{{ old('points_price', $product->points_price) }}"
+                                           step="0.01" min="0"
+                                           placeholder="{{ __('messages.optional') }}">
+                                    <span class="input-group-text">pts</span>
+                                </div>
+                                @error('points_price')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                                @enderror
+                                <div class="form-text">{{ __('messages.points_price_help') }}</div>
+                            </div>
+                        </div>
+
                         <div class="border-top pt-4 mt-4">
                             <div class="d-flex justify-content-between">
                                 <a href="{{ route('products.index') }}" class="btn btn-secondary">

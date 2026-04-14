@@ -15,10 +15,12 @@ class OrderProductService extends Model
         'product_service_id',
         'quantity',
         'price_at_order',
+        'points_at_order',
     ];
 
     protected $casts = [
         'price_at_order' => 'decimal:3',
+        'points_at_order' => 'integer',
     ];
 
     public function order()
