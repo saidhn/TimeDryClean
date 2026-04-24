@@ -28,15 +28,8 @@
 
                         <div class="mb-3">
                             <label for="user_id" class="form-label fw-bold">{{ __('messages.user') }}</label>
-                            <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required>
-                                <option value="">{{ __('messages.select_user') }}</option>
-                                @foreach ($clients as $client)
-                                <option value="{{ $client->id }}" {{ old('user_id') == $client->id ? 'selected' : '' }}>
-                                    {{ $client->name }} ({{ $client->mobile }}) — {{ number_format($client->points_balance, 2) }} pts
-                                </option>
-                                @endforeach
-                            </select>
-                            @error('user_id')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            <select name="user_id" id="user_id" class="form-select @error('user_id') is-invalid @enderror" required></select>
+                            @error('user_id')<div class="invalid-feedback d-block">{{ $message }}</div>@enderror
                         </div>
 
                         <div class="mb-3">
@@ -67,3 +60,68 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    let clientSelect = new TomSelect('#user_id', {
+        valueField: 'id',
+        labelField: 'name',
+        searchField: ['id', 'name', 'mobile'],
+        load: function (query, callback) {
+            fetch(`/users/search?q=${encodeURIComponent(query)}&user_type={{ App\Enums\UserType::CLIENT }}`)
+                .then(response => response.json())
+                .then(json => {
+                    if (json.data && json.data.length) {
+                        callback(json.data);
+                    } else {
+                        callback([]);
+                    }
+                })
+                .catch(() => callback([]));
+        },
+        render: {
+            option: function (item, escape) {
+                return `<div>
+                    <strong>${escape(item.name)}</strong>
+                    <div class="text-muted">ID: ${escape(String(item.id))}, Mobile: ${escape(item.mobile)}</div>
+                </div>`;
+            },
+            item: function (item, escape) {
+                return `<div>${escape(item.name)}</div>`;
+            }
+        }
+    });
+
+    // Pre-load initial list
+    fetch(`/users/search?q=&user_type={{ App\Enums\UserType::CLIENT }}`)
+        .then(response => response.json())
+        .then(json => {
+            if (json.data && json.data.length) {
+                clientSelect.addOptions(json.data);
+            }
+            @if(old('user_id'))
+            const oldUserId = '{{ old('user_id') }}';
+            const existing = json.data ? json.data.find(u => String(u.id) === String(oldUserId)) : null;
+            if (existing) {
+                clientSelect.addOption(existing);
+                clientSelect.setValue(oldUserId, true);
+            } else {
+                fetch(`/users/search?q=${encodeURIComponent(oldUserId)}&user_type={{ App\Enums\UserType::CLIENT }}`)
+                    .then(r => r.json())
+                    .then(json2 => {
+                        if (json2.data && json2.data.length) {
+                            const user = json2.data.find(u => String(u.id) === String(oldUserId));
+                            if (user) {
+                                clientSelect.addOption(user);
+                                clientSelect.setValue(oldUserId, true);
+                            }
+                        }
+                    });
+            }
+            @endif
+        })
+        .catch(error => console.error('Error loading clients:', error));
+});
+</script>
+@endpush

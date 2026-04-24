@@ -84,6 +84,7 @@
                             <th>{{ __('messages.user_type') }}</th>
                             <th>{{ __('messages.address') }}</th>
                             <th>{{ __('messages.balance') }}</th>
+                            <th>{{ __('messages.points_balance') }}</th>
                             <th>{{ __('messages.modify') }}</th>
                         </tr>
                     </thead>
@@ -104,6 +105,13 @@
                                         <span class="badge bg-danger">{{ $user->balance }}</span>
                                     @else
                                         <span class="badge bg-secondary">{{ $user->balance }}</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($user->points_balance > 0)
+                                        <span class="badge bg-primary">{{ number_format($user->points_balance, 2) }}</span>
+                                    @else
+                                        <span class="badge bg-secondary">{{ number_format($user->points_balance, 2) }}</span>
                                     @endif
                                 </td>
                                 <td>

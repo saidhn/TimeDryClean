@@ -114,9 +114,8 @@ class ClientPointsController extends Controller
     public function assignForm()
     {
         $packages = PointsPackage::active()->get();
-        $clients  = User::where('user_type', 'client')->get();
 
-        return view('points.admin.assign', compact('packages', 'clients'));
+        return view('points.admin.assign', compact('packages'));
     }
 
     /**
