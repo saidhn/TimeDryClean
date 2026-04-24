@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Support\Str;
 
@@ -103,11 +104,16 @@ class KnetService
         // If payment successful, credit the appropriate balance
         if ($paymentStatus === 'completed') {
             $details = json_decode($payment->details, true) ?? [];
-            if (($details['type'] ?? null) === 'points_package' && isset($details['purchase_id'])) {
+            $type = $details['type'] ?? null;
+
+            if ($type === 'points_package' && isset($details['purchase_id'])) {
                 $purchase = \App\Models\UserPointsPackage::find($details['purchase_id']);
                 if ($purchase) {
                     app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
                 }
+            } elseif ($type === 'order') {
+                // Order stays Pending — no balance to credit.
+                // The order was already created; payment completion confirms it.
             } else {
                 $payment->user->increment('balance', $payment->amount);
             }
@@ -118,6 +124,40 @@ class KnetService
             'payment_status' => $paymentStatus,
             'tracking_id' => $trackingId,
             'redirect_url' => route('client.payment.complete', ['tracking_id' => $trackingId]),
+        ];
+    }
+
+    /**
+     * Create a payment for an order and get redirect URL
+     */
+    public function createOrderPayment(float $amount, int $userId, int $orderId): array
+    {
+        $trackingId = 'TRK-ORD-' . time() . '-' . Str::random(8);
+
+        $payment = Payment::create([
+            'user_id'        => $userId,
+            'amount'         => $amount,
+            'payment_method' => 'KNET',
+            'transaction_id' => $trackingId,
+            'status'         => 'pending',
+            'details'        => json_encode([
+                'tracking_id' => $trackingId,
+                'type'        => 'order',
+                'order_id'    => $orderId,
+            ]),
+        ]);
+
+        if ($this->config['debug']) {
+            $paymentUri = route('client.payment.test-gateway', ['tracking_id' => $trackingId]);
+        } else {
+            $paymentUri = $this->getKnetPaymentUrl($amount, $trackingId);
+        }
+
+        return [
+            'status'      => 'success',
+            'tracking_id' => $trackingId,
+            'payment_uri' => $paymentUri,
+            'payment_id'  => $payment->id,
         ];
     }
 

@@ -54,7 +54,7 @@
                         <tbody id="order-product-services">
                             @for ($i = 0; $i < (old('order_product_services') ? count(old('order_product_services')) :
                                 1); $i++)
-                                <tr>
+                                <tr data-row-index="{{ $i }}">
                                     <td>
                                         <select name="order_product_services[{{ $i }}][product_id]"
                                                 class="form-control product-select"
@@ -332,6 +332,14 @@
                                     <i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}
                                 </label>
                             </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="payment_method" id="payKnet"
+                                       value="knet" {{ old('payment_method') === 'knet' ? 'checked' : '' }}>
+                                <label class="form-check-label" for="payKnet">
+                                    <i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_with_knet') }}
+                                    <span class="badge bg-info ms-1">{{ __('messages.knet_sandbox') }}</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -391,6 +399,9 @@
 
             // Store TomSelect instances for products
             const productSelects = {};
+
+            // Monotonically increasing counter so row indices never collide after removals
+            let rowCounter = {{ old('order_product_services') ? count(old('order_product_services')) : 1 }};
 
             // Function to initialize TomSelect on a product select element
             function initProductSelect(selectElement, rowIndex) {
@@ -564,9 +575,9 @@
             // The TomSelect onChange event handles loading services
 
             $('.add-row').on('click', function () {
-                var lastRowIndex = $('#order-product-services tr').length;
+                var lastRowIndex = rowCounter++;
                 var newRow = `
-            <tr>
+            <tr data-row-index="${lastRowIndex}">
                 <td>
                     <select name="order_product_services[${lastRowIndex}][product_id]" class="form-control product-select">
                         <option value="">{{ __('messages.select_product') }}</option>
@@ -608,7 +619,7 @@
             });
 
             $(document).on('click', '.remove-row', function () {
-                const rowIndex = $(this).closest('tr').index();
+                const rowIndex = $(this).closest('tr').data('row-index');
                 // Destroy TomSelect instance before removing row
                 if (productSelects[rowIndex]) {
                     productSelects[rowIndex].destroy();
@@ -701,6 +712,24 @@
             if (deliveryPriceInput) deliveryPriceInput.addEventListener('input', updateTotal);
 
             form.addEventListener('submit', function (event) {
+                // Ensure every TomSelect product value is reflected in the native <select>
+                // before the browser serialises the form. TomSelect keeps the option in its
+                // internal store; we force-create the matching <option> element when needed.
+                document.querySelectorAll('#order-product-services tr').forEach(function (row) {
+                    const sel = row.querySelector('.product-select');
+                    if (sel && sel.tomselect) {
+                        const value = String(sel.tomselect.getValue());
+                        if (value) {
+                            if (!sel.querySelector('option[value="' + value + '"]')) {
+                                const opt = document.createElement('option');
+                                opt.value = value;
+                                sel.appendChild(opt);
+                            }
+                            sel.value = value;
+                        }
+                    }
+                });
+
                 toggleDriverRequired();
                 let hasError = false;
 

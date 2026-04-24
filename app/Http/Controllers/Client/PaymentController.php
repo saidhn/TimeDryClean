@@ -104,7 +104,10 @@ class PaymentController extends Controller
         $payment = $this->knetService->getPaymentByTrackingId($trackingId);
 
         if (!$payment) {
-            return redirect()->route('client.bills.index')->with('error', 'Payment not found.');
+            $fallback = Auth::guard('admin')->check() || Auth::guard('employee')->check()
+                ? route('orders.index')
+                : route('client.bills.index');
+            return redirect($fallback)->with('error', 'Payment not found.');
         }
 
         return view('client.payment.complete', compact('payment'));

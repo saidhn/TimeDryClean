@@ -21,14 +21,17 @@ use App\Models\City;
 use App\Models\OrderDelivery;
 use App\Models\Province;
 use App\Services\NotificationService;
+use App\Services\KnetService;
 
 class OrdersController extends Controller
 {
     protected $notificationService;
+    protected $knetService;
 
-    public function __construct(NotificationService $notificationService)
+    public function __construct(NotificationService $notificationService, KnetService $knetService)
     {
         $this->notificationService = $notificationService;
+        $this->knetService = $knetService;
     }
     /**
      * Display a listing of the resource.
@@ -158,7 +161,7 @@ class OrdersController extends Controller
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
-            'payment_method' => 'nullable|in:money,points',
+            'payment_method' => 'nullable|in:money,points,knet',
         ];
 
         $messages = [
@@ -347,6 +350,25 @@ class OrdersController extends Controller
                 $user->points_balance -= $total_points;
                 $user->save();
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
+            } elseif ($paymentMethod === 'knet') {
+                // No balance deduction — redirect to KNET gateway; order stays Pending until payment confirmed.
+                DB::commit();
+
+                $result = $this->knetService->createOrderPayment(
+                    (float) $order->sum_price,
+                    $user->id,
+                    $order->id
+                );
+
+                if ($result['status'] !== 'success') {
+                    Log::error('Failed to create KNET order payment', ['order_id' => $order->id]);
+                    return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')])->withInput();
+                }
+
+                // Link payment record to the order
+                $order->update(['payment_id' => $result['payment_id']]);
+
+                return redirect($result['payment_uri']);
             } else {
                 $user->balance -= $orderCost;
                 $user->save();
@@ -439,7 +461,7 @@ class OrdersController extends Controller
             'discount_type' => 'nullable|in:fixed,percentage',
             'discount_value' => 'nullable|numeric|min:0.01',
             'notes' => 'nullable|string|max:1000',
-            'payment_method' => 'nullable|in:money,points',
+            'payment_method' => 'nullable|in:money,points,knet',
         ];
 
         $editMessages = [

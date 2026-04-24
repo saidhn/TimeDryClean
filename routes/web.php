@@ -86,12 +86,16 @@ Route::middleware(['set_locale'])->group(function () {
         //balance
         Route::get('/client/balance', [ClientController::class, 'balanceIndex'])->name('client.balance.index');
         
-        // Payment routes
+        // Payment routes (client-only: balance top-up initiation)
         Route::get('/payment/create', [\App\Http\Controllers\Client\PaymentController::class, 'create'])->name('client.payment.create');
         Route::post('/payment', [\App\Http\Controllers\Client\PaymentController::class, 'store'])->name('client.payment.store');
+
+    });
+
+    // KNET gateway & result pages — accessible to any authenticated guard (admin, employee, client)
+    Route::middleware(['auth:admin,employee,client'])->group(function () {
         Route::get('/payment/test-gateway', [\App\Http\Controllers\Client\PaymentController::class, 'testGateway'])->name('client.payment.test-gateway');
         Route::get('/payment/complete', [\App\Http\Controllers\Client\PaymentController::class, 'complete'])->name('client.payment.complete');
-
     });
 
     // KNET callback (must be accessible without auth for KNET to POST back)

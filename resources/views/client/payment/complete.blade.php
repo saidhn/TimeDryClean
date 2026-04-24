@@ -4,6 +4,11 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
+            @php
+                $paymentDetails = json_decode($payment->details, true) ?? [];
+                $isOrderPayment = ($paymentDetails['type'] ?? null) === 'order';
+                $orderId = $paymentDetails['order_id'] ?? null;
+            @endphp
             <div class="card shadow">
                 @if($payment->status === 'completed')
                 <div class="card-header bg-success text-white text-center">
@@ -30,6 +35,14 @@
                             <div class="col-6 text-end"><strong>{{ __('messages.date') }}:</strong></div>
                             <div class="col-6 text-start">{{ $payment->payment_date?->format('Y-m-d H:i') ?? now()->format('Y-m-d H:i') }}</div>
                         </div>
+                        @if($isOrderPayment && $orderId)
+                        <div class="row mt-2">
+                            <div class="col-6 text-end"><strong>{{ __('messages.order') }}:</strong></div>
+                            <div class="col-6 text-start">
+                                <a href="{{ route('orders.show', $orderId) }}" class="fw-bold text-success">#{{ $orderId }}</a>
+                            </div>
+                        </div>
+                        @else
                         <div class="row mt-2">
                             <div class="col-6 text-end"><strong>{{ __('messages.current_balance') }}:</strong></div>
                             <div class="col-6 text-start">
@@ -38,6 +51,7 @@
                                 </span>
                             </div>
                         </div>
+                        @endif
                     </div>
                 </div>
                 @else
@@ -53,16 +67,28 @@
                         <p class="mb-0"><strong>{{ __('messages.payment_amount') }}:</strong> {{ number_format($payment->amount, 3) }} {{ __('messages.currency_symbol') }}</p>
                     </div>
 
+                    @if($isOrderPayment && $orderId)
+                    <a href="{{ route('orders.show', $orderId) }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-redo"></i> {{ __('messages.retry_order_payment') }}
+                    </a>
+                    @else
                     <a href="{{ route('client.payment.create') }}" class="btn btn-warning btn-lg">
                         <i class="fas fa-redo"></i> {{ __('messages.try_again') }}
                     </a>
+                    @endif
                 </div>
                 @endif
 
                 <div class="card-footer text-center">
+                    @if($isOrderPayment)
+                    <a href="{{ route('orders.index') }}" class="btn btn-primary">
+                        <i class="fas fa-list"></i> {{ __('messages.orders') }}
+                    </a>
+                    @else
                     <a href="{{ route('client.bills.index') }}" class="btn btn-primary">
                         <i class="fas fa-arrow-left"></i> {{ __('messages.back') }}
                     </a>
+                    @endif
                 </div>
             </div>
         </div>
