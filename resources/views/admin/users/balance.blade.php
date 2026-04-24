@@ -25,10 +25,10 @@
         <div class="mb-3">
             <form action="{{ route('admin.users.balance') }}" method="GET">
                 <div class="row g-2 align-items-center mb-2">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search_user') }}" value="{{ request('search') }}">
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <select name="balance_filter" class="form-select">
                             <option value="all" {{ $balanceFilter === 'all' ? 'selected' : '' }}>{{ __('messages.all_balances') }}</option>
                             <option value="positive" {{ $balanceFilter === 'positive' ? 'selected' : '' }}>{{ __('messages.positive_balance') }}</option>
@@ -36,10 +36,17 @@
                             <option value="zero" {{ $balanceFilter === 'zero' ? 'selected' : '' }}>{{ __('messages.zero_balance') }}</option>
                         </select>
                     </div>
+                    <div class="col-md-3">
+                        <select name="points_filter" class="form-select">
+                            <option value="all" {{ $pointsFilter === 'all' ? 'selected' : '' }}>{{ __('messages.all_points') }}</option>
+                            <option value="positive" {{ $pointsFilter === 'positive' ? 'selected' : '' }}>{{ __('messages.positive_points') }}</option>
+                            <option value="zero" {{ $pointsFilter === 'zero' ? 'selected' : '' }}>{{ __('messages.zero_points') }}</option>
+                        </select>
+                    </div>
                     <div class="col-md-2">
                         <button class="btn btn-outline-secondary form-control" type="submit">{{ __('messages.filter') }}</button>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <a href="{{ route('admin.users.balance') }}" class="btn btn-light border form-control">{{ __('messages.clear') }}</a>
                     </div>
                 </div>

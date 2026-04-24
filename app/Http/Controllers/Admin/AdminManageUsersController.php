@@ -289,6 +289,7 @@ class AdminManageUsersController extends Controller
         $search = $request->get('search');
         $userTypes = $request->get('user_type', []);
         $balanceFilter = $request->get('balance_filter', 'all');
+        $pointsFilter  = $request->get('points_filter', 'all');
 
         $users = User::query();
 
@@ -313,11 +314,18 @@ class AdminManageUsersController extends Controller
             $users->where('balance', '=', 0);
         }
 
+        if ($pointsFilter === 'positive') {
+            $users->where('points_balance', '>', 0);
+        } elseif ($pointsFilter === 'zero') {
+            $users->where('points_balance', '=', 0);
+        }
+
         $users = $users->paginate(10)->appends($request->query());
 
         return view('admin.users.balance', [
             'users' => $users,
             'balanceFilter' => $balanceFilter,
+            'pointsFilter'  => $pointsFilter,
         ]);
     }
 
