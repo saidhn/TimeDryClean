@@ -8,16 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->enum('payment_method', ['money', 'points'])->default('money')->after('notes')->comment('Whether order is paid with KWD balance or points');
-            $table->decimal('points_used', 12, 2)->default(0)->after('payment_method')->comment('Total points charged for points orders');
-        });
+        // Already added by 2026_04_13_100003_add_payment_method_to_orders
     }
 
     public function down(): void
     {
-        Schema::table('orders', function (Blueprint $table) {
-            $table->dropColumn(['payment_method', 'points_used']);
-        });
+        // No-op
     }
 };

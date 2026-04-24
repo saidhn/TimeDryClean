@@ -8,15 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('order_product_services', function (Blueprint $table) {
-            $table->decimal('points_at_order', 12, 2)->nullable()->after('price_at_order')->comment('Points price per unit at the time of order (for points orders)');
-        });
+        // Already added by 2026_04_13_100004_add_points_at_order_to_order_product_services
     }
 
     public function down(): void
     {
-        Schema::table('order_product_services', function (Blueprint $table) {
-            $table->dropColumn('points_at_order');
-        });
+        // No-op
     }
 };

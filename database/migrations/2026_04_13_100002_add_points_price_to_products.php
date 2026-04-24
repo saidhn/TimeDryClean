@@ -20,23 +20,3 @@ return new class extends Migration
         });
     }
 };
-
-use Illuminate\Support\Facades\Schema;
-
-return new class extends Migration
-{
-    public function up(): void
-    {
-        Schema::table('products', function (Blueprint $table) {
-            $table->unsignedInteger('points_price')->nullable()->after('image_path')
-                ->comment('Price in points for ordering this product via points payment');
-        });
-    }
-
-    public function down(): void
-    {
-        Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('points_price');
-        });
-    }
-};
