@@ -14,6 +14,35 @@
     </div>
     @endif
 
+    {{-- Payment status card --}}
+    <div class="card mb-3 border-{{ $order->is_paid ? 'success' : 'warning' }}">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap gap-2 py-2">
+            <div>
+                <strong>{{ __('messages.payment_status') }}:</strong>
+                @if($order->is_paid)
+                    <span class="badge bg-success ms-1"><i class="fas fa-check-circle me-1"></i>{{ __('messages.paid') }}</span>
+                @else
+                    <span class="badge bg-danger ms-1"><i class="fas fa-times-circle me-1"></i>{{ __('messages.not_paid') }}</span>
+                @endif
+                &nbsp;&nbsp;
+                <strong>{{ __('messages.total_price') }}:</strong>
+                <span class="ms-1">{{ number_format($order->sum_price, 3) }} KWD</span>
+            </div>
+            @if(!$order->is_paid)
+            <div class="d-flex gap-2 flex-wrap">
+                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#editPayOrderModal">
+                    <i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_now') }}
+                </button>
+                <button type="button"
+                        class="btn btn-outline-secondary btn-sm btn-copy-edit-link"
+                        data-url="{{ URL::signedRoute('orders.public-pay', ['order' => $order->id]) }}">
+                    <i class="fas fa-link me-1"></i>{{ __('messages.copy_payment_link') }}
+                </button>
+            </div>
+            @endif
+        </div>
+    </div>
+
     <form id="edit-order-form" action="{{ route('orders.update', $order) }}" method="POST">
         @csrf
         @method('PUT') {{-- Important for updates --}}
@@ -232,6 +261,11 @@
                                 <td colspan="2" class="text-end"><strong>{{ __('messages.total_price') }}:</strong></td>
                                 <td id="total-price-display">0</td>
                             </tr>
+                            <tr id="total-points-row" style="display: none;">
+                                <td></td>
+                                <td colspan="2" class="text-end"><strong><i class="fas fa-star text-warning me-1"></i>{{ __('messages.total_points') }}:</strong></td>
+                                <td id="total-points-display">0</td>
+                            </tr>
                         </tfoot>
                     </table>
                 </div>
@@ -383,6 +417,45 @@
                 return rowPrice;
             }
 
+            function calculateRowPoints(row) {
+                const selected = row.find('.product-service-select option:selected');
+                if (!selected.val()) return 0;
+                const points = selected.data('points');
+                if (points === undefined || points === null || points === '') return null;
+                const quantity = parseInt(row.find('.quantity-input').val()) || 1;
+                return quantity * parseFloat(points);
+            }
+
+            function updatePointsTotal() {
+                const payPoints = document.getElementById('payPoints');
+                const pointsRow = document.getElementById('total-points-row');
+                if (!payPoints || !pointsRow) return;
+
+                if (!payPoints.checked) {
+                    pointsRow.style.display = 'none';
+                    return;
+                }
+
+                pointsRow.style.display = '';
+                let totalPoints = 0;
+                let missingPoints = false;
+                $('#order-product-services tr').each(function () {
+                    const rowPoints = calculateRowPoints($(this));
+                    if (rowPoints === null) {
+                        missingPoints = true;
+                    } else {
+                        totalPoints += rowPoints;
+                    }
+                });
+
+                const display = $('#total-points-display');
+                if (missingPoints) {
+                    display.text('{{ __('messages.points_not_available') }}').removeClass('text-warning fw-bold').addClass('text-danger');
+                } else {
+                    display.text(totalPoints.toFixed(2) + ' pts').removeClass('text-danger').addClass('text-warning fw-bold');
+                }
+            }
+
             function updateTotal() {
                 totalPrice = 0;
                 $('#order-product-services tr').each(function() {
@@ -396,12 +469,18 @@
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
 
+                updatePointsTotal();
+
                 const currentSubtotalSpan = document.getElementById('currentSubtotal');
                 if (currentSubtotalSpan) {
                     currentSubtotalSpan.textContent = totalPrice.toFixed(2);
                     currentSubtotalSpan.setAttribute('data-value', totalPrice.toFixed(2));
                 }
             }
+
+            $('input[name="payment_method"]').on('change', function () {
+                updatePointsTotal();
+            });
 
             // Load services via AJAX (same as create page)
             function loadProductServices(productId, serviceSelect, callback) {
@@ -420,10 +499,17 @@
                             warning.removeClass('d-none');
                         } else {
                             data.data.services.forEach(service => {
+                                let label = `${service.name} - ${service.price} {{ __('messages.currency_symbol') }}`;
+                                if (service.points_price !== null && service.points_price !== undefined) {
+                                    label += ` / ${service.points_price} pts`;
+                                }
                                 const option = $('<option></option>')
                                     .val(service.id)
-                                    .text(`${service.name} - ${service.price} {{ __('messages.currency_symbol') }}`)
+                                    .text(label)
                                     .attr('data-price', service.price);
+                                if (service.points_price !== null && service.points_price !== undefined) {
+                                    option.attr('data-points', service.points_price);
+                                }
                                 serviceSelect.append(option);
                             });
                         }
@@ -729,4 +815,90 @@
     });
 </script>
 @endpush
+
+@if(!$order->is_paid)
+{{-- Pay Now modal for edit page --}}
+<div class="modal fade" id="editPayOrderModal" tabindex="-1" aria-labelledby="editPayOrderModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" action="{{ route('orders.pay', $order->id) }}">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editPayOrderModalLabel">
+                        <i class="fas fa-credit-card me-2"></i>{{ __('messages.pay_now') }}
+                        — {{ __('messages.id') }} #{{ $order->id }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">{{ __('messages.total_price') }}: <strong>{{ number_format($order->sum_price, 3) }} KWD</strong></p>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">{{ __('messages.payment_method_label') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="edit_pay_money" value="money" checked>
+                            <label class="form-check-label" for="edit_pay_money">
+                                <i class="fas fa-money-bill me-1 text-success"></i>{{ __('messages.pay_with_money') }}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="edit_pay_points" value="points">
+                            <label class="form-check-label" for="edit_pay_points">
+                                <i class="fas fa-star me-1 text-warning"></i>{{ __('messages.pay_with_points') }}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="edit_pay_knet" value="knet">
+                            <label class="form-check-label" for="edit_pay_knet">
+                                <i class="fas fa-credit-card me-1 text-primary"></i>{{ __('messages.pay_with_knet') }}
+                                @if(config('services.knet.debug'))
+                                    <span class="badge bg-info ms-1">{{ __('messages.knet_sandbox') }}</span>
+                                @endif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.cancel') }}</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>{{ __('messages.pay_now') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- Toast for payment link copied --}}
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1100">
+    <div id="editLinkCopiedToast" class="toast align-items-center text-bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-check-circle me-2"></i>{{ __('messages.payment_link_copied') }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var editLinkCopiedToastEl = document.getElementById('editLinkCopiedToast');
+    var toast = editLinkCopiedToastEl ? new bootstrap.Toast(editLinkCopiedToastEl, { delay: 2500 }) : null;
+    
+    document.querySelectorAll('.btn-copy-edit-link').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var url = this.getAttribute('data-url');
+            if (!url) return;
+            
+            navigator.clipboard.writeText(url).then(function () {
+                if (toast) toast.show();
+            }).catch(function () {
+                window.prompt('{{ __('messages.copy_payment_link') }}:', url);
+            });
+        });
+    });
+});
+</script>
+@endif
+
 @endsection

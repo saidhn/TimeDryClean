@@ -18,6 +18,7 @@ class Order extends Model
         'status',
         'payment_method',
         'payment_id',
+        'is_paid',
         'points_used',
         'notes',
         'discount_type',
@@ -29,6 +30,7 @@ class Order extends Model
     protected $casts = [
         'status' => 'string',
         'payment_method' => 'string',
+        'is_paid' => 'boolean',
         'points_used' => 'integer',
         'sum_price' => 'decimal:2',
         'discount_value' => 'decimal:2',

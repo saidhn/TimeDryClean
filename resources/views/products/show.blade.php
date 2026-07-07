@@ -75,7 +75,8 @@
                                         <thead class="bg-light">
                                             <tr>
                                                 <th class="border-0 py-3 ps-4 text-muted small text-uppercase fw-bold">{{ __('messages.service') }}</th>
-                                                <th class="border-0 py-3 pe-4 text-end text-muted small text-uppercase fw-bold">{{ __('messages.price') }}</th>
+                                                <th class="border-0 py-3 text-end text-muted small text-uppercase fw-bold">{{ __('messages.price') }}</th>
+                                                <th class="border-0 py-3 pe-4 text-end text-muted small text-uppercase fw-bold">{{ __('messages.points') }}</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -94,14 +95,22 @@
                                                             <span class="fw-medium text-dark">{{ $price->productService->name }}</span>
                                                         </div>
                                                     </td>
-                                                    <td class="py-3 pe-4 text-end align-middle">
+                                                    <td class="py-3 text-end align-middle">
                                                         <span class="fw-bold h5 mb-0" style="color: #464687;">{{ number_format((float) $price->price, 3) }}</span>
                                                         <span class="small text-muted ms-1">{{ __('messages.currency_symbol') }}</span>
+                                                    </td>
+                                                    <td class="py-3 pe-4 text-end align-middle">
+                                                        @if($price->points_price !== null)
+                                                            <span class="fw-bold h5 mb-0 text-warning"><i class="fas fa-star small me-1"></i>{{ number_format((float) $price->points_price, 2) }}</span>
+                                                            <span class="small text-muted ms-1">pts</span>
+                                                        @else
+                                                            <span class="text-muted small">—</span>
+                                                        @endif
                                                     </td>
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="2" class="py-4 text-center text-muted italic">
+                                                    <td colspan="3" class="py-4 text-center text-muted italic">
                                                         <i class="fas fa-exclamation-triangle me-2"></i>
                                                         {{ __('messages.no_services_configured') }}
                                                     </td>

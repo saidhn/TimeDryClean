@@ -103,6 +103,11 @@
                                 <td colspan="2" class="text-end"><strong>{{ __('messages.total_price') }}:</strong></td>
                                 <td id="total-price-display">0</td>
                             </tr>
+                            <tr id="total-points-row" style="display: none;">
+                                <td></td>
+                                <td colspan="2" class="text-end"><strong><i class="fas fa-star text-warning me-1"></i>{{ __('messages.total_points') }}:</strong></td>
+                                <td id="total-points-display">0</td>
+                            </tr>
                         </tfoot>
                     </table>
                 </div>
@@ -496,6 +501,45 @@
                 return rowPrice;
             }
 
+            function calculateRowPoints(row) {
+                const selected = row.find('.product-service-select option:selected');
+                if (!selected.val()) return 0;
+                const points = selected.data('points');
+                if (points === undefined || points === null || points === '') return null;
+                const quantity = parseInt(row.find('.quantity-input').val()) || 1;
+                return quantity * parseFloat(points);
+            }
+
+            function updatePointsTotal() {
+                const payPoints = document.getElementById('payPoints');
+                const pointsRow = document.getElementById('total-points-row');
+                if (!payPoints || !pointsRow) return;
+
+                if (!payPoints.checked) {
+                    pointsRow.style.display = 'none';
+                    return;
+                }
+
+                pointsRow.style.display = '';
+                let totalPoints = 0;
+                let missingPoints = false;
+                $('#order-product-services tr').each(function () {
+                    const rowPoints = calculateRowPoints($(this));
+                    if (rowPoints === null) {
+                        missingPoints = true;
+                    } else {
+                        totalPoints += rowPoints;
+                    }
+                });
+
+                const display = $('#total-points-display');
+                if (missingPoints) {
+                    display.text('{{ __('messages.points_not_available') }}').removeClass('text-warning fw-bold').addClass('text-danger');
+                } else {
+                    display.text(totalPoints.toFixed(2) + ' pts').removeClass('text-danger').addClass('text-warning fw-bold');
+                }
+            }
+
             updateTotal = function() {
                 totalPrice = 0;
                 $('#order-product-services tr').each(function () {
@@ -511,11 +555,17 @@
 
                 $('#total-price-display').text(totalPrice.toFixed(2));
 
+                updatePointsTotal();
+
                 // Update discount preview if discount form exists
                 if (typeof validateDiscount === 'function') {
                     validateDiscount();
                 }
             };
+
+            $('input[name="payment_method"]').on('change', function () {
+                updatePointsTotal();
+            });
 
             $('#order-product-services tr').each(function () {
                 calculateRowPrice($(this));
@@ -555,10 +605,17 @@
                             warning.removeClass('d-none');
                         } else {
                             data.data.services.forEach(service => {
+                                let label = `${service.name} - ${service.price} KWD`;
+                                if (service.points_price !== null && service.points_price !== undefined) {
+                                    label += ` / ${service.points_price} pts`;
+                                }
                                 const option = $('<option></option>')
                                     .val(service.id)
-                                    .text(`${service.name} - ${service.price} KWD`)
+                                    .text(label)
                                     .attr('data-price', service.price);
+                                if (service.points_price !== null && service.points_price !== undefined) {
+                                    option.attr('data-points', service.points_price);
+                                }
                                 serviceSelect.append(option);
                             });
                         }

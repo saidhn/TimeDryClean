@@ -40,11 +40,21 @@
             @endif
             <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }}</p>
             <p><strong>{{ __('messages.payment_method_label') }}:</strong>
-                @if(($order->payment_method ?? 'money') === 'points')
+                @php $pm = $order->payment_method ?? 'money'; @endphp
+                @if($pm === 'points')
                     <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}</span>
                     &nbsp;<span class="text-muted small">({{ number_format($order->points_used ?? 0, 2) }} pts {{ __('messages.points_used') }})</span>
+                @elseif($pm === 'knet')
+                    <span class="badge bg-primary"><i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_with_knet') }}</span>
                 @else
                     <span class="badge bg-success"><i class="fas fa-money-bill me-1"></i>{{ __('messages.pay_with_money') }}</span>
+                @endif
+            </p>
+            <p><strong>{{ __('messages.payment_status') }}:</strong>
+                @if($order->is_paid)
+                    <span class="badge bg-success"><i class="fas fa-check-circle me-1"></i>{{ __('messages.paid') }}</span>
+                @else
+                    <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>{{ __('messages.not_paid') }}</span>
                 @endif
             </p>
             <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
@@ -100,7 +110,84 @@
             @endif
 
             <a href="{{ route('orders.index') }}" class="btn btn-secondary">{{ __('messages.back') }}</a>
+
+            @if(!$order->is_paid && (Auth::guard('admin')->check() || Auth::guard('employee')->check()))
+            <button type="button" class="btn btn-success ms-2" data-bs-toggle="modal" data-bs-target="#payNowModal">
+                <i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_now') }}
+            </button>
+            @endif
         </div>
     </div>
 </div>
 @endsection
+
+@if(!$order->is_paid && (Auth::guard('admin')->check() || Auth::guard('employee')->check()))
+{{-- Pay Now Modal --}}
+<div class="modal fade" id="payNowModal" tabindex="-1" aria-labelledby="payNowModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('orders.pay', $order->id) }}" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title" id="payNowModalLabel">
+                        <i class="fas fa-credit-card me-2"></i>{{ __('messages.pay_now') }} — {{ __('messages.id') }} #{{ $order->id }}
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    @if($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">@foreach($errors->all() as $e)<li>{{ $e }}</li>@endforeach</ul>
+                    </div>
+                    @endif
+                    <p class="mb-3">{{ __('messages.total_price') }}: <strong>{{ number_format($order->sum_price, 3) }} KWD</strong></p>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ __('messages.payment_method_label') }}</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pay_money" value="money" checked>
+                            <label class="form-check-label" for="pay_money">
+                                <i class="fas fa-money-bill me-1 text-success"></i>{{ __('messages.pay_with_money') }}
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pay_points" value="points"
+                                   {{ ($requiredPoints ?? null) === null ? 'disabled' : '' }}>
+                            <label class="form-check-label" for="pay_points">
+                                <i class="fas fa-star me-1 text-warning"></i>{{ __('messages.pay_with_points') }}
+                                @if(($requiredPoints ?? null) !== null)
+                                    <span class="text-muted small">({{ number_format($requiredPoints, 2) }} pts)</span>
+                                @else
+                                    <span class="text-muted small">({{ __('messages.points_not_available') }})</span>
+                                @endif
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="payment_method" id="pay_knet" value="knet">
+                            <label class="form-check-label" for="pay_knet">
+                                <i class="fas fa-credit-card me-1 text-primary"></i>{{ __('messages.pay_with_knet') }}
+                                @if(config('services.knet.debug'))
+                                    <span class="badge bg-info ms-1">{{ __('messages.knet_sandbox') }}</span>
+                                @endif
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">{{ __('messages.cancel') }}</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>{{ __('messages.pay_now') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@if($errors->any())
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var modal = new bootstrap.Modal(document.getElementById('payNowModal'));
+        modal.show();
+    });
+</script>
+@endif
+@endif

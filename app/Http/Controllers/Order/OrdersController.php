@@ -214,11 +214,10 @@ class OrdersController extends Controller
             $item = array_merge($orderProductServiceData, ['price_at_order' => $priceAtOrder]);
 
             if ($paymentMethod === 'points') {
-                $product = Product::find($orderProductServiceData['product_id']);
-                if (!$product || $product->points_price === null) {
+                if ($productServicePrice->points_price === null) {
                     return back()->withErrors(['message' => __('messages.product_no_points_price_warning')])->withInput();
                 }
-                $pointsAtOrder = (float) $product->points_price;
+                $pointsAtOrder = (float) $productServicePrice->points_price;
                 $total_points += $pointsAtOrder * $orderProductServiceData['quantity'];
                 $item['points_at_order'] = $pointsAtOrder;
             }
@@ -349,6 +348,7 @@ class OrdersController extends Controller
                 }
                 $user->points_balance -= $total_points;
                 $user->save();
+                $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             } elseif ($paymentMethod === 'knet') {
                 // No balance deduction — redirect to KNET gateway; order stays Pending until payment confirmed.
@@ -372,6 +372,7 @@ class OrdersController extends Controller
             } else {
                 $user->balance -= $orderCost;
                 $user->save();
+                $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             }
 
@@ -406,7 +407,154 @@ class OrdersController extends Controller
         }
 
         $order->load('user', 'discount', 'clientSubscription', 'orderProductServices.product', 'orderProductServices.productService', 'orderDelivery.driver', 'orderDelivery.address.province', 'orderDelivery.address.city'); // Eager load all related data
-        return view('orders.show', compact('order'));
+
+        // Total points required to pay this order with points; null when any line has no points price
+        $requiredPoints = null;
+        if (!$order->is_paid) {
+            $requiredPoints = 0;
+            foreach ($order->orderProductServices as $line) {
+                $servicePrice = ProductServicePrice::where('product_id', $line->product_id)
+                    ->where('product_service_id', $line->product_service_id)
+                    ->first();
+                if (!$servicePrice || $servicePrice->points_price === null) {
+                    $requiredPoints = null;
+                    break;
+                }
+                $requiredPoints += (float) $servicePrice->points_price * $line->quantity;
+            }
+        }
+
+        return view('orders.show', compact('order', 'requiredPoints'));
+    }
+
+    /**
+     * Process payment for an existing unpaid order.
+     */
+    public function pay(Request $request, Order $order)
+    {
+        if ($order->is_paid) {
+            return back()->withErrors(['message' => __('messages.order_already_paid')]);
+        }
+
+        $request->validate([
+            'payment_method' => 'required|in:money,points,knet',
+        ], [
+            'payment_method.required' => __('messages.select_payment_method'),
+            'payment_method.in'       => __('messages.select_payment_method'),
+        ]);
+
+        $paymentMethod = $request->payment_method;
+        $user = $order->user;
+
+        if ($paymentMethod === 'points') {
+            // Calculate total points needed from order lines
+            $totalPoints = 0;
+            $linePoints = [];
+            foreach ($order->orderProductServices as $line) {
+                $servicePrice = ProductServicePrice::where('product_id', $line->product_id)
+                    ->where('product_service_id', $line->product_service_id)
+                    ->first();
+                if (!$servicePrice || $servicePrice->points_price === null) {
+                    return back()->withErrors(['message' => __('messages.product_no_points_price_warning')]);
+                }
+                $pointsAtOrder = (float) $servicePrice->points_price;
+                $totalPoints += $pointsAtOrder * $line->quantity;
+                $linePoints[$line->id] = $pointsAtOrder;
+            }
+            if ($user->points_balance < $totalPoints) {
+                return back()->withErrors(['message' => __('messages.insufficient_points')]);
+            }
+            // Snapshot the points price on each order line
+            foreach ($order->orderProductServices as $line) {
+                $line->update(['points_at_order' => $linePoints[$line->id]]);
+            }
+            $user->points_balance -= $totalPoints;
+            $user->save();
+            $order->update([
+                'payment_method' => 'points',
+                'points_used'    => $totalPoints,
+                'is_paid'        => true,
+                'status'         => OrderStatus::COMPLETED,
+            ]);
+            return redirect()->route('orders.show', $order->id)
+                ->with('success', __('messages.order_paid_successfully'));
+
+        } elseif ($paymentMethod === 'knet') {
+            $result = $this->knetService->createOrderPayment(
+                (float) $order->sum_price,
+                $user->id,
+                $order->id
+            );
+            if ($result['status'] !== 'success') {
+                return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')]);
+            }
+            $order->update(['payment_method' => 'knet', 'payment_id' => $result['payment_id']]);
+            return redirect($result['payment_uri']);
+
+        } else {
+            // money / cash
+            $user->balance -= $order->sum_price;
+            $user->save();
+            $order->update([
+                'payment_method' => 'money',
+                'is_paid'        => true,
+                'status'         => OrderStatus::COMPLETED,
+            ]);
+            return redirect()->route('orders.show', $order->id)
+                ->with('success', __('messages.order_paid_successfully'));
+        }
+    }
+
+    /**
+     * Public payment endpoint for shareable customer payment links.
+     * The URL must be signed (tamper-proof). No authentication required.
+     */
+    public function publicPay(Request $request, Order $order)
+    {
+        if ($order->is_paid) {
+            return redirect()->route('orders.public-pay-complete')
+                ->with('already_paid', true)
+                ->with('order_id', $order->id);
+        }
+
+        $result = $this->knetService->createOrderPayment(
+            (float) $order->sum_price,
+            $order->user_id,
+            $order->id,
+            true  // isPublicLink — callback will redirect to the public complete page
+        );
+
+        if ($result['status'] !== 'success') {
+            return redirect()->route('orders.public-pay-complete')
+                ->with('error', __('messages.knet_payment_initiation_failed'))
+                ->with('order_id', $order->id);
+        }
+
+        $order->update(['payment_method' => 'knet', 'payment_id' => $result['payment_id']]);
+
+        return redirect($result['payment_uri']);
+    }
+
+    /**
+     * Public payment complete page — shown after a customer pays via a shareable link.
+     * No authentication required.
+     */
+    public function publicPayComplete(Request $request)
+    {
+        $trackingId = $request->query('tracking_id');
+        $payment    = $trackingId ? $this->knetService->getPaymentByTrackingId($trackingId) : null;
+
+        $orderId = null;
+        if ($payment) {
+            $details = json_decode($payment->details, true) ?? [];
+            $orderId = $details['order_id'] ?? null;
+        } else {
+            $orderId = session('order_id');
+        }
+
+        $order = $orderId ? Order::find($orderId) : null;
+
+        return view('orders.public-pay-complete', compact('payment', 'order'));
     }
 
     /**
@@ -521,12 +669,11 @@ class OrdersController extends Controller
                 $item = array_merge($orderProductServiceData, ['price_at_order' => $priceAtOrder]);
 
                 if ($editPaymentMethod === 'points') {
-                    $product = Product::find($orderProductServiceData['product_id']);
-                    if (!$product || $product->points_price === null) {
+                    if ($productServicePrice->points_price === null) {
                         DB::rollBack();
                         return back()->withErrors(['message' => __('messages.product_no_points_price_warning')])->withInput();
                     }
-                    $pointsAtOrder = (float) $product->points_price;
+                    $pointsAtOrder = (float) $productServicePrice->points_price;
                     $total_points_edit += $pointsAtOrder * $orderProductServiceData['quantity'];
                     $item['points_at_order'] = $pointsAtOrder;
                 }

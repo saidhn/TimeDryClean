@@ -86,12 +86,26 @@ class PaymentController extends Controller
 
         $trackingId = $result['tracking_id'] ?? ($data['tracking_id'] ?? '');
 
+        // Determine if this payment came from a public (unauthenticated) payment link
+        $payment = $this->knetService->getPaymentByTrackingId($trackingId);
+        $isPublicLink = false;
+        if ($payment) {
+            $details = json_decode($payment->details, true) ?? [];
+            $isPublicLink = !empty($details['public_link']);
+        }
+
         // In test/debug mode, redirect directly
         if (config('services.knet.debug')) {
+            if ($isPublicLink) {
+                return redirect()->route('orders.public-pay-complete', ['tracking_id' => $trackingId]);
+            }
             return redirect()->route('client.payment.complete', ['tracking_id' => $trackingId]);
         }
 
         // In production, KNET expects "REDIRECT=<url>" as the response body
+        if ($isPublicLink) {
+            return 'REDIRECT=' . route('orders.public-pay-complete', ['tracking_id' => $trackingId]);
+        }
         return 'REDIRECT=' . route('client.payment.complete', ['tracking_id' => $trackingId]);
     }
 
@@ -104,10 +118,13 @@ class PaymentController extends Controller
         $payment = $this->knetService->getPaymentByTrackingId($trackingId);
 
         if (!$payment) {
-            $fallback = Auth::guard('admin')->check() || Auth::guard('employee')->check()
-                ? route('orders.index')
-                : route('client.bills.index');
-            return redirect($fallback)->with('error', 'Payment not found.');
+            if (Auth::guard('admin')->check() || Auth::guard('employee')->check()) {
+                return redirect()->route('orders.index')->with('error', 'Payment not found.');
+            }
+            if (Auth::guard('client')->check()) {
+                return redirect()->route('client.bills.index')->with('error', 'Payment not found.');
+            }
+            return redirect('/')->with('error', 'Payment not found.');
         }
 
         return view('client.payment.complete', compact('payment'));

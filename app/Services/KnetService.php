@@ -112,8 +112,11 @@ class KnetService
                     app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
                 }
             } elseif ($type === 'order') {
-                // Order stays Pending — no balance to credit.
-                // The order was already created; payment completion confirms it.
+                // Mark the order as Completed now that payment is confirmed.
+                if (!empty($details['order_id'])) {
+                    Order::where('id', $details['order_id'])
+                        ->update(['status' => \App\Enums\OrderStatus::COMPLETED, 'is_paid' => true]);
+                }
             } else {
                 $payment->user->increment('balance', $payment->amount);
             }
@@ -128,9 +131,11 @@ class KnetService
     }
 
     /**
-     * Create a payment for an order and get redirect URL
+     * Create a payment for an order and get redirect URL.
+     * Set $isPublicLink = true when generating a shareable customer payment link
+     * so the callback redirects to a page that does not require authentication.
      */
-    public function createOrderPayment(float $amount, int $userId, int $orderId): array
+    public function createOrderPayment(float $amount, int $userId, int $orderId, bool $isPublicLink = false): array
     {
         $trackingId = 'TRK-ORD-' . time() . '-' . Str::random(8);
 
@@ -144,11 +149,14 @@ class KnetService
                 'tracking_id' => $trackingId,
                 'type'        => 'order',
                 'order_id'    => $orderId,
+                'public_link' => $isPublicLink,
             ]),
         ]);
 
         if ($this->config['debug']) {
-            $paymentUri = route('client.payment.test-gateway', ['tracking_id' => $trackingId]);
+            // Public link payments use the no-auth test gateway so unauthenticated customers can access it
+            $gatewayRoute = $isPublicLink ? 'client.payment.public-test-gateway' : 'client.payment.test-gateway';
+            $paymentUri = route($gatewayRoute, ['tracking_id' => $trackingId]);
         } else {
             $paymentUri = $this->getKnetPaymentUrl($amount, $trackingId);
         }

@@ -13,10 +13,12 @@ class ProductServicePrice extends Model
         'product_id',
         'product_service_id',
         'price',
+        'points_price',
     ];
 
     protected $casts = [
         'price' => 'decimal:3',
+        'points_price' => 'decimal:2',
     ];
 
     public function product()

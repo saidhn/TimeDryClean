@@ -13,7 +13,6 @@ class Product extends Model
     protected $fillable = [
         'name',
         'image_path',
-        'points_price',
     ];
 
     public function orderProductServices()
@@ -34,7 +33,7 @@ class Product extends Model
     public function availableServices()
     {
         return $this->belongsToMany(ProductService::class, 'product_service_prices')
-            ->withPivot('price')
+            ->withPivot('price', 'points_price')
             ->withTimestamps();
     }
 

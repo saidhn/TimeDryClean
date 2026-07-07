@@ -98,6 +98,15 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/payment/complete', [\App\Http\Controllers\Client\PaymentController::class, 'complete'])->name('client.payment.complete');
     });
 
+    // Public payment link (signed URL — no auth required, sent to customers)
+    Route::get('/pay-order/{order}', [OrdersController::class, 'publicPay'])
+        ->name('orders.public-pay')
+        ->middleware('signed');
+    // Public payment test-gateway (unauthenticated customers clicking payment links)
+    Route::get('/payment/public-test-gateway', [\App\Http\Controllers\Client\PaymentController::class, 'testGateway'])->name('client.payment.public-test-gateway');
+    // Public payment complete (shown after customer pays via a shared link)
+    Route::get('/order-payment-result', [OrdersController::class, 'publicPayComplete'])->name('orders.public-pay-complete');
+
     // KNET callback (must be accessible without auth for KNET to POST back)
     Route::match(['get', 'post'], '/payment/callback', [\App\Http\Controllers\Client\PaymentController::class, 'callback'])->name('client.payment.callback');
 
@@ -188,6 +197,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/users/search', [OrdersController::class, 'searchUsers']);
         Route::get('/orders', [OrdersController::class, 'index'])->name('orders.index');
         Route::get('/orders/{order}', [OrdersController::class, 'show'])->name('orders.show');
+        Route::post('/orders/{order}/pay', [OrdersController::class, 'pay'])->name('orders.pay');
     });
 
     Route::middleware(['auth:admin,employee'])->group(function () {
