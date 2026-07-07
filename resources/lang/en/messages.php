@@ -430,6 +430,8 @@ return [
     'points_optional' => 'Points (optional)',
     'total_points' => 'Total Points',
     'points_not_available' => 'Not payable with points',
+    'points_redeemed' => 'Points Redeemed',
+    'income_excludes_points' => 'Excludes orders paid with points',
     'points_packages' => 'Points Packages',
     'manage_points_packages' => 'Manage Points Packages',
     'create_points_package' => 'Create Points Package',

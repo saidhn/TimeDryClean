@@ -438,6 +438,8 @@ return [
     'points_optional' => 'النقاط (اختياري)',
     'total_points' => 'إجمالي النقاط',
     'points_not_available' => 'غير قابل للدفع بالنقاط',
+    'points_redeemed' => 'النقاط المستبدلة',
+    'income_excludes_points' => 'لا يشمل الطلبات المدفوعة بالنقاط',
     'points_packages' => 'باقات النقاط',
     'manage_points_packages' => 'إدارة باقات النقاط',
     'create_points_package' => 'إضافة باقة نقاط',

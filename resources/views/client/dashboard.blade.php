@@ -43,7 +43,15 @@
                     <td>{{ optional(optional($order->orderDelivery)->driver)->name }}</td>
                     <td>{{ $order->created_at->format('Y-m-d') }}</td>
                     <td>{{ $order->statusTranslated() }}</td>
-                    <td>{{ $order->sum_price }}</td>
+                    <td>
+                        @if($order->payment_method === 'points')
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-star me-1"></i>{{ number_format($order->points_used ?? 0, 2) }} pts
+                            </span>
+                        @else
+                            {{ $order->sum_price }}
+                        @endif
+                    </td>
                     <td>
                         <a href="{{ route('orders.show', $order->id) }}" class="btn btn-info btn-sm" title="{{ __('messages.show') }}">
                             <i class="fas fa-eye"></i> {{-- View Icon --}}

@@ -71,7 +71,15 @@
                                 <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>{{ __('messages.not_paid') }}</span>
                             @endif
                         </td>
-                        <td>{{ $order->sum_price }}</td>
+                        <td>
+                            @if($order->payment_method === 'points')
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-star me-1"></i>{{ number_format($order->points_used ?? 0, 2) }} pts
+                                </span>
+                            @else
+                                {{ $order->sum_price }}
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('orders.show', $order->id) }}" class="btn btn-info btn-sm" title="{{ __('messages.show') }}">
                                 <i class="fas fa-eye"></i>

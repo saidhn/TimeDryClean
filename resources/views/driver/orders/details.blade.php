@@ -88,11 +88,20 @@
                 </thead>
                 <tbody>
                     @foreach($order->orderProductServices as $orderProductService)
+                    @php
+                        $displayPrice = $orderProductService->price_at_order;
+                        if (!$displayPrice) {
+                            $psp = \App\Models\ProductServicePrice::where('product_id', $orderProductService->product_id)
+                                ->where('product_service_id', $orderProductService->product_service_id)
+                                ->first();
+                            $displayPrice = $psp ? $psp->price : 0;
+                        }
+                    @endphp
                     <tr>
                         <td>{{ $orderProductService->product->name }}</td>
                         <td>{{ $orderProductService->productService->name }}</td>
                         <td>{{ $orderProductService->quantity }}</td>
-                        <td>{{ $orderProductService->productService->price * $orderProductService->quantity }}</td>
+                        <td>{{ number_format($displayPrice * $orderProductService->quantity, 3) }} {{ __('messages.currency_symbol') }}</td>
                     </tr>
                     @endforeach
                 </tbody>

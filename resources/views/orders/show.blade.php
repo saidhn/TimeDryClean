@@ -38,12 +38,17 @@
             @if ($order->clientSubscription)
             <p><strong>{{ __('messages.client_subscription') }}:</strong> {{ $order->clientSubscription->id }}</p>
             @endif
-            <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }}</p>
+            @php $pm = $order->payment_method ?? 'money'; @endphp
+            @if($pm === 'points')
+            <p><strong>{{ __('messages.total_price') }}:</strong>
+                <span class="badge bg-warning text-dark fs-6"><i class="fas fa-star me-1"></i>{{ number_format($order->points_used ?? 0, 2) }} pts</span>
+            </p>
+            @else
+            <p><strong>{{ __('messages.total_price') }}:</strong> {{ $order->sum_price }} {{ __('messages.currency_symbol') }}</p>
+            @endif
             <p><strong>{{ __('messages.payment_method_label') }}:</strong>
-                @php $pm = $order->payment_method ?? 'money'; @endphp
                 @if($pm === 'points')
                     <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}</span>
-                    &nbsp;<span class="text-muted small">({{ number_format($order->points_used ?? 0, 2) }} pts {{ __('messages.points_used') }})</span>
                 @elseif($pm === 'knet')
                     <span class="badge bg-primary"><i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_with_knet') }}</span>
                 @else
@@ -70,18 +75,28 @@
                         <th>{{ __('messages.product') }}</th>
                         <th>{{ __('messages.product_service') }}</th>
                         <th>{{ __('messages.quantity') }}</th>
+                        @if($pm === 'points')
+                        <th>{{ __('messages.points') }}</th>
+                        @else
                         <th>{{ __('messages.price') }}</th>
+                        @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($order->orderProductServices as $orderProductService)
                     @php
                         $displayPrice = $orderProductService->price_at_order;
-                        if (!$displayPrice) {
+                        $displayPoints = $orderProductService->points_at_order;
+                        if (!$displayPrice || ($pm === 'points' && $displayPoints === null)) {
                             $psp = \App\Models\ProductServicePrice::where('product_id', $orderProductService->product_id)
                                 ->where('product_service_id', $orderProductService->product_service_id)
                                 ->first();
-                            $displayPrice = $psp ? $psp->price : 0;
+                            if (!$displayPrice) {
+                                $displayPrice = $psp ? $psp->price : 0;
+                            }
+                            if ($pm === 'points' && $displayPoints === null) {
+                                $displayPoints = $psp ? $psp->points_price : null;
+                            }
                         }
                     @endphp
                     <tr>
@@ -93,7 +108,17 @@
                         </td>
                         <td>{{ $orderProductService->productService->name }}</td>
                         <td>{{ $orderProductService->quantity }}</td>
+                        @if($pm === 'points')
+                        <td>
+                            @if($displayPoints !== null)
+                                <span class="text-warning fw-bold"><i class="fas fa-star small me-1"></i>{{ number_format($displayPoints * $orderProductService->quantity, 2) }} pts</span>
+                            @else
+                                <span class="text-muted small">—</span>
+                            @endif
+                        </td>
+                        @else
                         <td>{{ number_format($displayPrice * $orderProductService->quantity, 3) }} KWD</td>
+                        @endif
                     </tr>
                     @endforeach
                 </tbody>

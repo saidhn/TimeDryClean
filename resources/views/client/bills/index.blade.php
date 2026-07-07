@@ -24,6 +24,7 @@
                     <th>{{ __('messages.order_id') }}</th>
                     <th>{{ __('messages.order_details') }}</th>
                     <th>{{ __('messages.order_status') }}</th>
+                    <th>{{ __('messages.payment_method_label') }}</th>
                     <th>{{ __('messages.delivery_price') }}</th>
                     <th>{{ __('messages.total_price') }}</th>
                     <th>{{ __('messages.created_at') }}</th>
@@ -68,6 +69,15 @@
                         <span class="badge bg-{{ $statusBadge }}">{{ $order->statusTranslated() }}</span>
                     </td>
                     <td class="align-middle">
+                        @if($order->payment_method === 'points')
+                            <span class="badge bg-warning text-dark"><i class="fas fa-star me-1"></i>{{ __('messages.pay_with_points') }}</span>
+                        @elseif($order->payment_method === 'knet')
+                            <span class="badge bg-primary"><i class="fas fa-credit-card me-1"></i>{{ __('messages.pay_with_knet') }}</span>
+                        @else
+                            <span class="badge bg-success"><i class="fas fa-money-bill me-1"></i>{{ __('messages.pay_with_money') }}</span>
+                        @endif
+                    </td>
+                    <td class="align-middle">
                         @if($order->orderDelivery)
                             {{ number_format($order->orderDelivery->price ?? 0, 3) }} {{ __('messages.currency_symbol') }}
                         @else
@@ -75,13 +85,19 @@
                         @endif
                     </td>
                     <td class="align-middle">
-                        <strong>{{ number_format($order->sum_price, 3) }} {{ __('messages.currency_symbol') }}</strong>
+                        @if($order->payment_method === 'points')
+                            <span class="badge bg-warning text-dark">
+                                <i class="fas fa-star me-1"></i>{{ number_format($order->points_used ?? 0, 2) }} pts
+                            </span>
+                        @else
+                            <strong>{{ number_format($order->sum_price, 3) }} {{ __('messages.currency_symbol') }}</strong>
+                        @endif
                     </td>
                     <td class="align-middle">{{ $order->created_at->format('Y-m-d H:i') }}</td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">{{ __('messages.no_orders_found') }}</td>
+                    <td colspan="7" class="text-center text-muted py-4">{{ __('messages.no_orders_found') }}</td>
                 </tr>
                 @endforelse
             </tbody>

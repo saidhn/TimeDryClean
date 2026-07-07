@@ -26,6 +26,7 @@
                             <p class="text-muted mb-0 small">{{ __('messages.total_income') }}</p>
                             <h4 class="mb-0 fw-bold">{{ number_format($totalIncome, 2) }}</h4>
                             <small class="text-muted">{{ __('messages.currency_symbol') }}</small>
+                            <br><small class="text-muted fst-italic">{{ __('messages.income_excludes_points') }}</small>
                         </div>
                     </div>
                 </div>
@@ -74,6 +75,22 @@
                             <p class="text-muted mb-0 small">{{ __('messages.completed_orders') }}</p>
                             <h4 class="mb-0 fw-bold">{{ number_format($completedOrders) }}</h4>
                             <small class="text-muted">{{ __('messages.orders') }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-sm-6">
+            <div class="card border-0 shadow-sm kpi-card kpi-points">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <div class="kpi-icon-wrapper bg-warning-soft me-3">
+                            <i class="fas fa-star text-warning"></i>
+                        </div>
+                        <div>
+                            <p class="text-muted mb-0 small">{{ __('messages.points_redeemed') }}</p>
+                            <h4 class="mb-0 fw-bold">{{ number_format($totalPointsRedeemed ?? 0, 2) }}</h4>
+                            <small class="text-muted">{{ __('messages.points') }}</small>
                         </div>
                     </div>
                 </div>

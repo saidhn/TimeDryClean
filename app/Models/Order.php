@@ -97,6 +97,11 @@ class Order extends Model
         return $this->discount_value . "% " . __('messages.off') . " (" . $currency . " " . number_format((float)$this->discount_amount, 2) . ")";
     }
 
+    public function scopeExcludingPointsPayments($query)
+    {
+        return $query->where('payment_method', '!=', 'points');
+    }
+
     public function getItemsSubtotalAttribute(): float
     {
         return $this->orderProductServices->sum(function ($item) {

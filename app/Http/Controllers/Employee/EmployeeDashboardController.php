@@ -20,16 +20,20 @@ class EmployeeDashboardController extends Controller
 
     public function totalIncome()
     {
-        // KPI Summary
-        $totalIncome = Order::sum('sum_price');
-        $thisMonthIncome = Order::whereYear('created_at', now()->year)
+        // KPI Summary (KWD income excludes orders paid with points)
+        $totalIncome = Order::excludingPointsPayments()->sum('sum_price');
+        $thisMonthIncome = Order::excludingPointsPayments()
+            ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->sum('sum_price');
         $completedOrders = Order::where('status', OrderStatus::COMPLETED)->count();
-        $averageOrderValue = Order::count() > 0 ? $totalIncome / Order::count() : 0;
+        $kwdOrderCount = Order::excludingPointsPayments()->count();
+        $averageOrderValue = $kwdOrderCount > 0 ? $totalIncome / $kwdOrderCount : 0;
+        $totalPointsRedeemed = Order::where('payment_method', 'points')->sum('points_used');
 
         // Monthly income for chart (last 12 months)
-        $monthlyIncome = Order::select(
+        $monthlyIncome = Order::excludingPointsPayments()
+            ->select(
                 DB::raw("DATE_FORMAT(created_at, '%Y-%m') as month"),
                 DB::raw('SUM(sum_price) as total')
             )
@@ -50,7 +54,8 @@ class EmployeeDashboardController extends Controller
         }
 
         // Income by status
-        $incomeByStatus = Order::select(
+        $incomeByStatus = Order::excludingPointsPayments()
+            ->select(
                 'status',
                 DB::raw('COUNT(*) as order_count'),
                 DB::raw('SUM(sum_price) as total_amount')
@@ -61,6 +66,7 @@ class EmployeeDashboardController extends Controller
 
         // Top 10 orders by value
         $topOrders = Order::with('user')
+            ->excludingPointsPayments()
             ->orderByDesc('sum_price')
             ->limit(10)
             ->get();
@@ -72,6 +78,7 @@ class EmployeeDashboardController extends Controller
             'thisMonthIncome',
             'completedOrders',
             'averageOrderValue',
+            'totalPointsRedeemed',
             'chartLabels',
             'chartData',
             'incomeByStatus',

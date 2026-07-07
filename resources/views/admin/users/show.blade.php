@@ -37,25 +37,35 @@
                         <h2 class="{{ $user->balance >= 0 ? 'text-success' : 'text-danger' }}">
                             {{ number_format($user->balance, 2) }}
                         </h2>
-                        <p class="text-muted">{{ __('messages.current_balance') }}</p>
+                        <p class="text-muted">{{ __('messages.current_balance') }} ({{ __('messages.currency_symbol') }})</p>
                     </div>
                     <div class="col-md-3 text-center">
+                        <h2 class="text-warning">
+                            <i class="fas fa-star me-1"></i>{{ number_format($user->points_balance ?? 0, 2) }}
+                        </h2>
+                        <p class="text-muted">{{ __('messages.points_balance') }}</p>
+                    </div>
+                    <div class="col-md-2 text-center">
                         <h3 class="text-info">{{ $orderStats['total_orders'] }}</h3>
                         <p class="text-muted">{{ __('messages.total_orders') }}</p>
                     </div>
-                    <div class="col-md-3 text-center">
+                    <div class="col-md-2 text-center">
                         <h3 class="text-warning">{{ $orderStats['pending_orders'] }}</h3>
                         <p class="text-muted">{{ __('messages.pending_orders') }}</p>
                     </div>
-                    <div class="col-md-3 text-center">
+                    <div class="col-md-2 text-center">
                         <h3 class="text-success">{{ $orderStats['completed_orders'] }}</h3>
                         <p class="text-muted">{{ __('messages.completed_orders') }}</p>
                     </div>
                 </div>
                 <div class="row mt-3">
-                    <div class="col-md-12 text-center">
+                    <div class="col-md-6 text-center">
                         <h4 class="text-primary">{{ number_format($orderStats['total_spent'], 2) }} {{ __('messages.currency_symbol') }}</h4>
                         <p class="text-muted">{{ __('messages.total_spent') }}</p>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <h4 class="text-warning"><i class="fas fa-star me-1"></i>{{ number_format($orderStats['total_points_redeemed'] ?? 0, 2) }}</h4>
+                        <p class="text-muted">{{ __('messages.points_redeemed') }}</p>
                     </div>
                 </div>
             </div>
@@ -87,7 +97,15 @@
                                         {{ $order->status }}
                                     </span>
                                 </td>
-                                <td>{{ number_format($order->sum_price, 2) }} {{ __('messages.currency_symbol') }}</td>
+                                <td>
+                                    @if($order->payment_method === 'points')
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="fas fa-star me-1"></i>{{ number_format($order->points_used ?? 0, 2) }} pts
+                                        </span>
+                                    @else
+                                        {{ number_format($order->sum_price, 2) }} {{ __('messages.currency_symbol') }}
+                                    @endif
+                                </td>
                                 <td>{{ $order->created_at->format('Y-m-d H:i') }}</td>
                                 <td>
                                     <a href="{{ route('orders.show', $order) }}" class="btn btn-info btn-sm">

@@ -69,7 +69,8 @@ class AdminManageUsersController extends Controller
             'total_orders' => $user->orders()->count(),
             'pending_orders' => $user->orders()->where('status', 'pending')->count(),
             'completed_orders' => $user->orders()->where('status', 'completed')->count(),
-            'total_spent' => $user->orders()->sum('sum_price'),
+            'total_spent' => $user->orders()->excludingPointsPayments()->sum('sum_price'),
+            'total_points_redeemed' => $user->orders()->where('payment_method', 'points')->sum('points_used'),
         ];
         
         return view('admin.users.show', compact('user', 'orders', 'orderStats'));
