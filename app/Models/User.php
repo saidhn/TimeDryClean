@@ -71,4 +71,18 @@ class User extends Authenticatable
     {
         return $this->hasMany(UserPointsPackage::class);
     }
+
+    public function clientSubscriptions()
+    {
+        return $this->hasMany(ClientSubscription::class);
+    }
+
+    /**
+     * The user's most recent subscription enrollment (used to derive a single
+     * billing-status badge for this user across the admin UI).
+     */
+    public function latestClientSubscription()
+    {
+        return $this->hasOne(ClientSubscription::class)->latestOfMany();
+    }
 }

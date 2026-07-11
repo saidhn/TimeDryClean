@@ -35,6 +35,18 @@ class NotificationTemplateSeeder extends Seeder
                 'message_en' => 'Subscription benefit added! Your new balance is: :balance',
             ],
             [
+                'key' => 'subscription_renewal_success',
+                'description' => 'Sent when a recurring subscription renewal is charged successfully',
+                'message_ar' => 'تم تجديد اشتراكك! تم خصم :amount د.ك، رصيدك الجديد: :balance',
+                'message_en' => 'Your subscription was renewed! :amount KWD charged, new balance: :balance',
+            ],
+            [
+                'key' => 'subscription_renewal_failed',
+                'description' => 'Sent when a recurring subscription renewal charge fails (insufficient balance)',
+                'message_ar' => 'فشل تجديد اشتراكك بسبب عدم كفاية الرصيد. يرجى شحن رصيدك. رصيدك الحالي: :balance',
+                'message_en' => 'Your subscription renewal failed due to insufficient balance. Please top up your balance. Current balance: :balance',
+            ],
+            [
                 'key' => 'driver_delivery_completed',
                 'description' => 'Sent to driver when delivery is completed (fee added)',
                 'message_ar' => 'تم التوصيل. تمت إضافة رسوم التوصيل :amount د.ك لرصيدك. الرصيد الجديد: :balance',

@@ -108,7 +108,7 @@ class OrdersController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
         $products = Product::all();
         $product_services = ProductService::all();
@@ -118,7 +118,8 @@ class OrdersController extends Controller
         $subscriptions = Subscription::all();
         $provinces = Province::all();
         $cities = City::all();
-        return view('orders.create', compact('products', 'product_services', 'discounts', 'clients', 'drivers', 'subscriptions', 'provinces', 'cities'));
+        $preselectedUserId = $request->query('user_id');
+        return view('orders.create', compact('products', 'product_services', 'discounts', 'clients', 'drivers', 'subscriptions', 'provinces', 'cities', 'preselectedUserId'));
     }
 
     /**
@@ -555,6 +556,14 @@ class OrdersController extends Controller
         $order = $orderId ? Order::find($orderId) : null;
 
         return view('orders.public-pay-complete', compact('payment', 'order'));
+    }
+
+    /**
+     * Check whether an order with the given ID exists.
+     */
+    public function checkExists($id)
+    {
+        return response()->json(['exists' => Order::whereKey($id)->exists()]);
     }
 
     /**

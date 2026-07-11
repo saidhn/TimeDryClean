@@ -22,7 +22,7 @@ class ProductController extends Controller
     {
         $search = $request->get('search');
 
-        $products = Product::withCount('productServicePrices');
+        $products = Product::withCount('productServicePrices')->with('productServicePrices');
 
         if ($search) {
             $products->where('name', 'LIKE', "%$search%")

@@ -38,6 +38,7 @@
                         <th>{{__('messages.mobile')}}</th>
                         <th>{{__('messages.address')}}</th>
                         <th>{{__('messages.subscription')}}</th>
+                        <th>{{__('messages.subscription_billing_status')}}</th>
                         <th>{{__('messages.date')}}</th>
                     </tr>
                 </thead>
@@ -49,8 +50,8 @@
                         <td>{{ optional($clientSubscription->client)->mobile }}</td>
                         <td>{{ optional($clientSubscription->client)->address_formatted() }}</td>
                         <td>{{ optional($clientSubscription->subscription)->getDetails() }}</td>
+                        <td><x-subscription-status-badge :client-subscription="$clientSubscription" /></td>
                         <td>{{ $clientSubscription->created_at }}</td>
-                        
                     </tr>
                     @endforeach
                 </tbody>

@@ -52,8 +52,120 @@
                 </div>
             </a>
         </div>
+
+        <!-- Subscriptions Report Card -->
+        <div class="col-md-4">
+            <a href="{{ route('subscriptions.report') }}" class="text-decoration-none">
+                <div class="card h-100 border-0 shadow-sm dashboard-card">
+                    <div class="card-body text-center py-4">
+                        <div class="mb-3">
+                            <i class="fas fa-chart-pie fa-3x text-secondary"></i>
+                        </div>
+                        <h5 class="card-title text-dark">{{ __('messages.subscriptions_report') }}</h5>
+                        <p class="card-text text-muted">{{ __('messages.subscriptions_report_desc') }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Go to Order Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm dashboard-card">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-search fa-3x text-warning"></i>
+                    </div>
+                    <h5 class="card-title text-dark">{{ __('messages.go_to_order') }}</h5>
+                    <p class="card-text text-muted">{{ __('messages.go_to_order_desc') }}</p>
+                    <div class="input-group mt-2">
+                        <input type="number" min="1" id="goToOrderInput" class="form-control" placeholder="{{ __('messages.order_id_placeholder') }}">
+                        <button type="button" id="goToOrderBtn" class="btn btn-primary">{{ __('messages.go') }}</button>
+                    </div>
+                    <div id="goToOrderAlert" class="alert alert-danger mt-3 mb-0 py-2 d-none" role="alert"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Go to User Card -->
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm dashboard-card">
+                <div class="card-body text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-user-circle fa-3x text-secondary"></i>
+                    </div>
+                    <h5 class="card-title text-dark">{{ __('messages.go_to_user') }}</h5>
+                    <p class="card-text text-muted">{{ __('messages.go_to_user_desc') }}</p>
+                    <div class="input-group mt-2">
+                        <input type="number" min="1" id="goToUserInput" class="form-control" placeholder="{{ __('messages.user_id_placeholder') }}">
+                        <button type="button" id="goToUserBtn" class="btn btn-primary">{{ __('messages.go') }}</button>
+                    </div>
+                    <div id="goToUserAlert" class="alert alert-danger mt-3 mb-0 py-2 d-none" role="alert"></div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+(function () {
+    function setupGoTo(inputId, btnId, alertId, checkUrlTemplate, targetUrlTemplate, notFoundMessage) {
+        const input = document.getElementById(inputId);
+        const btn = document.getElementById(btnId);
+        const alertBox = document.getElementById(alertId);
+
+        function hideAlert() {
+            alertBox.classList.add('d-none');
+            alertBox.textContent = '';
+        }
+
+        function showAlert(message) {
+            alertBox.textContent = message;
+            alertBox.classList.remove('d-none');
+        }
+
+        function go() {
+            const id = input.value.trim();
+            hideAlert();
+            if (!id) {
+                return;
+            }
+            btn.disabled = true;
+            fetch(checkUrlTemplate.replace(':id', encodeURIComponent(id)), { credentials: 'include' })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Request failed');
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data.exists) {
+                        window.location.href = targetUrlTemplate.replace(':id', encodeURIComponent(id));
+                    } else {
+                        showAlert(notFoundMessage.replace(':id', id));
+                    }
+                })
+                .catch(function () {
+                    showAlert(notFoundMessage.replace(':id', id));
+                })
+                .finally(function () {
+                    btn.disabled = false;
+                });
+        }
+
+        btn.addEventListener('click', go);
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                go();
+            }
+        });
+        input.addEventListener('input', hideAlert);
+    }
+
+    setupGoTo('goToOrderInput', 'goToOrderBtn', 'goToOrderAlert', '/orders/:id/check', '/orders/:id/edit', @json(__('messages.order_not_found')));
+    setupGoTo('goToUserInput', 'goToUserBtn', 'goToUserAlert', '/admin/users/:id/check', '/admin/users/:id', @json(__('messages.user_not_found')));
+})();
+</script>
 
 <style>
 .dashboard-card {

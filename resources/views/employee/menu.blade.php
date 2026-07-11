@@ -44,6 +44,7 @@
     <ul class="dropdown-menu" aria-labelledby="navbarDropdown3">
         <li><a class="dropdown-item" href="{{ route('subscriptions.index') }}">{{ __('messages.manage_subscriptions') }}</a></li>
         <li><a class="dropdown-item" href="{{ route('client_subscriptions.index') }}">{{ __('messages.manage_client_subscriptions') }}</a></li>
+        <li><a class="dropdown-item" href="{{ route('subscriptions.report') }}">{{ __('messages.subscriptions_report') }}</a></li>
     </ul>
 </li>
 

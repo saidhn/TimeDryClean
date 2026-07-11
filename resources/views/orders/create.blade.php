@@ -1025,8 +1025,8 @@
                 if (json.data && json.data.length) {
                     clientSelect.addOptions(json.data);
                 }
-                @if(old('user_id'))
-                const oldUserId = '{{ old('user_id') }}';
+                @if(old('user_id', $preselectedUserId ?? null))
+                const oldUserId = '{{ old('user_id', $preselectedUserId ?? '') }}';
                 fetch(`/users/search?q=${encodeURIComponent(oldUserId)}&user_type={{App\Enums\UserType::CLIENT}}`)
                     .then(r => r.json())
                     .then(json => {

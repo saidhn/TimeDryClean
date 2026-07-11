@@ -7,8 +7,11 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\City;
+use App\Models\Payment;
 use App\Models\Province;
 use App\Models\User;
+use App\Services\KnetService;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +24,11 @@ class AdminManageUsersController extends Controller
     // Define user types as a constant for better reusability
     public const USER_TYPES = [UserType::CLIENT, UserType::DRIVER, UserType::EMPLOYEE, UserType::ADMIN];
 
+    public function __construct(
+        protected KnetService $knetService,
+        protected NotificationService $notificationService
+    ) {}
+
     /**
      * Display a paginated list of users.
      *
@@ -31,7 +39,7 @@ class AdminManageUsersController extends Controller
         $search = $request->get('search');
         $userTypes = $request->get('user_type', []); // Get selected user types as an array
 
-        $users = User::query();
+        $users = User::query()->with('latestClientSubscription');
 
         if ($search) {
             $users->where('name', 'LIKE', "%$search%")
@@ -49,6 +57,64 @@ class AdminManageUsersController extends Controller
     }
 
     /**
+     * Check whether a user with the given ID exists.
+     */
+    public function checkExists($user_id)
+    {
+        return response()->json(['exists' => User::whereKey($user_id)->exists()]);
+    }
+
+    /**
+     * Settle (pay down) a user's outstanding KWD balance, either by recording
+     * a cash payment received in person or by initiating a KNET payment.
+     */
+    public function settleBalance(Request $request, $user_id)
+    {
+        $user = User::findOrFail($user_id);
+
+        $request->validate([
+            'amount' => 'required|numeric|min:0.001',
+            'payment_method' => 'required|in:cash,knet',
+        ], [
+            'payment_method.required' => __('messages.select_payment_method'),
+            'payment_method.in' => __('messages.select_payment_method'),
+        ]);
+
+        $amount = (float) $request->amount;
+
+        if ($request->payment_method === 'knet') {
+            $result = $this->knetService->createPayment($amount, $user->id);
+
+            if ($result['status'] !== 'success') {
+                return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')]);
+            }
+
+            return redirect($result['payment_uri']);
+        }
+
+        // Cash payment received in person — record and credit immediately.
+        Payment::create([
+            'user_id' => $user->id,
+            'amount' => $amount,
+            'payment_method' => 'Cash',
+            'status' => 'completed',
+            'payment_date' => now(),
+            'details' => json_encode(['type' => 'balance_settlement', 'recorded_via' => 'admin_panel']),
+        ]);
+
+        $user->increment('balance', $amount);
+
+        $this->notificationService->sendTransactionNotification(
+            $user,
+            'payment_completed',
+            ['amount' => $amount, 'balance' => $user->balance]
+        );
+
+        return redirect()->route('admin.users.show', $user->id)
+            ->with('success', __('messages.balance_settled_successfully'));
+    }
+
+    /**
      * Display the specified user with details and balance.
      *
      * @param int $user_id
@@ -56,7 +122,7 @@ class AdminManageUsersController extends Controller
      */
     public function show($user_id)
     {
-        $user = User::with(['address.city', 'address.province'])->findOrFail($user_id);
+        $user = User::with(['address.city', 'address.province', 'clientSubscriptions.subscription'])->findOrFail($user_id);
         
         // Load user's orders with their details
         $orders = $user->orders()->with(['orderProductServices.product', 'orderProductServices.productService', 'orderDelivery.driver'])
@@ -292,7 +358,7 @@ class AdminManageUsersController extends Controller
         $balanceFilter = $request->get('balance_filter', 'all');
         $pointsFilter  = $request->get('points_filter', 'all');
 
-        $users = User::query();
+        $users = User::query()->with('latestClientSubscription');
 
         if ($search) {
             $users->where(function ($query) use ($search) {

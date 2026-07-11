@@ -21,9 +21,36 @@ class ManageClientSubscriptionsController extends Controller
      */
     public function index()
     {
-        $clientSubscriptions = ClientSubscription::paginate(10); // Replace 1 with a valid ID
+        $clientSubscriptions = ClientSubscription::with(['client', 'subscription'])
+            ->latest()
+            ->paginate(10);
 
         return view('client_subscriptions.index', compact('clientSubscriptions'));
+    }
+
+    /**
+     * Subscription billing status report: how many users are paid up to date,
+     * how many failed their most recent renewal, and how many have failed
+     * two or more renewals in a row.
+     */
+    public function report(Request $request)
+    {
+        $statusFilter = $request->get('status', 'all');
+
+        $counts = [
+            'total' => ClientSubscription::count(),
+            ClientSubscription::STATUS_ACTIVE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_ACTIVE)->count(),
+            ClientSubscription::STATUS_FAILED_ONCE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_FAILED_ONCE)->count(),
+            ClientSubscription::STATUS_FAILED_MULTIPLE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_FAILED_MULTIPLE)->count(),
+        ];
+
+        $query = ClientSubscription::with(['client', 'subscription'])->latest();
+        if (in_array($statusFilter, [ClientSubscription::STATUS_ACTIVE, ClientSubscription::STATUS_FAILED_ONCE, ClientSubscription::STATUS_FAILED_MULTIPLE], true)) {
+            $query->withBillingStatus($statusFilter);
+        }
+        $clientSubscriptions = $query->paginate(15)->withQueryString();
+
+        return view('client_subscriptions.report', compact('clientSubscriptions', 'counts', 'statusFilter'));
     }
 
     /**
@@ -69,10 +96,12 @@ class ManageClientSubscriptionsController extends Controller
 
         DB::transaction(function () use ($validatedData) {
             $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+            $activatedAt = now();
             $clientSubscription = ClientSubscription::create([
                 'user_id' => $validatedData['user_id'],
                 'subscription_id' => $validatedData['subscription_id'],
-                'activated_at' => now(),
+                'activated_at' => $activatedAt,
+                'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
             ]);
             $user = User::findOrFail($validatedData['user_id']);
             $user->increment('balance', $subscription->benefit);

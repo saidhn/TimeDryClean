@@ -10,15 +10,31 @@ class ClientSubscription extends Model
         'user_id',
         'subscription_id',
         'activated_at',
+        'next_billing_at',
+        'last_billed_at',
+        'consecutive_failures',
+        'last_payment_status',
     ];
 
     protected $casts = [
         'activated_at' => 'datetime',
+        'next_billing_at' => 'datetime',
+        'last_billed_at' => 'datetime',
+        'consecutive_failures' => 'integer',
     ];
+
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_FAILED_ONCE = 'failed_once';
+    public const STATUS_FAILED_MULTIPLE = 'failed_multiple';
 
     public function client()
     {
         return $this->belongsTo(Client::class, 'user_id')->withGlobalScope('client', 'client'); // user_id and Client::class
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function subscription()
@@ -27,29 +43,57 @@ class ClientSubscription extends Model
     }
 
     /**
-     * Check if this subscription is still within its benefit period.
+     * A subscription now recurs indefinitely (billed every period) rather than
+     * expiring once its first period ends, so it stays "active" until removed.
      */
     public function isActive(): bool
     {
-        $activated = $this->activated_at ?? $this->created_at;
-        if (!$activated) {
-            return false;
-        }
-        $periodEnd = $this->subscription->getPeriodEndFrom($activated);
-        return now()->lte($periodEnd);
+        return (bool) ($this->activated_at ?? $this->created_at);
     }
 
     /**
-     * Get the date when the subscription period ends.
+     * Date of the upcoming (or most recently missed) renewal charge.
      */
     public function getPeriodEndAt(): ?\Carbon\Carbon
     {
+        if ($this->next_billing_at) {
+            return $this->next_billing_at;
+        }
         $activated = $this->activated_at ?? $this->created_at;
-        return $activated ? $this->subscription->getPeriodEndFrom($activated) : null;
+        return $activated && $this->subscription ? $this->subscription->getPeriodEndFrom($activated) : null;
     }
 
     /**
-     * Check if a user has any active subscription (within benefit period).
+     * Billing status derived from consecutive renewal failures:
+     * active (paid up to date), failed once, or failed 2+ times in a row.
+     */
+    public function billingStatus(): string
+    {
+        if ($this->consecutive_failures >= 2) {
+            return self::STATUS_FAILED_MULTIPLE;
+        }
+        if ($this->consecutive_failures === 1) {
+            return self::STATUS_FAILED_ONCE;
+        }
+        return self::STATUS_ACTIVE;
+    }
+
+    public function scopeDueForBilling($query, $asOf = null)
+    {
+        return $query->whereNotNull('next_billing_at')->where('next_billing_at', '<=', $asOf ?? now());
+    }
+
+    public function scopeWithBillingStatus($query, string $status)
+    {
+        return match ($status) {
+            self::STATUS_FAILED_ONCE => $query->where('consecutive_failures', 1),
+            self::STATUS_FAILED_MULTIPLE => $query->where('consecutive_failures', '>=', 2),
+            default => $query->where('consecutive_failures', 0),
+        };
+    }
+
+    /**
+     * Check if a user has any active subscription.
      */
     public static function userHasActiveSubscription(int $userId, ?int $excludeId = null): bool
     {

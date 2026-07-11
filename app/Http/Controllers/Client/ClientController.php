@@ -48,7 +48,7 @@ class ClientController extends Controller
     {
         if (auth()->check() && auth()->user() && auth()->user()->user_type === 'client') {
             $userId = auth()->id();
-            $clientSubscriptions = ClientSubscription::where('user_id', $userId)->paginate(10);
+            $clientSubscriptions = ClientSubscription::where('user_id', $userId)->with('subscription')->latest()->paginate(10);
             $hasActiveSubscription = ClientSubscription::userHasActiveSubscription($userId);
         } else {
             $clientSubscriptions = ClientSubscription::paginate(10);
@@ -90,10 +90,12 @@ class ClientController extends Controller
 
         DB::transaction(function () use ($validatedData) {
             $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+            $activatedAt = now();
             ClientSubscription::create([
                 'user_id' => $validatedData['user_id'],
                 'subscription_id' => $validatedData['subscription_id'],
-                'activated_at' => now(),
+                'activated_at' => $activatedAt,
+                'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
             ]);
             $user = User::findOrFail($validatedData['user_id']);
             $user->increment('balance', $subscription->benefit);

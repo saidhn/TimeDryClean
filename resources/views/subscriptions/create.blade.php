@@ -31,6 +31,9 @@
                     <option value="year">{{ __('messages.period_year_plural') }}</option>
                 </select>
             </div>
+            <div class="col-12">
+                <small class="form-text text-muted"><i class="fas fa-info-circle me-1"></i>{{ __('messages.period_help_text') }}</small>
+            </div>
         </div>
 
         <button type="submit" class="btn btn-primary">{{ __('messages.create') }}</button>

@@ -13,6 +13,8 @@
     <div class="toolbar mb-3">
         <a href="{{ route('client_subscriptions.create') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus"></i> {{ __('messages.add') }}</a>
+        <a href="{{ route('subscriptions.report') }}" class="btn btn-outline-dark btn-sm ms-2">
+            <i class="fas fa-chart-pie"></i> {{ __('messages.subscriptions_report') }}</a>
     </div>
     <div class="mt-4">
 
@@ -29,6 +31,7 @@
                         <th>{{__('messages.mobile')}}</th>
                         <th>{{__('messages.address')}}</th>
                         <th>{{__('messages.subscription')}}</th>
+                        <th>{{__('messages.subscription_billing_status')}}</th>
                         <th>{{__('messages.date')}}</th>
                         <th>{{__('messages.modify')}}</th>
                     </tr>
@@ -41,6 +44,7 @@
                         <td>{{ optional($clientSubscription->client)->mobile }}</td>
                         <td>{{ optional($clientSubscription->client)->address_formatted() }}</td>
                         <td>{{ optional($clientSubscription->subscription)->getDetails() }}</td>
+                        <td><x-subscription-status-badge :client-subscription="$clientSubscription" /></td>
                         <td>{{ $clientSubscription->created_at }}</td>
                         <td>
                             <a class="btn btn-warning btn-sm text-white" href="{{route('client_subscriptions.edit',$clientSubscription->id)}}">

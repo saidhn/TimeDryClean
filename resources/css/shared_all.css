@@ -52,3 +52,73 @@
     color: #ccc;
     pointer-events: none;
 }
+
+/* subscription billing status badges */
+.subscription-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    padding: 0.35em 0.75em;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    border: 1px solid transparent;
+}
+
+.subscription-badge-active {
+    color: #0f6b3f;
+    background-color: #e3f7ec;
+    border-color: #b7ecd1;
+}
+
+.subscription-badge-warning {
+    color: #92590a;
+    background-color: #fff2e0;
+    border-color: #ffdca8;
+}
+
+.subscription-badge-danger {
+    color: #9c1d1d;
+    background-color: #fde8e8;
+    border-color: #f6bcbc;
+}
+
+.subscription-badge-none {
+    color: #5a5f66;
+    background-color: #f1f2f4;
+    border-color: #dde0e4;
+}
+
+/* subscription report stat cards */
+.subscription-stat-card {
+    border: none;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.subscription-stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+}
+
+.subscription-stat-card .stat-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.subscription-stat-card .stat-label {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+.subscription-stat-card.total { background: linear-gradient(135deg, #464687, #6a6ac2); }
+.subscription-stat-card.active { background: linear-gradient(135deg, #1f9d63, #34c98a); }
+.subscription-stat-card.failed-once { background: linear-gradient(135deg, #d98a1f, #f2ac4c); }
+.subscription-stat-card.failed-multiple { background: linear-gradient(135deg, #c0392b, #e2685a); }

@@ -135,7 +135,6 @@ Route::middleware(['set_locale'])->group(function () {
             Route::get('/users/balance', [AdminManageUsersController::class, 'balance'])->name('admin.users.balance');
             Route::get('/users/create', [AdminManageUsersController::class, 'create'])->name('admin.users.create');
             Route::post('/users', [AdminManageUsersController::class, 'store'])->name('admin.users.store');
-            Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');
             Route::get('/users/{user}/edit', [AdminManageUsersController::class, 'edit'])->name('admin.users.edit');
             Route::put('/users/{user}', [AdminManageUsersController::class, 'update'])->name('admin.users.update');
             Route::delete('/users/{user}', [AdminManageUsersController::class, 'destroy'])->name('admin.users.destroy');
@@ -154,6 +153,13 @@ Route::middleware(['set_locale'])->group(function () {
             // Notification templates (admin settings)
             Route::get('/settings/notifications', [AdminNotificationSettingsController::class, 'index'])->name('admin.notifications.index');
             Route::put('/settings/notifications', [AdminNotificationSettingsController::class, 'update'])->name('admin.notifications.update');
+        });
+
+        // Accessible to both admin and employee (read-only user detail lookup + balance settlement)
+        Route::middleware('auth:admin,employee')->group(function () {
+            Route::get('/users/{user}/check', [AdminManageUsersController::class, 'checkExists'])->name('admin.users.check');
+            Route::post('/users/{user}/settle-balance', [AdminManageUsersController::class, 'settleBalance'])->name('admin.users.settleBalance');
+            Route::get('/users/{user}', [AdminManageUsersController::class, 'show'])->name('admin.users.show');
         });
     });
     //-----------------------------------------------------------------------------------
@@ -204,6 +210,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
         Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
         Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
+        Route::get('/orders/{id}/check', [OrdersController::class, 'checkExists'])->name('orders.check');
     });
 
     //search clients inside orders
@@ -289,6 +296,9 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/client/bills', [ClientController::class, 'clientBillsIndex'])->name('client.bills.index');
     });
     //manage client subscriptions
+    Route::get('/subscriptions-report', [ManageClientSubscriptionsController::class, 'report'])
+        ->name('subscriptions.report')
+        ->middleware('auth:admin,employee');
     Route::resource('/client_subscriptions', ManageClientSubscriptionsController::class)->middleware('auth:admin,employee');
 
 

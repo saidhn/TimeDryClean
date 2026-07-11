@@ -74,6 +74,7 @@
                         <th>{{__('messages.address')}}</th>
                         <th>{{__('messages.balance')}}</th>
                         <th>{{__('messages.points_balance')}}</th>
+                        <th>{{__('messages.subscription_billing_status')}}</th>
                         <th>{{__('messages.modify')}}</th>
                     </tr>
                 </thead>
@@ -89,6 +90,7 @@
                         <td>{{ $user->address_formatted() }}</td>
                         <td>{{ $user->balance }}</td>
                         <td>{{ $user->points_balance }}</td>
+                        <td><x-subscription-status-badge :client-subscription="$user->latestClientSubscription" /></td>
                         <td>
                             <a class="btn btn-info btn-sm text-white" href="{{ route('admin.users.show', $user->id) }}">
                                 <span class="svg-icon svg-icon-primary svg-icon-2x"><!--begin::Svg Icon --><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="16px" height="16px" viewBox="0 0 24 24" version="1.1">

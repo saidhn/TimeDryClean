@@ -35,6 +35,8 @@
                         <th>{{ __('messages.image') }}</th>
                         <th>{{ __('messages.name') }}</th>
                         <th>{{ __('messages.services') }}</th>
+                        <th>{{ __('messages.price') }} ({{ __('messages.currency_symbol') }})</th>
+                        <th>{{ __('messages.points') }}</th>
                         <th>{{ __('messages.actions') }}</th>
                     </tr>
                 </thead>
@@ -61,6 +63,33 @@
                                 <i class="fas fa-exclamation-triangle me-1"></i>
                                 {{ __('messages.no_services_configured') }}
                             </span>
+                            @endif
+                        </td>
+                        <td>
+                            @php
+                                $prices = $product->productServicePrices->pluck('price');
+                                $points = $product->productServicePrices->pluck('points_price')->filter(fn ($p) => $p !== null);
+                            @endphp
+                            @if ($prices->isNotEmpty())
+                                @if ($prices->min() == $prices->max())
+                                    {{ number_format((float) $prices->min(), 3) }}
+                                @else
+                                    {{ number_format((float) $prices->min(), 3) }} - {{ number_format((float) $prices->max(), 3) }}
+                                @endif
+                            @else
+                                <span class="text-muted">-</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if ($points->isNotEmpty())
+                                <i class="fas fa-star text-warning me-1"></i>
+                                @if ($points->min() == $points->max())
+                                    {{ number_format((float) $points->min(), 2) }}
+                                @else
+                                    {{ number_format((float) $points->min(), 2) }} - {{ number_format((float) $points->max(), 2) }}
+                                @endif
+                            @else
+                                <span class="text-muted">-</span>
                             @endif
                         </td>
                         <td>
