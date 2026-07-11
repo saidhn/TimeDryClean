@@ -137,6 +137,8 @@ return [
     'next_billing_date' => 'تاريخ الدفع القادم',
     'subscriptions_report' => 'تقرير الاشتراكات',
     'subscriptions_report_desc' => 'معرفة عدد المستخدمين ذوي الاشتراكات النشطة أو الفاشلة',
+    'subscriptions_report_subtitle' => 'تتبع من قام بالدفع، ومن فاتته دفعة، ومن يحتاج إلى متابعة.',
+    'of_total' => 'من الإجمالي',
     'total_subscriptions' => 'إجمالي الاشتراكات',
     'active_subscriptions' => 'نشطة',
     'failed_once_subscriptions' => 'فشلت (شهر واحد)',

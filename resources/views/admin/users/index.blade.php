@@ -61,8 +61,8 @@
         <p>{{__("messages.no_data_to_display")}}</p>
         @else
 
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
+        <div class="table-responsive data-table-wrap">
+            <table class="table mb-0">
                 <thead>
                     <tr>
                         <th>{{__('messages.id')}}</th>
@@ -88,8 +88,8 @@
                         <td>{{ $user->created_at }}</td>
                         <td>{{ $user->user_type_translated() }}</td>
                         <td>{{ $user->address_formatted() }}</td>
-                        <td>{{ $user->balance }}</td>
-                        <td>{{ $user->points_balance }}</td>
+                        <td><x-value-status-pill :value="$user->balance" :decimals="2" /></td>
+                        <td><x-value-status-pill :value="$user->points_balance" :decimals="2" /></td>
                         <td><x-subscription-status-badge :client-subscription="$user->latestClientSubscription" /></td>
                         <td>
                             <a class="btn btn-info btn-sm text-white" href="{{ route('admin.users.show', $user->id) }}">

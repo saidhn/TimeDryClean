@@ -135,6 +135,8 @@ return [
     'next_billing_date' => 'Next Billing Date',
     'subscriptions_report' => 'Subscriptions Report',
     'subscriptions_report_desc' => 'See how many users have active or failed subscription payments',
+    'subscriptions_report_subtitle' => 'Track who\'s paid up to date, who missed a payment, and who needs follow-up.',
+    'of_total' => 'of total',
     'total_subscriptions' => 'Total Subscriptions',
     'active_subscriptions' => 'Active',
     'failed_once_subscriptions' => 'Failed (1 month)',

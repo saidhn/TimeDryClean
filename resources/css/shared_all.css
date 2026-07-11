@@ -53,72 +53,299 @@
     pointer-events: none;
 }
 
-/* subscription billing status badges */
-.subscription-badge {
+/* ==========================================================================
+   Status color system
+   Reused everywhere a record can be "good / needs attention / at risk" —
+   subscription billing state today, balance/points sign as well.
+   Soft tint background + saturated dot + dark-on-tint text, so meaning
+   never rides on hue alone.
+   ========================================================================== */
+:root {
+    --status-good: #0ca34f;
+    --status-good-bg: #e6f7ec;
+    --status-good-text: #0a7a3b;
+    --status-good-ring: #bfe9cf;
+
+    --status-warning: #e8940c;
+    --status-warning-bg: #fef3e0;
+    --status-warning-text: #93600a;
+    --status-warning-ring: #f8ddab;
+
+    --status-critical: #d0393f;
+    --status-critical-bg: #fbe9ea;
+    --status-critical-text: #a3242a;
+    --status-critical-ring: #f2bfc2;
+
+    --status-neutral: #757b86;
+    --status-neutral-bg: #f0f1f3;
+    --status-neutral-text: #52565f;
+    --status-neutral-ring: #dcdfe4;
+
+    --ink-primary: #1c1e21;
+    --ink-secondary: #63676f;
+}
+
+/* status pill — dot + label, used for subscription status, balance, points */
+.status-pill {
     display: inline-flex;
     align-items: center;
-    gap: 0.4em;
-    padding: 0.35em 0.75em;
+    gap: 0.5em;
+    padding: 0.32em 0.8em 0.32em 0.65em;
     border-radius: 999px;
     font-size: 0.8rem;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.3;
     white-space: nowrap;
     border: 1px solid transparent;
+    font-variant-numeric: tabular-nums;
 }
 
-.subscription-badge-active {
-    color: #0f6b3f;
-    background-color: #e3f7ec;
-    border-color: #b7ecd1;
+.status-pill::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: none;
+    background: currentColor;
 }
 
-.subscription-badge-warning {
-    color: #92590a;
-    background-color: #fff2e0;
-    border-color: #ffdca8;
+.status-pill-good {
+    color: var(--status-good-text);
+    background-color: var(--status-good-bg);
+    border-color: var(--status-good-ring);
 }
 
-.subscription-badge-danger {
-    color: #9c1d1d;
-    background-color: #fde8e8;
-    border-color: #f6bcbc;
+.status-pill-warning {
+    color: var(--status-warning-text);
+    background-color: var(--status-warning-bg);
+    border-color: var(--status-warning-ring);
 }
 
-.subscription-badge-none {
-    color: #5a5f66;
-    background-color: #f1f2f4;
-    border-color: #dde0e4;
+.status-pill-critical {
+    color: var(--status-critical-text);
+    background-color: var(--status-critical-bg);
+    border-color: var(--status-critical-ring);
 }
 
-/* subscription report stat cards */
-.subscription-stat-card {
-    border: none;
-    border-radius: 0.75rem;
-    padding: 1.5rem;
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.status-pill-neutral {
+    color: var(--status-neutral-text);
+    background-color: var(--status-neutral-bg);
+    border-color: var(--status-neutral-ring);
 }
 
-.subscription-stat-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+/* legacy alias kept so any un-migrated markup still resolves */
+.subscription-badge { }
+.subscription-badge-active { }
+.subscription-badge-warning { }
+.subscription-badge-danger { }
+.subscription-badge-none { }
+
+/* ==========================================================================
+   Subscriptions report page
+   ========================================================================== */
+.report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
 }
 
-.subscription-stat-card .stat-value {
-    font-size: 2.25rem;
+.report-header h3 {
+    font-weight: 700;
+    color: var(--ink-primary);
+    margin-bottom: 0.25rem;
+}
+
+.report-header p {
+    color: var(--ink-secondary);
+    margin-bottom: 0;
+    font-size: 0.95rem;
+}
+
+.stat-card {
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(11, 11, 11, 0.06);
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+    transition: transform 0.16s ease, box-shadow 0.16s ease;
+    overflow: hidden;
+    height: 100%;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--accent, var(--status-neutral));
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(16, 24, 40, 0.09);
+}
+
+.stat-card.is-active { --accent: var(--status-good); }
+.stat-card.is-total { --accent: #464687; }
+.stat-card.is-warning { --accent: var(--status-warning); }
+.stat-card.is-critical { --accent: var(--status-critical); }
+
+.stat-card .stat-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(70, 70, 135, 0.12);
+    background: color-mix(in srgb, var(--accent) 14%, white);
+    color: var(--accent);
+    font-size: 0.95rem;
+    margin-bottom: 0.85rem;
+}
+
+.stat-card .stat-value {
+    font-size: 2rem;
     font-weight: 700;
     line-height: 1;
+    color: var(--ink-primary);
+    font-variant-numeric: tabular-nums;
 }
 
-.subscription-stat-card .stat-label {
+.stat-card .stat-label {
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+    margin-top: 0.4rem;
+    font-weight: 500;
+}
+
+.stat-card .stat-share {
+    font-size: 0.78rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 0.15rem;
+}
+
+/* segmented proportion bar */
+.proportion-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 2px;
+    height: 10px;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--status-neutral-bg);
+}
+
+.proportion-bar .segment {
+    height: 100%;
+    min-width: 3px;
+    transition: flex-grow 0.3s ease;
+}
+
+.proportion-bar .segment.good { background: var(--status-good); }
+.proportion-bar .segment.warning { background: var(--status-warning); }
+.proportion-bar .segment.critical { background: var(--status-critical); }
+
+.proportion-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 0.85rem;
+    font-size: 0.85rem;
+    color: var(--ink-secondary);
+}
+
+.proportion-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+}
+
+.proportion-legend .legend-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex: none;
+}
+
+.proportion-legend .legend-dot.good { background: var(--status-good); }
+.proportion-legend .legend-dot.warning { background: var(--status-warning); }
+.proportion-legend .legend-dot.critical { background: var(--status-critical); }
+
+.proportion-legend strong {
+    color: var(--ink-primary);
+    font-variant-numeric: tabular-nums;
+}
+
+/* filter pill group */
+.filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+}
+
+.filter-pills a {
+    display: inline-block;
+    padding: 0.4rem 0.95rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink-secondary);
+    background: #fff;
+    border: 1px solid rgba(11, 11, 11, 0.1);
+    transition: all 0.15s ease;
+}
+
+.filter-pills a:hover {
+    border-color: #464687;
+    color: #464687;
+}
+
+.filter-pills a.active {
+    background: #464687;
+    border-color: #464687;
+    color: #fff;
+}
+
+/* clean data table (used by the report + subscription lists) */
+.data-table-wrap {
+    background: #fff;
+    border: 1px solid rgba(11, 11, 11, 0.07);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.data-table-wrap table {
+    margin-bottom: 0;
+}
+
+.data-table-wrap thead th {
+    background: #f8f8fa;
+    color: var(--ink-secondary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid rgba(11, 11, 11, 0.07);
+    padding: 0.75rem 1rem;
+    white-space: nowrap;
+}
+
+.data-table-wrap tbody td {
+    padding: 0.7rem 1rem;
+    border-top: 1px solid rgba(11, 11, 11, 0.05);
+    vertical-align: middle;
+    color: var(--ink-primary);
     font-size: 0.9rem;
-    opacity: 0.9;
-    margin-top: 0.5rem;
 }
 
-.subscription-stat-card.total { background: linear-gradient(135deg, #464687, #6a6ac2); }
-.subscription-stat-card.active { background: linear-gradient(135deg, #1f9d63, #34c98a); }
-.subscription-stat-card.failed-once { background: linear-gradient(135deg, #d98a1f, #f2ac4c); }
-.subscription-stat-card.failed-multiple { background: linear-gradient(135deg, #c0392b, #e2685a); }
+.data-table-wrap tbody tr:hover {
+    background: #fafafa;
+}
