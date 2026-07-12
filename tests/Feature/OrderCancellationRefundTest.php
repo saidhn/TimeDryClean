@@ -110,4 +110,57 @@ class OrderCancellationRefundTest extends TestCase
         $this->assertSame(OrderStatus::CANCELLED, $order->status);
         $this->assertNotNull($order->refunded_at);
     }
+
+    public function test_resaving_an_already_cancelled_and_refunded_order_does_not_leak_a_second_refund(): void
+    {
+        $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000106', 'balance' => 40]);
+        $admin = User::factory()->create(['user_type' => 'admin', 'mobile' => '50000107', 'balance' => 0]);
+
+        $product = Product::create(['name' => 'Shirt']);
+        $service = ProductService::create(['name' => 'Wash']);
+        ProductServicePrice::create([
+            'product_id' => $product->id,
+            'product_service_id' => $service->id,
+            'price' => 40,
+        ]);
+
+        // Order is ALREADY cancelled and ALREADY refunded (e.g. from a prior
+        // cancellation request) — simulating the state right after the first,
+        // legitimate cancellation refund has already been applied.
+        $order = Order::create([
+            'user_id' => $client->id,
+            'sum_price' => 40,
+            'status' => OrderStatus::CANCELLED,
+            'is_paid' => true,
+            'payment_method' => 'money',
+            'refunded_at' => now(),
+        ]);
+
+        // Admin opens the edit form (which pre-selects the current status) and
+        // saves without actually changing the status — order_status=CANCELLED is
+        // resubmitted even though the order was already CANCELLED.
+        $response = $this->actingAs($admin, 'admin')->put(route('orders.update', $order->id), [
+            'user_id' => $client->id,
+            'order_status' => OrderStatus::CANCELLED,
+            'payment_method' => 'money',
+            'order_product_services' => [
+                [
+                    'product_id' => $product->id,
+                    'product_service_id' => $service->id,
+                    'quantity' => 1,
+                ],
+            ],
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+        $response->assertRedirect();
+
+        $client->refresh();
+        $order->refresh();
+
+        // No actual status transition occurred, so no refund should be applied —
+        // the customer's balance must be unchanged from before this request.
+        $this->assertEquals(40.0, (float) $client->balance);
+        $this->assertSame(OrderStatus::CANCELLED, $order->status);
+    }
 }

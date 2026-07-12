@@ -662,7 +662,15 @@ class OrdersController extends Controller
             // so exactly one money movement happens for a cancel-while-editing request
             // (the reversal of the original charge) instead of the reversal-then-recharge
             // and the workflow service's own cancellation refund both firing.
-            $isCancelling = $request->input('order_status') === OrderStatus::CANCELLED;
+            //
+            // Gated on an actual transition INTO cancelled (pre-edit status !== CANCELLED),
+            // not merely on the submitted value — otherwise re-saving an edit form for an
+            // order that is ALREADY cancelled (the form naturally resubmits its current
+            // status) would still trip the unconditional "reverse original charge" step
+            // below with nothing to offset it, crediting the customer for free on every
+            // re-save.
+            $isCancelling = $request->input('order_status') === OrderStatus::CANCELLED
+                && $order->status !== OrderStatus::CANCELLED;
 
             // 1. Update Order:
             $sum_price = 0;
