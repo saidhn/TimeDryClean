@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Order;
 
 use App\Enums\DeliveryDirection;
 use App\Enums\DeliveryStatus;
+use App\Exceptions\InsufficientPointsException;
 use App\Http\Controllers\Controller;
 use App\Models\Discount;
 use App\Models\Order;
@@ -343,11 +344,12 @@ class OrdersController extends Controller
             $orderCost = $order->sum_price;
 
             if ($paymentMethod === 'points') {
-                if ($user->points_balance < $total_points) {
+                try {
+                    $user = User::adjustPointsIfSufficient($user->id, -$total_points);
+                } catch (InsufficientPointsException $e) {
                     DB::rollBack();
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
-                $user = User::adjustPoints($user->id, -$total_points);
                 $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             } elseif ($paymentMethod === 'knet') {
@@ -460,14 +462,16 @@ class OrdersController extends Controller
                 $totalPoints += $pointsAtOrder * $line->quantity;
                 $linePoints[$line->id] = $pointsAtOrder;
             }
-            if ($user->points_balance < $totalPoints) {
+            try {
+                $user = User::adjustPointsIfSufficient($user->id, -$totalPoints);
+            } catch (InsufficientPointsException $e) {
                 return back()->withErrors(['message' => __('messages.insufficient_points')]);
             }
-            // Snapshot the points price on each order line
+            // Snapshot the points price on each order line (only after the
+            // deduction above has succeeded).
             foreach ($order->orderProductServices as $line) {
                 $line->update(['points_at_order' => $linePoints[$line->id]]);
             }
-            $user = User::adjustPoints($user->id, -$totalPoints);
             $order->update([
                 'payment_method' => 'points',
                 'points_used'    => $totalPoints,
@@ -843,11 +847,12 @@ class OrdersController extends Controller
             }
 
             if ($editPaymentMethod === 'points') {
-                if ($user->points_balance < $total_points_edit) {
+                try {
+                    $user = User::adjustPointsIfSufficient($user->id, -$total_points_edit);
+                } catch (InsufficientPointsException $e) {
                     DB::rollBack();
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
-                $user = User::adjustPoints($user->id, -$total_points_edit);
             } else {
                 $user = User::adjustBalance($user->id, -$orderCost);
             }

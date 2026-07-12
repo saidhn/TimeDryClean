@@ -2,6 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Exceptions\InsufficientPointsException;
+use App\Enums\OrderStatus;
+use App\Models\Order;
+use App\Models\OrderProductService;
+use App\Models\Product;
+use App\Models\ProductService;
+use App\Models\ProductServicePrice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -48,5 +55,71 @@ class OrderBalanceConcurrencyTest extends TestCase
         $user->refresh();
 
         $this->assertEquals(10.0, (float) $user->points_balance);
+    }
+
+    public function test_adjust_points_if_sufficient_throws_and_does_not_mutate_when_insufficient(): void
+    {
+        $user = User::factory()->create([
+            'user_type' => 'client',
+            'mobile' => '50000012',
+            'points_balance' => 10,
+        ]);
+
+        $this->expectException(InsufficientPointsException::class);
+
+        try {
+            User::adjustPointsIfSufficient($user->id, -15);
+        } finally {
+            $user->refresh();
+            $this->assertEquals(10.0, (float) $user->points_balance);
+        }
+    }
+
+    public function test_pay_with_insufficient_points_returns_error_and_does_not_mutate_balance(): void
+    {
+        $admin = User::factory()->create([
+            'user_type' => 'admin',
+            'mobile' => '50000013',
+        ]);
+
+        $client = User::factory()->create([
+            'user_type' => 'client',
+            'mobile' => '50000014',
+            'points_balance' => 5,
+        ]);
+
+        $product = Product::create(['name' => 'Test Product']);
+        $productService = ProductService::create(['name' => 'Wash']);
+        ProductServicePrice::create([
+            'product_id' => $product->id,
+            'product_service_id' => $productService->id,
+            'price' => 10,
+            'points_price' => 20,
+        ]);
+
+        $order = Order::create([
+            'user_id' => $client->id,
+            'sum_price' => 10,
+            'status' => OrderStatus::PENDING,
+            'is_paid' => false,
+        ]);
+
+        OrderProductService::create([
+            'order_id' => $order->id,
+            'product_id' => $product->id,
+            'product_service_id' => $productService->id,
+            'quantity' => 1,
+        ]);
+
+        $response = $this->actingAs($admin, 'admin')
+            ->post(route('orders.pay', $order), ['payment_method' => 'points']);
+
+        $response->assertSessionHasErrors('message');
+
+        $client->refresh();
+        $this->assertEquals(5.0, (float) $client->points_balance);
+
+        $order->refresh();
+        $this->assertFalse((bool) $order->is_paid);
     }
 }
