@@ -76,7 +76,7 @@ class Order extends Model
 
     public function statusTranslated()
     {
-        return __('messages.' . strtolower($this->status));
+        return \App\Enums\OrderStatus::label($this->status);
     }
 
     public function discountAppliedBy()
@@ -116,7 +116,7 @@ class Order extends Model
 
     public function canApplyDiscount(): bool
     {
-        return in_array($this->status, ['draft', 'pending']);
+        return in_array($this->status, [\App\Enums\OrderStatus::PLACED, \App\Enums\OrderStatus::PICKUP_SCHEDULED]);
     }
 
     public function getDiscountDisplayAttribute(): string

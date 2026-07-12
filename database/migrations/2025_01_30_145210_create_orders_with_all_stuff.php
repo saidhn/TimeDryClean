@@ -3,7 +3,6 @@
 use App\Enums\DeliverDirection;
 use App\Enums\DeliveryDirection;
 use App\Enums\DeliveryStatus;
-use App\Enums\OrderStatus;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -89,13 +88,19 @@ return new class extends Migration
             $table->decimal('discount_amount', 10, 2)->default(0)->comment('The discount amount applied to the order');
 
             // Correct way to define the enum column:
+            // NOTE: these values are inlined (not App\Enums\OrderStatus::*) on purpose —
+            // this migration is a historical snapshot of the schema as it existed on
+            // 2025-01-30 and must not depend on the OrderStatus class, whose values
+            // were later replaced with a real fulfillment lifecycle (see the
+            // 2026_07_14_100000_convert_orders_status_to_flexible_string migration,
+            // which converts this ENUM column to a flexible VARCHAR and backfills data).
             $table->enum('status', [
-                OrderStatus::PENDING,
-                OrderStatus::PROCESSING,
-                OrderStatus::SHIPPED,
-                OrderStatus::COMPLETED,
-                OrderStatus::CANCELLED,
-            ])->default(OrderStatus::PENDING)->comment('The status of the order'); // No ->change() here!
+                'Pending',
+                'Processing',
+                'Shipped',
+                'Completed',
+                'Cancelled',
+            ])->default('Pending')->comment('The status of the order'); // No ->change() here!
 
             $table->timestamps();
             $table->softDeletes(); // Add soft deletes
