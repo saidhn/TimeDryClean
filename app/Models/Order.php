@@ -62,6 +62,12 @@ class Order extends Model
     {
         return $this->hasOne(OrderDelivery::class);
     }
+
+    public function statusHistories()
+    {
+        return $this->hasMany(OrderStatusHistory::class);
+    }
+
     public function statusTranslated()
     {
         return __('messages.' . strtolower($this->status));
