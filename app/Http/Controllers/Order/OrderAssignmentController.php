@@ -54,75 +54,78 @@ class OrderAssignmentController extends Controller
             'city_id' => 'required|exists:cities,id', // Added city_id validation
         ]);
 
-        $order = Order::findOrFail($request->order_id);
+        DB::transaction(function () use ($request) {
+            $order = Order::whereKey($request->order_id)->lockForUpdate()->firstOrFail();
 
-        if ($request->has('bring_order') && $request->has('return_order')) {
-            $direction = DeliveryDirection::BOTH;
-        } elseif ($request->has('bring_order')) {
-            $direction = DeliveryDirection::ORDER_TO_WORK;
-        } elseif ($request->has('return_order')) {
-            $direction = DeliveryDirection::WORK_TO_ORDER;
-        } else {
-            $direction = null; // Set to null if neither is checked
-        }
-
-        $orderDelivery = $order->orderDelivery;
-
-        if ($orderDelivery) {
-            // Update existing OrderDelivery
-            $orderDelivery->update([
-                'user_id' => $request->driver_id,
-                'direction' => $direction,
-                'price' => $request->delivery_price ?? 0,
-                'street' => $request->street ?? null,
-                'building' => $request->building ?? null,
-                'floor' => $request->floor ?? null,
-                'apartment_number' => $request->apartment_number ?? null,
-                'status' => DeliveryStatus::ASSIGNED,
-                'delivery_date' => now(),
-            ]);
-
-            // Update or create the address
-            if ($orderDelivery->address) {
-                $orderDelivery->address->update([
-                    'province_id' => $request->input('province_id'),
-                    'city_id' => $request->input('city_id'),
-                ]);
+            if ($request->has('bring_order') && $request->has('return_order')) {
+                $direction = DeliveryDirection::BOTH;
+            } elseif ($request->has('bring_order')) {
+                $direction = DeliveryDirection::ORDER_TO_WORK;
+            } elseif ($request->has('return_order')) {
+                $direction = DeliveryDirection::WORK_TO_ORDER;
             } else {
+                $direction = null; // Set to null if neither is checked
+            }
+
+            $orderDelivery = OrderDelivery::where('order_id', $order->id)->lockForUpdate()->first();
+
+            if ($orderDelivery) {
+                // Update existing OrderDelivery
+                $orderDelivery->update([
+                    'user_id' => $request->driver_id,
+                    'direction' => $direction,
+                    'price' => $request->delivery_price ?? 0,
+                    'street' => $request->street ?? null,
+                    'building' => $request->building ?? null,
+                    'floor' => $request->floor ?? null,
+                    'apartment_number' => $request->apartment_number ?? null,
+                    'status' => DeliveryStatus::ASSIGNED,
+                    'delivery_date' => now(),
+                ]);
+
+                // Update or create the address
+                if ($orderDelivery->address) {
+                    $orderDelivery->address->update([
+                        'province_id' => $request->input('province_id'),
+                        'city_id' => $request->input('city_id'),
+                    ]);
+                } else {
+                    $address = Address::create([
+                        'province_id' => $request->input('province_id'),
+                        'city_id' => $request->input('city_id'),
+                    ]);
+                    $orderDelivery->address()->associate($address);
+                    $orderDelivery->save();
+                }
+            } else {
+                // Create new OrderDelivery
+                $orderDelivery = OrderDelivery::create([
+                    'order_id' => $order->id,
+                    'user_id' => $request->driver_id,
+                    'direction' => $direction,
+                    'price' => $request->delivery_price ?? 0,
+                    'street' => $request->street ?? null,
+                    'building' => $request->building ?? null,
+                    'floor' => $request->floor ?? null,
+                    'apartment_number' => $request->apartment_number ?? null,
+                    'status' => DeliveryStatus::ASSIGNED,
+                    'delivery_date' => now(),
+                ]);
+
+                // Create the address
                 $address = Address::create([
                     'province_id' => $request->input('province_id'),
                     'city_id' => $request->input('city_id'),
                 ]);
+
+                // Associate the address with the OrderDelivery
                 $orderDelivery->address()->associate($address);
                 $orderDelivery->save();
             }
-        } else {
-            // Create new OrderDelivery
-            $orderDelivery = OrderDelivery::create([
-                'order_id' => $order->id,
-                'user_id' => $request->driver_id,
-                'direction' => $direction,
-                'price' => $request->delivery_price ?? 0,
-                'street' => $request->street ?? null,
-                'building' => $request->building ?? null,
-                'floor' => $request->floor ?? null,
-                'apartment_number' => $request->apartment_number ?? null,
-                'status' => DeliveryStatus::ASSIGNED,
-                'delivery_date' => now(),
-            ]);
+        });
 
-            // Create the address
-            $address = Address::create([
-                'province_id' => $request->input('province_id'),
-                'city_id' => $request->input('city_id'),
-            ]);
-
-            // Associate the address with the OrderDelivery
-            $orderDelivery->address()->associate($address);
-            $orderDelivery->save();
-        }
         // Order assigned successfully.
-        return redirect()->route('orders.show', $order->id)->with('success', __('messages.order_assigned_successfully'));
+        return redirect()->route('orders.show', $request->order_id)->with('success', __('messages.order_assigned_successfully'));
     }
 
     /**
