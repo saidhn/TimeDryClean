@@ -529,4 +529,13 @@ return [
     'reprice_only_at_facility' => 'Orders can only be re-priced while at the facility or being sorted.',
     'order_repriced_successfully' => 'Order re-priced successfully.',
     'no_additional_payment_due' => 'This order has no additional payment due.',
+
+    // New keys for contact messaging UI
+    'new_message' => 'New Message',
+    'chat_with_support' => 'Chat with Support',
+    'type_message_here' => 'Type your message here...',
+    'no_replies_yet' => 'No replies yet',
+    'admin_reply' => 'Support Team',
+    'you' => 'You',
+    'send_message_title' => 'Contact Support',
 ];

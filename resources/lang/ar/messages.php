@@ -537,4 +537,13 @@ return [
     'reprice_only_at_facility' => 'لا يمكن إعادة تسعير الطلب إلا أثناء وجوده في المنشأة أو أثناء الفرز.',
     'order_repriced_successfully' => 'تم إعادة تسعير الطلب بنجاح.',
     'no_additional_payment_due' => 'لا يوجد مبلغ إضافي مستحق على هذا الطلب.',
+
+    // New keys for contact messaging UI
+    'new_message' => 'رسالة جديدة',
+    'chat_with_support' => 'تحدث مع الدعم الفني',
+    'type_message_here' => 'اكتب رسالتك هنا...',
+    'no_replies_yet' => 'لا توجد ردود بعد',
+    'admin_reply' => 'فريق الدعم الفني',
+    'you' => 'أنت',
+    'send_message_title' => 'تواصل مع الدعم',
 ];

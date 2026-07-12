@@ -8,6 +8,7 @@ export default defineConfig({
                 'resources/css/app_ltr.css',
                 'resources/css/app_rtl.css',
                 'resources/css/shared_all.css',
+                'resources/css/pages/contact.css',
                 'resources/js/app.js'
             ],
             refresh: true,
