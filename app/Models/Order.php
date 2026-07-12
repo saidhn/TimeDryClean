@@ -25,6 +25,10 @@ class Order extends Model
         'discount_value',
         'discount_applied_by',
         'discount_applied_at',
+        'is_flagged',
+        'flag_reason',
+        'flagged_at',
+        'flagged_by',
     ];
 
     protected $casts = [
@@ -36,6 +40,8 @@ class Order extends Model
         'discount_value' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'discount_applied_at' => 'datetime',
+        'is_flagged' => 'boolean',
+        'flagged_at' => 'datetime',
     ];
 
     public function user()
@@ -76,6 +82,31 @@ class Order extends Model
     public function discountAppliedBy()
     {
         return $this->belongsTo(User::class, 'discount_applied_by');
+    }
+
+    public function flaggedBy()
+    {
+        return $this->belongsTo(User::class, 'flagged_by');
+    }
+
+    public function flag(string $reason, int $flaggedByUserId): void
+    {
+        $this->update([
+            'is_flagged' => true,
+            'flag_reason' => $reason,
+            'flagged_at' => now(),
+            'flagged_by' => $flaggedByUserId,
+        ]);
+    }
+
+    public function unflag(): void
+    {
+        $this->update([
+            'is_flagged' => false,
+            'flag_reason' => null,
+            'flagged_at' => null,
+            'flagged_by' => null,
+        ]);
     }
 
     public function hasDiscount(): bool
