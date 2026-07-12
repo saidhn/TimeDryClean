@@ -413,11 +413,11 @@ class OrdersController extends Controller
         // Total points required to pay this order with points; null when any line has no points price
         $requiredPoints = null;
         if (!$order->is_paid) {
+            $prices = $this->batchedProductServicePrices($order->orderProductServices);
+
             $requiredPoints = 0;
             foreach ($order->orderProductServices as $line) {
-                $servicePrice = ProductServicePrice::where('product_id', $line->product_id)
-                    ->where('product_service_id', $line->product_service_id)
-                    ->first();
+                $servicePrice = $prices->get($line->product_id . ':' . $line->product_service_id);
                 if (!$servicePrice || $servicePrice->points_price === null) {
                     $requiredPoints = null;
                     break;
@@ -450,12 +450,12 @@ class OrdersController extends Controller
 
         if ($paymentMethod === 'points') {
             // Calculate total points needed from order lines
+            $prices = $this->batchedProductServicePrices($order->orderProductServices);
+
             $totalPoints = 0;
             $linePoints = [];
             foreach ($order->orderProductServices as $line) {
-                $servicePrice = ProductServicePrice::where('product_id', $line->product_id)
-                    ->where('product_service_id', $line->product_service_id)
-                    ->first();
+                $servicePrice = $prices->get($line->product_id . ':' . $line->product_service_id);
                 if (!$servicePrice || $servicePrice->points_price === null) {
                     return back()->withErrors(['message' => __('messages.product_no_points_price_warning')]);
                 }
@@ -1043,6 +1043,27 @@ class OrdersController extends Controller
         }
 
         return redirect($result['payment_uri']);
+    }
+
+    /**
+     * Batch-fetch ProductServicePrice rows for a set of order lines in a single
+     * query, keyed by "product_id:product_service_id", instead of issuing one
+     * query per line (N+1). Used by show() and pay() to compute points pricing.
+     */
+    private function batchedProductServicePrices($orderProductServices)
+    {
+        $pairs = $orderProductServices->map(fn ($line) => [$line->product_id, $line->product_service_id]);
+
+        return ProductServicePrice::query()
+            ->where(function ($q) use ($pairs) {
+                foreach ($pairs as [$productId, $serviceId]) {
+                    $q->orWhere(function ($q2) use ($productId, $serviceId) {
+                        $q2->where('product_id', $productId)->where('product_service_id', $serviceId);
+                    });
+                }
+            })
+            ->get()
+            ->keyBy(fn ($p) => $p->product_id . ':' . $p->product_service_id);
     }
 
     /**
