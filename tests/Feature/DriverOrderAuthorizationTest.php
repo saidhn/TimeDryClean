@@ -15,14 +15,14 @@ class DriverOrderAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function makeOrderWithDelivery(User $assignedDriver): Order
+    private function makeOrderWithDelivery(User $assignedDriver, string $status = OrderStatus::PLACED): Order
     {
         $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000020', 'balance' => 0]);
 
         $order = Order::create([
             'user_id' => $client->id,
             'sum_price' => 10,
-            'status' => OrderStatus::PENDING,
+            'status' => $status,
         ]);
 
         OrderDelivery::create([
@@ -44,7 +44,7 @@ class DriverOrderAuthorizationTest extends TestCase
         $order = $this->makeOrderWithDelivery($assignedDriver);
 
         $response = $this->actingAs($otherDriver, 'driver')
-            ->put(route('driver.orders.update', ['order' => $order->id, 'status' => OrderStatus::COMPLETED]));
+            ->put(route('driver.orders.update', ['order' => $order->id, 'status' => OrderStatus::PICKUP_SCHEDULED]));
 
         $response->assertForbidden();
         $otherDriver->refresh();
@@ -54,14 +54,16 @@ class DriverOrderAuthorizationTest extends TestCase
     public function test_assigned_driver_can_update_status(): void
     {
         $assignedDriver = User::factory()->create(['user_type' => 'driver', 'mobile' => '50000023', 'balance' => 0]);
-        $order = $this->makeOrderWithDelivery($assignedDriver);
+        // Start the order one legal transition away from DELIVERED so a single
+        // PUT exercises both the guarded transition and the driver-balance credit.
+        $order = $this->makeOrderWithDelivery($assignedDriver, OrderStatus::OUT_FOR_DELIVERY);
 
         $response = $this->actingAs($assignedDriver, 'driver')
-            ->put(route('driver.orders.update', ['order' => $order->id, 'status' => OrderStatus::COMPLETED]));
+            ->put(route('driver.orders.update', ['order' => $order->id, 'status' => OrderStatus::DELIVERED]));
 
         $response->assertRedirect();
         $order->refresh();
-        $this->assertSame(OrderStatus::COMPLETED, $order->status);
+        $this->assertSame(OrderStatus::DELIVERED, $order->status);
     }
 
     public function test_invalid_status_value_is_rejected(): void
@@ -74,6 +76,6 @@ class DriverOrderAuthorizationTest extends TestCase
 
         $response->assertStatus(422);
         $order->refresh();
-        $this->assertSame(OrderStatus::PENDING, $order->status);
+        $this->assertSame(OrderStatus::PLACED, $order->status);
     }
 }

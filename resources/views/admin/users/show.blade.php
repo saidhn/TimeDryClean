@@ -151,7 +151,7 @@
                             <tr>
                                 <td>#{{ $order->id }}</td>
                                 <td>
-                                    <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">
+                                    <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::DELIVERED ? 'success' : ($order->status == App\Enums\OrderStatus::PLACED ? 'warning' : 'info') }}">
                                         {{ $order->status }}
                                     </span>
                                 </td>

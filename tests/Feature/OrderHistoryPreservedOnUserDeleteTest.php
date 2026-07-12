@@ -20,7 +20,7 @@ class OrderHistoryPreservedOnUserDeleteTest extends TestCase
         Order::create([
             'user_id' => $client->id,
             'sum_price' => 10,
-            'status' => OrderStatus::COMPLETED,
+            'status' => OrderStatus::DELIVERED,
         ]);
 
         $this->expectException(QueryException::class);

@@ -63,13 +63,13 @@
 
             <h2 class="mt-4">{{ __('messages.change_status') }}</h2>
             <div>
-                <form class='d-inline' method="POST" action="{{ route('driver.orders.update', ['order' => $order->id, 'status' => App\Enums\OrderStatus::SHIPPED]) }}">
+                <form class='d-inline' method="POST" action="{{ route('driver.orders.update', ['order' => $order->id, 'status' => App\Enums\OrderStatus::OUT_FOR_DELIVERY]) }}">
                     @csrf
                     @method('PUT')
                     <button class="btn btn-primary">{{__('messages.change_status_to_shipped')}}</button>
                 </form>
 
-                <form class='d-inline' method="POST" action="{{ route('driver.orders.update', ['order' => $order->id, 'status' => App\Enums\OrderStatus::COMPLETED]) }}">
+                <form class='d-inline' method="POST" action="{{ route('driver.orders.update', ['order' => $order->id, 'status' => App\Enums\OrderStatus::DELIVERED]) }}">
                     @csrf
                     @method('PUT')
                     <button class="btn btn-primary">{{__('messages.change_status_to_completed')}}</button>

@@ -37,7 +37,7 @@ class OrderAssignmentConcurrencyTest extends TestCase
         $order = Order::create([
             'user_id' => $client->id,
             'sum_price' => 10,
-            'status' => OrderStatus::PENDING,
+            'status' => OrderStatus::PLACED,
         ]);
 
         $payload = fn (User $driver) => [

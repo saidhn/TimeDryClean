@@ -16,7 +16,7 @@ class ClientDashboardController extends Controller
 
         $current_orders = Order::where('user_id', $client->id)
             ->where('status', '!=', OrderStatus::CANCELLED)
-            ->where('status', '!=', OrderStatus::COMPLETED)
+            ->where('status', '!=', OrderStatus::DELIVERED)
             ->latest()
             ->paginate(10);
 

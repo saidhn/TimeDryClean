@@ -25,7 +25,7 @@ class DriverController extends Controller
             $query->where('id', $driver->id); // Assuming the driver id is stored in the id column of the users table.
         })
             ->where('status', '!=', OrderStatus::CANCELLED)
-            ->where('status', '!=', OrderStatus::COMPLETED)
+            ->where('status', '!=', OrderStatus::DELIVERED)
             ->latest()
             ->paginate(10);
 
@@ -42,18 +42,6 @@ class DriverController extends Controller
 
     public function updateOrderStatus(Order $order, string $status)
     {
-        $validStatuses = [
-            OrderStatus::PENDING,
-            OrderStatus::PROCESSING,
-            OrderStatus::SHIPPED,
-            OrderStatus::COMPLETED,
-            OrderStatus::CANCELLED,
-        ];
-
-        if (!in_array($status, $validStatuses, true)) {
-            abort(422, __('messages.validation_order_status_invalid'));
-        }
-
         $delivery = $order->orderDelivery;
 
         if (!$delivery) {
@@ -64,12 +52,26 @@ class DriverController extends Controller
             abort(403);
         }
 
-        //make a complete order Not complete (subtract from driver the delivery balance)
-        if ($order->status == OrderStatus::COMPLETED && $status != OrderStatus::COMPLETED) {
+        if (!in_array($status, \App\Enums\OrderStatus::all(), true)) {
+            abort(422, __('messages.validation_order_status_invalid'));
+        }
+
+        $wasDelivered = $order->status === OrderStatus::DELIVERED;
+
+        try {
+            $order = app(\App\Services\OrderWorkflowService::class)
+                ->transition($order, $status, 'driver', Auth::id());
+        } catch (\App\Exceptions\InvalidOrderTransitionException $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
+        }
+
+        $nowDelivered = $order->status === OrderStatus::DELIVERED;
+
+        if ($wasDelivered && !$nowDelivered) {
             $driver = Auth::user();
             $driver->decrement('balance', $delivery->price);
             $driver->save();
-        } else if ($order->status != OrderStatus::COMPLETED && $status == OrderStatus::COMPLETED) { //make Not complete order be complete (add delivery balance to driver)
+        } elseif (!$wasDelivered && $nowDelivered) {
             $driver = Auth::user();
             $driver->increment('balance', $delivery->price);
             $driver->save();
@@ -79,7 +81,7 @@ class DriverController extends Controller
                 'balance' => $driver->balance,
             ]);
         }
-        $order->update(['status' => $status]);
+
         return redirect()->back()->with('success', __('messages.updated_successfully'));
     }
     public function deliveryHistory(Request $request)
@@ -91,7 +93,7 @@ class DriverController extends Controller
             // Assuming the driver id is stored in the id column of the users table.
             $query->where('id', $driver->id);
         })
-            ->where('status', OrderStatus::COMPLETED); // Keep existing filters
+            ->where('status', OrderStatus::DELIVERED); // Keep existing filters
 
         // --- Add Date Filtering ---
         $startDate = $request->input('start_date');

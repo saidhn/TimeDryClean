@@ -21,7 +21,7 @@ class OrderDeliveryUniqueConstraintTest extends TestCase
         $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000050', 'balance' => 0]);
         $driver = User::factory()->create(['user_type' => 'driver', 'mobile' => '50000051', 'balance' => 0]);
 
-        $order = Order::create(['user_id' => $client->id, 'sum_price' => 10, 'status' => OrderStatus::PENDING]);
+        $order = Order::create(['user_id' => $client->id, 'sum_price' => 10, 'status' => OrderStatus::PLACED]);
 
         OrderDelivery::create([
             'order_id' => $order->id, 'user_id' => $driver->id, 'direction' => DeliveryDirection::BOTH,

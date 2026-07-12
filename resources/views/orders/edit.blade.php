@@ -72,12 +72,16 @@
                             <label for="order_status">{{ __('messages.order_status') }}</label>
                             <select class="form-control" id="order_status" name="order_status">
                                 @php $selectedStatus = old('order_status', $order->status); @endphp
-                                <option value="{{ \App\Enums\OrderStatus::PENDING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PENDING ? 'selected' : '' }}>{{ __('messages.pending') }}</option>
-                                <option value="{{ \App\Enums\OrderStatus::PROCESSING }}" {{ $selectedStatus === \App\Enums\OrderStatus::PROCESSING ? 'selected' : '' }}>{{ __('messages.processing') }}</option>
-                                <option value="{{ \App\Enums\OrderStatus::SHIPPED }}" {{ $selectedStatus === \App\Enums\OrderStatus::SHIPPED ? 'selected' : '' }}>{{ __('messages.shipped') }}</option>
-                                <option value="{{ \App\Enums\OrderStatus::COMPLETED }}" {{ $selectedStatus === \App\Enums\OrderStatus::COMPLETED ? 'selected' : '' }}>{{ __('messages.completed') }}</option>
-                                <option value="{{ \App\Enums\OrderStatus::CANCELLED }}" {{ $selectedStatus === \App\Enums\OrderStatus::CANCELLED ? 'selected' : '' }}>{{ __('messages.cancelled') }}</option>
+                                @foreach (\App\Enums\OrderStatus::all() as $statusValue)
+                                    <option value="{{ $statusValue }}" {{ $selectedStatus === $statusValue ? 'selected' : '' }}>
+                                        {{ \App\Enums\OrderStatus::label($statusValue) }}
+                                    </option>
+                                @endforeach
                             </select>
+                        </div>
+                        <div class="form-group mt-2">
+                            <label for="status_note">{{ __('messages.status_change_note') }}</label>
+                            <input type="text" name="status_note" id="status_note" class="form-control" maxlength="500">
                         </div>
                     </div>
 

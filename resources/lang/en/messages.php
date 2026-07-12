@@ -186,6 +186,7 @@ return [
     'order_status_out_for_delivery' => 'Out For Delivery',
     'order_status_delivered' => 'Delivered',
     'order_status_cancelled' => 'Cancelled',
+    'status_change_note' => 'Status Change Note',
     'order_notes' => 'Notes',
     'order_notes_placeholder' => 'Optional notes about this order...',
     'balance' => 'Balance',

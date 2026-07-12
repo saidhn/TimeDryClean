@@ -26,7 +26,7 @@ class EmployeeDashboardController extends Controller
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->sum('sum_price');
-        $completedOrders = Order::where('status', OrderStatus::COMPLETED)->count();
+        $completedOrders = Order::where('status', OrderStatus::DELIVERED)->count();
         $kwdOrderCount = Order::excludingPointsPayments()->count();
         $averageOrderValue = $kwdOrderCount > 0 ? $totalIncome / $kwdOrderCount : 0;
         $totalPointsRedeemed = Order::where('payment_method', 'points')->sum('points_used');
@@ -124,13 +124,7 @@ class EmployeeDashboardController extends Controller
         // Paginated results
         $invoices = $query->orderByDesc('created_at')->paginate(15)->withQueryString();
 
-        $statuses = [
-            OrderStatus::PENDING,
-            OrderStatus::PROCESSING,
-            OrderStatus::SHIPPED,
-            OrderStatus::COMPLETED,
-            OrderStatus::CANCELLED,
-        ];
+        $statuses = OrderStatus::all();
 
         $dashboardRoute = 'employee.dashboard';
         $currentRoute = 'employee.invoice-data';

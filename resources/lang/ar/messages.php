@@ -188,6 +188,7 @@ return [
     'order_status_out_for_delivery' => 'قيد التوصيل',
     'order_status_delivered' => 'تم التوصيل',
     'order_status_cancelled' => 'ملغي',
+    'status_change_note' => 'ملاحظة تغيير الحالة',
     'order_notes' => 'ملاحظات',
     'order_notes_placeholder' => 'ملاحظات اختيارية حول هذا الطلب...',
     'balance' => 'الرصيد',

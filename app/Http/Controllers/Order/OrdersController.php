@@ -274,7 +274,7 @@ class OrdersController extends Controller
             // Create the order (include delivery and driver if applicable)
             $orderData = $request->only(['user_id']); // Start with user_id
             $orderData['sum_price'] = $sum_price; // Add the calculated sum_price
-            $orderData['status'] = OrderStatus::PENDING; // Set a default status or get it from the request if you have it.
+            $orderData['status'] = OrderStatus::PLACED; // New orders always start at the beginning of the fulfillment lifecycle.
             $orderData['notes'] = $request->input('notes') ?: null;
             $orderData['payment_method'] = $paymentMethod;
             if ($paymentMethod === 'points') {
@@ -350,7 +350,7 @@ class OrdersController extends Controller
                     DB::rollBack();
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
-                $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
+                $order->update(['is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             } elseif ($paymentMethod === 'knet') {
                 // No balance deduction — redirect to KNET gateway; order stays Pending until payment confirmed.
@@ -373,7 +373,7 @@ class OrdersController extends Controller
                 return redirect($result['payment_uri']);
             } else {
                 $user = User::adjustBalance($user->id, -$orderCost);
-                $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
+                $order->update(['is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             }
 
@@ -476,7 +476,6 @@ class OrdersController extends Controller
                 'payment_method' => 'points',
                 'points_used'    => $totalPoints,
                 'is_paid'        => true,
-                'status'         => OrderStatus::COMPLETED,
             ]);
             return redirect()->route('orders.show', $order->id)
                 ->with('success', __('messages.order_paid_successfully'));
@@ -499,7 +498,6 @@ class OrdersController extends Controller
             $order->update([
                 'payment_method' => 'money',
                 'is_paid'        => true,
-                'status'         => OrderStatus::COMPLETED,
             ]);
             return redirect()->route('orders.show', $order->id)
                 ->with('success', __('messages.order_paid_successfully'));
@@ -598,13 +596,7 @@ class OrdersController extends Controller
             'bring_order' => 'nullable|in:on',
             'delivery_price' => $driverRequired . '|numeric|min:0',
             'driver_id' => $driverRequired . '|exists:users,id',
-            'order_status' => 'required|in:' . implode(',', [
-                \App\Enums\OrderStatus::PENDING,
-                \App\Enums\OrderStatus::PROCESSING,
-                \App\Enums\OrderStatus::SHIPPED,
-                \App\Enums\OrderStatus::COMPLETED,
-                \App\Enums\OrderStatus::CANCELLED,
-            ]),
+            'order_status' => 'required|in:' . implode(',', \App\Enums\OrderStatus::all()),
             'province_id' => $driverRequired . '|exists:provinces,id',
             'city_id' => $driverRequired . '|exists:cities,id',
             'street' => $driverRequired . '|string|max:255',
@@ -656,6 +648,12 @@ class OrdersController extends Controller
 
         try {
             DB::beginTransaction();
+
+            // Captured up front, before any mutation, so the balance-reversal math
+            // below is never affected by an intermediate refresh()/update() call.
+            $originalPaymentMethod = $order->payment_method ?? 'money';
+            $originalPointsUsed = (float) ($order->points_used ?? 0);
+            $originalPrice = (float) $order->sum_price;
 
             // 1. Update Order:
             $sum_price = 0;
@@ -721,13 +719,10 @@ class OrdersController extends Controller
 
             $orderData = $request->only(['user_id']);
             $orderData['sum_price'] = $sum_price;
-            $orderData['status'] = $request->order_status; // Update the order status
             $orderData['notes'] = $request->input('notes') ?: null;
             $orderData['payment_method'] = $editPaymentMethod;
             $orderData['points_used'] = ($editPaymentMethod === 'points') ? $total_points_edit : 0;
-            
-            $originalPrice = ($order->sum_price);
-            
+
             // Handle discount fields separately
             if ($request->filled('discount_type') && $request->filled('discount_value')) {
                 // Add or update discount fields
@@ -752,6 +747,19 @@ class OrdersController extends Controller
                         'discount_applied_by' => null,
                         'discount_applied_at' => null,
                     ]);
+                $order->refresh();
+            }
+
+            // Fulfillment status moves exclusively through the guarded workflow service —
+            // it is intentionally kept out of the raw $orderData array above.
+            if ($request->filled('order_status') && $request->order_status !== $order->status) {
+                app(\App\Services\OrderWorkflowService::class)->transition(
+                    $order,
+                    $request->order_status,
+                    $this->currentActorType(),
+                    auth()->id(),
+                    $request->input('status_note')
+                );
                 $order->refresh();
             }
 
@@ -834,8 +842,6 @@ class OrdersController extends Controller
                 throw new \Exception("User not found.");
             }
             $orderCost = $order->sum_price;
-            $originalPaymentMethod = $order->getOriginal('payment_method') ?? $order->payment_method ?? 'money';
-            $originalPointsUsed = (float) ($order->getOriginal('points_used') ?? $order->points_used ?? 0);
 
             // Reverse original charge, then apply new charge — each step is its own
             // atomic, locked operation so a concurrent request for the same user
@@ -869,6 +875,19 @@ class OrdersController extends Controller
         }
     }
 
+    /**
+     * Resolve which guard the currently authenticated user is logged in through,
+     * for attribution on OrderStatusHistory rows written by OrderWorkflowService.
+     */
+    private function currentActorType(): string
+    {
+        foreach (['admin', 'employee', 'driver', 'client'] as $guard) {
+            if (auth()->guard($guard)->check()) {
+                return $guard;
+            }
+        }
+        return 'system';
+    }
 
     public function destroy(Order $order)
     {

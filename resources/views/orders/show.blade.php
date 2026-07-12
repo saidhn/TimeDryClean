@@ -62,7 +62,7 @@
                     <span class="badge bg-danger"><i class="fas fa-times-circle me-1"></i>{{ __('messages.not_paid') }}</span>
                 @endif
             </p>
-            <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::COMPLETED ? 'success' : ($order->status == App\Enums\OrderStatus::PENDING ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
+            <p><strong>{{ __('messages.status') }}:</strong> <span class="badge bg-{{ $order->status == App\Enums\OrderStatus::DELIVERED ? 'success' : ($order->status == App\Enums\OrderStatus::PLACED ? 'warning' : 'info') }}">{{ $order->statusTranslated() }}</span></p>
 
             @if($order->notes)
             <p><strong>{{ __('messages.order_notes') }}:</strong> {{ $order->notes }}</p>

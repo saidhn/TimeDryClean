@@ -130,10 +130,11 @@ class KnetService
                     app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
                 }
             } elseif ($type === 'order') {
-                // Mark the order as Completed now that payment is confirmed.
+                // Mark the order as paid now that payment is confirmed. Fulfillment
+                // status is independent of payment and only moves via OrderWorkflowService.
                 if (!empty($details['order_id'])) {
                     Order::where('id', $details['order_id'])
-                        ->update(['status' => \App\Enums\OrderStatus::COMPLETED, 'is_paid' => true]);
+                        ->update(['is_paid' => true]);
                 }
             } else {
                 User::adjustBalance($payment->user_id, $payment->amount);

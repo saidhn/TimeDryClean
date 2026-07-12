@@ -17,7 +17,7 @@ class OrderFlaggingTest extends TestCase
         $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000070', 'balance' => 0]);
         $employee = User::factory()->create(['user_type' => 'employee', 'mobile' => '50000071', 'balance' => 0]);
 
-        $order = Order::create(['user_id' => $client->id, 'sum_price' => 10, 'status' => OrderStatus::PENDING]);
+        $order = Order::create(['user_id' => $client->id, 'sum_price' => 10, 'status' => OrderStatus::PLACED]);
 
         $order->flag('Shirt found with a tear before washing', $employee->id);
 

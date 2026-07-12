@@ -38,13 +38,7 @@ class OrderSeeder extends Seeder
                 'discount_id' => null,
                 'sum_price' => 0,
                 'discount_amount' => 0,
-                'status' => $faker->randomElement([
-                    OrderStatus::PENDING,
-                    OrderStatus::PROCESSING,
-                    OrderStatus::SHIPPED,
-                    OrderStatus::COMPLETED,
-                    OrderStatus::CANCELLED,
-                ]),
+                'status' => $faker->randomElement(OrderStatus::all()),
             ]);
 
             $totalPrice = 0;

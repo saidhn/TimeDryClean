@@ -34,11 +34,11 @@
                 @forelse($orders as $order)
                 @php
                     $statusBadge = match($order->status) {
-                        \App\Enums\OrderStatus::COMPLETED => 'success',
+                        \App\Enums\OrderStatus::DELIVERED => 'success',
                         \App\Enums\OrderStatus::CANCELLED => 'danger',
-                        \App\Enums\OrderStatus::PENDING => 'warning',
-                        \App\Enums\OrderStatus::PROCESSING => 'info',
-                        \App\Enums\OrderStatus::SHIPPED => 'primary',
+                        \App\Enums\OrderStatus::PLACED => 'warning',
+                        \App\Enums\OrderStatus::AT_FACILITY, \App\Enums\OrderStatus::SORTING, \App\Enums\OrderStatus::WASHING => 'info',
+                        \App\Enums\OrderStatus::PICKUP_SCHEDULED, \App\Enums\OrderStatus::READY_FOR_DELIVERY, \App\Enums\OrderStatus::OUT_FOR_DELIVERY => 'primary',
                         default => 'secondary',
                     };
                 @endphp
