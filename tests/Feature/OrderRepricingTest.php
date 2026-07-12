@@ -79,4 +79,54 @@ class OrderRepricingTest extends TestCase
         $this->assertTrue($order->requires_additional_payment);
         $this->assertEquals(40.0, (float) $order->repriced_amount);
     }
+
+    public function test_reweighing_a_points_paid_order_to_a_lower_total_refunds_points_not_money(): void
+    {
+        $admin = User::factory()->create(['user_type' => 'admin', 'mobile' => '50000114', 'balance' => 0]);
+        $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000115', 'balance' => 0, 'points_balance' => 0]);
+        $product = Product::create(['name' => 'Shirt']);
+        $service = ProductService::create(['name' => 'Wash']);
+        // Deliberately different price vs points_price so confusing the two currencies is caught.
+        ProductServicePrice::create([
+            'product_id' => $product->id, 'product_service_id' => $service->id,
+            'price' => 5, 'points_price' => 50,
+        ]);
+
+        $order = Order::create([
+            'user_id' => $client->id, 'sum_price' => 20, 'status' => OrderStatus::PLACED,
+            'is_paid' => true, 'payment_method' => 'points', 'points_used' => 200,
+        ]);
+        $order->orderProductServices()->create([
+            'product_id' => $product->id, 'product_service_id' => $service->id,
+            'quantity' => 4, 'price_at_order' => 5, 'points_at_order' => 50,
+        ]);
+        app(OrderWorkflowService::class)->transition($order, OrderStatus::PICKUP_SCHEDULED, 'admin', $client->id);
+        app(OrderWorkflowService::class)->transition($order, OrderStatus::AT_FACILITY, 'admin', $client->id);
+
+        $this->actingAs($admin, 'admin')->put(route('orders.reprice', $order), [
+            'order_product_services' => [
+                ['product_id' => $product->id, 'product_service_id' => $service->id, 'quantity' => 2],
+            ],
+        ]);
+
+        $order->refresh();
+        $client->refresh();
+
+        // New total: 2 * points_price(50) = 100 points. Original points_used: 200.
+        // Correct points refund = 200 - 100 = 100 points.
+        $this->assertEquals(100.0, (float) $client->points_balance, 'points refund must be points-denominated (100), not the money delta');
+
+        // Money delta would have been: original sum_price(20) - new money total (2 * price(5) = 10) = 10.
+        // If the bug were still present, points_balance would have been bumped by 10, not 100.
+        $this->assertNotEquals(10.0, (float) $client->points_balance);
+
+        $this->assertEquals(0.0, (float) $client->balance, 'a points-paid order must never touch the money balance');
+
+        $this->assertEquals(100, (int) $order->points_used);
+
+        $lines = $order->orderProductServices()->get();
+        $this->assertCount(1, $lines);
+        $this->assertNotNull($lines->first()->points_at_order);
+        $this->assertEquals(50.0, (float) $lines->first()->points_at_order);
+    }
 }

@@ -931,7 +931,14 @@ class OrdersController extends Controller
         try {
             DB::beginTransaction();
 
+            // Captured up front, before the line items are deleted/recreated below,
+            // so the points-reversal math is never affected by an intermediate
+            // mutation — mirrors the same pattern in update().
+            $originalTotal = (float) $order->sum_price;
+            $originalPointsUsed = (float) ($order->points_used ?? 0);
+
             $newTotal = 0;
+            $newPointsTotal = 0;
             $lines = [];
             foreach ($request->order_product_services as $lineData) {
                 $productServicePrice = ProductServicePrice::where('product_id', $lineData['product_id'])
@@ -944,7 +951,19 @@ class OrdersController extends Controller
                 }
 
                 $newTotal += $productServicePrice->price * $lineData['quantity'];
-                $lines[] = array_merge($lineData, ['price_at_order' => $productServicePrice->price]);
+                $line = array_merge($lineData, ['price_at_order' => $productServicePrice->price]);
+
+                if ($order->payment_method === 'points') {
+                    if ($productServicePrice->points_price === null) {
+                        DB::rollBack();
+                        return back()->withErrors(['message' => __('messages.product_no_points_price_warning')]);
+                    }
+                    $pointsAtOrder = (float) $productServicePrice->points_price;
+                    $newPointsTotal += $pointsAtOrder * $lineData['quantity'];
+                    $line['points_at_order'] = $pointsAtOrder;
+                }
+
+                $lines[] = $line;
             }
 
             $order->orderProductServices()->delete();
@@ -952,25 +971,34 @@ class OrdersController extends Controller
                 $order->orderProductServices()->create($line);
             }
 
-            $originalTotal = (float) $order->sum_price;
             $delta = $newTotal - $originalTotal;
+            // Points-denominated delta, computed from points_price (never from the
+            // money-denominated $delta above) — price and points_price are two
+            // independently admin-configured fields with no fixed conversion ratio.
+            $pointsDelta = $newPointsTotal - $originalPointsUsed;
 
             if ($delta <= 0) {
                 // New total is lower or equal — apply immediately and refund the difference.
                 if ($order->is_paid && $delta < 0) {
                     if ($order->payment_method === 'points') {
-                        User::adjustPoints($order->user_id, -$delta); // -$delta is positive here
+                        if ($pointsDelta < 0) {
+                            User::adjustPoints($order->user_id, -$pointsDelta); // -$pointsDelta is positive here
+                        }
                     } else {
                         User::adjustBalance($order->user_id, -$delta);
                     }
                 }
-                $order->update([
+                $updateData = [
                     'sum_price' => $newTotal,
                     'repriced_amount' => null,
                     'repriced_at' => now(),
                     'repriced_by' => auth()->id(),
                     'requires_additional_payment' => false,
-                ]);
+                ];
+                if ($order->payment_method === 'points') {
+                    $updateData['points_used'] = $newPointsTotal;
+                }
+                $order->update($updateData);
             } else {
                 // New total is higher — do not silently charge more. Flag for
                 // additional authorization; sum_price stays at the originally
