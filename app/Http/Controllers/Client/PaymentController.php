@@ -4,15 +4,13 @@ namespace App\Http\Controllers\Client;
 
 use App\Http\Controllers\Controller;
 use App\Services\KnetService;
-use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
     public function __construct(
-        protected KnetService $knetService,
-        protected NotificationService $notificationService
+        protected KnetService $knetService
     ) {}
 
     /**
@@ -96,8 +94,8 @@ class PaymentController extends Controller
             $payment = $this->knetService->getPaymentByTrackingId($result['tracking_id']);
             if ($payment) {
                 $payment->user->refresh();
-                $this->notificationService->sendTransactionNotification(
-                    $payment->user,
+                \App\Jobs\SendTransactionNotificationJob::dispatch(
+                    $payment->user->id,
                     'payment_completed',
                     ['amount' => $payment->amount, 'balance' => $payment->user->balance]
                 );

@@ -6,15 +6,11 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\User;
-use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class DriverController extends Controller
 {
-    public function __construct(
-        protected NotificationService $notificationService
-    ) {}
     /**
      * show current orders that needs delivery (not completed and not canceled)
      */
@@ -72,7 +68,7 @@ class DriverController extends Controller
             $driver = User::adjustBalance(Auth::id(), -$delivery->price);
         } elseif (!$wasDelivered && $nowDelivered) {
             $driver = User::adjustBalance(Auth::id(), $delivery->price);
-            $this->notificationService->sendTransactionNotification($driver, 'driver_delivery_completed', [
+            \App\Jobs\SendTransactionNotificationJob::dispatch($driver->id, 'driver_delivery_completed', [
                 'amount' => $delivery->price,
                 'balance' => $driver->balance,
             ]);

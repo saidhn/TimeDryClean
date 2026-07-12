@@ -21,17 +21,14 @@ use App\Models\Address;
 use App\Models\City;
 use App\Models\OrderDelivery;
 use App\Models\Province;
-use App\Services\NotificationService;
 use App\Services\KnetService;
 
 class OrdersController extends Controller
 {
-    protected $notificationService;
     protected $knetService;
 
-    public function __construct(NotificationService $notificationService, KnetService $knetService)
+    public function __construct(KnetService $knetService)
     {
-        $this->notificationService = $notificationService;
         $this->knetService = $knetService;
     }
     /**
@@ -351,7 +348,6 @@ class OrdersController extends Controller
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
                 $order->update(['is_paid' => true]);
-                $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             } elseif ($paymentMethod === 'knet') {
                 // No balance deduction — redirect to KNET gateway; order stays Pending until payment confirmed.
                 DB::commit();
@@ -374,10 +370,15 @@ class OrdersController extends Controller
             } else {
                 $user = User::adjustBalance($user->id, -$orderCost);
                 $order->update(['is_paid' => true]);
-                $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             }
 
             DB::commit(); // Commit the transaction
+
+            // Dispatched after commit so a slow/hanging WhatsApp API call never
+            // holds the transaction's row locks open. Covers both the points and
+            // money branches above (the knet branch returns earlier and never
+            // reaches here).
+            \App\Jobs\SendTransactionNotificationJob::dispatch($user->id, 'order_placed_balance', ['balance' => $user->balance]);
 
             return redirect()->route('orders.index')->with('success', __('messages.order_created_successfully'));
         } catch (\Exception $e) {
@@ -896,10 +897,12 @@ class OrdersController extends Controller
                 }
             }
 
-            // 5. Send WhatsApp notification with user's preferred language
-            $this->notificationService->sendTransactionNotification($user, 'order_update_balance', ['balance' => $user->balance]);
-
             DB::commit();
+
+            // 5. Queue the WhatsApp notification after commit so a slow/hanging
+            // API call never holds this transaction's row locks open.
+            \App\Jobs\SendTransactionNotificationJob::dispatch($user->id, 'order_update_balance', ['balance' => $user->balance]);
+
             return redirect()->route('orders.index')->with('success', __('messages.order_updated_successfully'));
         } catch (\Exception $e) {
             DB::rollBack();
@@ -1078,10 +1081,11 @@ class OrdersController extends Controller
                 $user = User::adjustBalance($user->id, $orderCost);
             }
 
-            // Send WhatsApp notification with user's preferred language
-            $this->notificationService->sendTransactionNotification($user, 'order_deleted_balance', ['balance' => $user->balance]);
-
             DB::commit();
+
+            // Queue the WhatsApp notification after commit so a slow/hanging
+            // API call never holds this transaction's row locks open.
+            \App\Jobs\SendTransactionNotificationJob::dispatch($user->id, 'order_deleted_balance', ['balance' => $user->balance]);
 
             return redirect()->route('orders.index')->with('success', __('messages.deleted_successfully'));
         } catch (\Exception $e) {
