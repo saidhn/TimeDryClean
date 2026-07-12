@@ -140,11 +140,11 @@
                                 @foreach($incomeByStatus as $row)
                                 @php
                                     $statusClass = match($row->status) {
-                                        'Completed' => 'success',
-                                        'Pending' => 'warning',
-                                        'Processing' => 'info',
-                                        'Shipped' => 'primary',
-                                        'Cancelled' => 'danger',
+                                        \App\Enums\OrderStatus::DELIVERED => 'success',
+                                        \App\Enums\OrderStatus::CANCELLED => 'danger',
+                                        \App\Enums\OrderStatus::PLACED => 'warning',
+                                        \App\Enums\OrderStatus::AT_FACILITY, \App\Enums\OrderStatus::SORTING, \App\Enums\OrderStatus::WASHING => 'info',
+                                        \App\Enums\OrderStatus::PICKUP_SCHEDULED, \App\Enums\OrderStatus::READY_FOR_DELIVERY, \App\Enums\OrderStatus::OUT_FOR_DELIVERY => 'primary',
                                         default => 'secondary',
                                     };
                                     $percentage = $totalIncome > 0 ? ($row->total_amount / $totalIncome * 100) : 0;
@@ -152,7 +152,7 @@
                                 <tr>
                                     <td>
                                         <span class="badge bg-{{ $statusClass }}">
-                                            {{ __('messages.' . strtolower($row->status)) }}
+                                            {{ \App\Enums\OrderStatus::label($row->status) }}
                                         </span>
                                     </td>
                                     <td class="text-center fw-semibold">{{ number_format($row->order_count) }}</td>
@@ -203,11 +203,11 @@
                                 @foreach($topOrders as $index => $order)
                                 @php
                                     $statusClass = match($order->status) {
-                                        'Completed' => 'success',
-                                        'Pending' => 'warning',
-                                        'Processing' => 'info',
-                                        'Shipped' => 'primary',
-                                        'Cancelled' => 'danger',
+                                        \App\Enums\OrderStatus::DELIVERED => 'success',
+                                        \App\Enums\OrderStatus::CANCELLED => 'danger',
+                                        \App\Enums\OrderStatus::PLACED => 'warning',
+                                        \App\Enums\OrderStatus::AT_FACILITY, \App\Enums\OrderStatus::SORTING, \App\Enums\OrderStatus::WASHING => 'info',
+                                        \App\Enums\OrderStatus::PICKUP_SCHEDULED, \App\Enums\OrderStatus::READY_FOR_DELIVERY, \App\Enums\OrderStatus::OUT_FOR_DELIVERY => 'primary',
                                         default => 'secondary',
                                     };
                                 @endphp

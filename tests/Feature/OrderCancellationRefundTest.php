@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Jobs\SendTransactionNotificationJob;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductService;
@@ -10,6 +11,7 @@ use App\Models\ProductServicePrice;
 use App\Models\User;
 use App\Services\OrderWorkflowService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class OrderCancellationRefundTest extends TestCase
@@ -162,5 +164,27 @@ class OrderCancellationRefundTest extends TestCase
         // the customer's balance must be unchanged from before this request.
         $this->assertEquals(40.0, (float) $client->balance);
         $this->assertSame(OrderStatus::CANCELLED, $order->status);
+    }
+
+    public function test_cancelling_a_paid_order_queues_a_refund_notification(): void
+    {
+        Queue::fake();
+
+        $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000108', 'balance' => 0]);
+        $admin = User::factory()->create(['user_type' => 'admin', 'mobile' => '50000109', 'balance' => 0]);
+
+        $order = Order::create([
+            'user_id' => $client->id,
+            'sum_price' => 40,
+            'status' => OrderStatus::PLACED,
+            'is_paid' => true,
+            'payment_method' => 'money',
+        ]);
+
+        app(OrderWorkflowService::class)->transition($order, OrderStatus::CANCELLED, 'admin', $admin->id, 'Customer requested cancellation');
+
+        Queue::assertPushed(SendTransactionNotificationJob::class, function ($job) use ($client) {
+            return $job->userId === $client->id && (float) $job->replace['balance'] === 40.0;
+        });
     }
 }

@@ -3,13 +3,17 @@
 namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
+use App\Jobs\SendTransactionNotificationJob;
 use App\Models\Order;
+use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductService;
 use App\Models\ProductServicePrice;
 use App\Models\User;
+use App\Services\KnetService;
 use App\Services\OrderWorkflowService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class OrderRepricingTest extends TestCase
@@ -128,5 +132,73 @@ class OrderRepricingTest extends TestCase
         $this->assertCount(1, $lines);
         $this->assertNotNull($lines->first()->points_at_order);
         $this->assertEquals(50.0, (float) $lines->first()->points_at_order);
+    }
+
+    public function test_knet_callback_for_reprice_topup_finalizes_the_order(): void
+    {
+        $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000116', 'balance' => 0]);
+
+        $order = Order::create([
+            'user_id' => $client->id,
+            'sum_price' => 20,
+            'status' => OrderStatus::AT_FACILITY,
+            'is_paid' => true,
+            'payment_method' => 'money',
+            'requires_additional_payment' => true,
+            'repriced_amount' => 40,
+        ]);
+
+        $trackingId = 'TRK-ORD-reprice-topup-1';
+        Payment::create([
+            'user_id' => $client->id,
+            'amount' => 20, // the delta being collected
+            'payment_method' => 'KNET',
+            'transaction_id' => $trackingId,
+            'status' => 'pending',
+            'details' => json_encode([
+                'tracking_id' => $trackingId,
+                'type' => 'order',
+                'order_id' => $order->id,
+                'public_link' => false,
+            ]),
+        ]);
+
+        $knetService = app(KnetService::class);
+        $result = $knetService->handleCallback([
+            'tracking_id' => $trackingId,
+            'result' => 'CAPTURED',
+        ]);
+
+        $this->assertSame('success', $result['status']);
+
+        $order->refresh();
+
+        $this->assertTrue((bool) $order->is_paid);
+        $this->assertEquals(40.0, (float) $order->sum_price);
+        $this->assertFalse((bool) $order->requires_additional_payment);
+        $this->assertNull($order->repriced_amount);
+    }
+
+    public function test_reweighing_to_a_lower_total_queues_a_refund_notification(): void
+    {
+        Queue::fake();
+
+        $admin = User::factory()->create(['user_type' => 'admin', 'mobile' => '50000117', 'balance' => 0]);
+        $client = User::factory()->create(['user_type' => 'client', 'mobile' => '50000118', 'balance' => 0]);
+        $product = Product::create(['name' => 'Shirt']);
+        $service = ProductService::create(['name' => 'Wash']);
+        ProductServicePrice::create(['product_id' => $product->id, 'product_service_id' => $service->id, 'price' => 5]);
+
+        $order = $this->orderAtFacility($client, $product, $service);
+
+        $this->actingAs($admin, 'admin')->put(route('orders.reprice', $order), [
+            'order_product_services' => [
+                ['product_id' => $product->id, 'product_service_id' => $service->id, 'quantity' => 2],
+            ],
+        ]);
+
+        Queue::assertPushed(SendTransactionNotificationJob::class, function ($job) use ($client) {
+            return $job->userId === $client->id;
+        });
     }
 }

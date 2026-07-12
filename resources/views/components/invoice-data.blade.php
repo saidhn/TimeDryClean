@@ -95,7 +95,7 @@
                             <option value="">{{ __('messages.all_statuses') }}</option>
                             @foreach($statuses as $status)
                             <option value="{{ $status }}" {{ request('status') === $status ? 'selected' : '' }}>
-                                {{ __('messages.' . strtolower($status)) }}
+                                {{ \App\Enums\OrderStatus::label($status) }}
                             </option>
                             @endforeach
                         </select>
@@ -139,11 +139,11 @@
                         @foreach($invoices as $invoice)
                         @php
                             $statusClass = match($invoice->status) {
-                                'Completed' => 'success',
-                                'Pending' => 'warning',
-                                'Processing' => 'info',
-                                'Shipped' => 'primary',
-                                'Cancelled' => 'danger',
+                                \App\Enums\OrderStatus::DELIVERED => 'success',
+                                \App\Enums\OrderStatus::CANCELLED => 'danger',
+                                \App\Enums\OrderStatus::PLACED => 'warning',
+                                \App\Enums\OrderStatus::AT_FACILITY, \App\Enums\OrderStatus::SORTING, \App\Enums\OrderStatus::WASHING => 'info',
+                                \App\Enums\OrderStatus::PICKUP_SCHEDULED, \App\Enums\OrderStatus::READY_FOR_DELIVERY, \App\Enums\OrderStatus::OUT_FOR_DELIVERY => 'primary',
                                 default => 'secondary',
                             };
                             $itemsCount = $invoice->orderProductServices->count();

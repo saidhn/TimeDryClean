@@ -980,15 +980,19 @@ class OrdersController extends Controller
             // independently admin-configured fields with no fixed conversion ratio.
             $pointsDelta = $newPointsTotal - $originalPointsUsed;
 
+            // Captured so the refund notification can be dispatched after
+            // DB::commit() below, once we know a refund actually happened.
+            $refundedUser = null;
+
             if ($delta <= 0) {
                 // New total is lower or equal — apply immediately and refund the difference.
                 if ($order->is_paid && $delta < 0) {
                     if ($order->payment_method === 'points') {
                         if ($pointsDelta < 0) {
-                            User::adjustPoints($order->user_id, -$pointsDelta); // -$pointsDelta is positive here
+                            $refundedUser = User::adjustPoints($order->user_id, -$pointsDelta); // -$pointsDelta is positive here
                         }
                     } else {
-                        User::adjustBalance($order->user_id, -$delta);
+                        $refundedUser = User::adjustBalance($order->user_id, -$delta);
                     }
                 }
                 $updateData = [
@@ -1015,6 +1019,15 @@ class OrdersController extends Controller
             }
 
             DB::commit();
+
+            // Queue the refund notification after commit so a slow/hanging API call
+            // never holds this transaction's row locks open — same pattern used by
+            // store()/update()/destroy()/payRepriceDelta() elsewhere in this controller.
+            if ($refundedUser) {
+                $balance = $order->payment_method === 'points' ? $refundedUser->points_balance : $refundedUser->balance;
+                \App\Jobs\SendTransactionNotificationJob::dispatch($order->user_id, 'order_update_balance', ['balance' => $balance]);
+            }
+
             return redirect()->route('orders.show', $order->id)->with('success', __('messages.order_repriced_successfully'));
         } catch (\Exception $e) {
             DB::rollBack();

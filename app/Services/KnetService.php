@@ -130,12 +130,26 @@ class KnetService
                     app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
                 }
             } elseif ($type === 'order') {
-                // TODO(reprice): resolve requires_additional_payment on this order if repriced_amount is set
                 // Mark the order as paid now that payment is confirmed. Fulfillment
                 // status is independent of payment and only moves via OrderWorkflowService.
                 if (!empty($details['order_id'])) {
-                    Order::where('id', $details['order_id'])
-                        ->update(['is_paid' => true]);
+                    $order = Order::find($details['order_id']);
+                    if ($order) {
+                        $updateData = ['is_paid' => true];
+
+                        // This payment is the reprice top-up delta being collected
+                        // (see OrdersController::reprice()'s up-reprice branch and
+                        // payRepriceDelta()) — finalize it by promoting sum_price to
+                        // the repriced_amount and clearing the pending-payment flags,
+                        // mirroring how the down-reprice path clears them immediately.
+                        if ($order->requires_additional_payment && $order->repriced_amount !== null) {
+                            $updateData['sum_price'] = $order->repriced_amount;
+                            $updateData['requires_additional_payment'] = false;
+                            $updateData['repriced_amount'] = null;
+                        }
+
+                        $order->update($updateData);
+                    }
                 }
             } else {
                 User::adjustBalance($payment->user_id, $payment->amount);

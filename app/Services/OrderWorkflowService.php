@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\OrderStatus;
 use App\Exceptions\InvalidOrderTransitionException;
+use App\Jobs\SendTransactionNotificationJob;
 use App\Models\Order;
 use App\Models\OrderStatusHistory;
 use App\Models\User;
@@ -13,7 +14,13 @@ class OrderWorkflowService
 {
     public function transition(Order $order, string $toStatus, string $actorType, int $actorId, ?string $note = null): Order
     {
-        return DB::transaction(function () use ($order, $toStatus, $actorType, $actorId, $note) {
+        // Captured inside the transaction below, then used after it commits to
+        // queue the refund notification — a slow/hanging queue connection must
+        // never hold this transaction's row lock open, mirroring the
+        // post-DB::commit() dispatch pattern already used in OrdersController.
+        $refundNotification = null;
+
+        $locked = DB::transaction(function () use ($order, $toStatus, $actorType, $actorId, $note, &$refundNotification) {
             $locked = Order::whereKey($order->id)->lockForUpdate()->firstOrFail();
             $fromStatus = $locked->status;
 
@@ -25,11 +32,15 @@ class OrderWorkflowService
 
             if ($toStatus === OrderStatus::CANCELLED && $locked->is_paid && !$locked->refunded_at) {
                 if ($locked->payment_method === 'points') {
-                    User::adjustPoints($locked->user_id, (float) $locked->points_used);
+                    $refundedUser = User::adjustPoints($locked->user_id, (float) $locked->points_used);
+                    $refundBalance = $refundedUser->points_balance;
                 } else {
-                    User::adjustBalance($locked->user_id, (float) $locked->sum_price);
+                    $refundedUser = User::adjustBalance($locked->user_id, (float) $locked->sum_price);
+                    $refundBalance = $refundedUser->balance;
                 }
                 $locked->update(['refunded_at' => now()]);
+
+                $refundNotification = ['user_id' => $locked->user_id, 'balance' => $refundBalance];
             }
 
             OrderStatusHistory::create([
@@ -43,5 +54,15 @@ class OrderWorkflowService
 
             return $locked;
         });
+
+        if ($refundNotification !== null) {
+            SendTransactionNotificationJob::dispatch(
+                $refundNotification['user_id'],
+                'order_deleted_balance',
+                ['balance' => $refundNotification['balance']]
+            );
+        }
+
+        return $locked;
     }
 }
