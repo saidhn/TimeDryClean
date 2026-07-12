@@ -1,103 +1,112 @@
 @extends('layouts.app')
 
+@push('scripts')
+<link rel="stylesheet" href="{{ Vite::asset('resources/css/pages/contact.css') }}">
+@endpush
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-12">
-            <div class="card">
-                <div class="card-header">{{ __('messages.contact_messages') }}</div>
+        <div class="col-md-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0 text-primary fw-bold" style="color: #464687 !important;">
+                    <i class="fas fa-inbox me-2"></i>{{ __('messages.contact_messages') }}
+                </h2>
+                @if(Auth::user()->user_type !== 'admin')
+                <a href="{{ route('contact.showForm') }}" class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-pen me-2"></i>{{ __('messages.new_message') }}
+                </a>
+                @endif
+            </div>
 
-                <div class="card-body">
-                    @if (session('success'))
-                    <div class="alert alert-success">
-                        {{ session('success') }}
-                    </div>
-                    @endif
-                    <form method="GET" action="{{ route('contact.index') }}">
-                        <div class="row mb-3">
-                            <div class="col-md-4">
-                                <input type="text" name="search" class="form-control" placeholder="{{ __('messages.search') }}" value="{{ request('search') }}">
+            @if (session('success'))
+            <div class="alert alert-success rounded-pill border-0 shadow-sm">
+                <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+            </div>
+            @endif
+
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <form method="GET" action="{{ route('contact.index') }}" class="mb-4">
+                        <div class="filter-pills d-flex align-items-center flex-wrap gap-2">
+                            <div class="position-relative flex-grow-1" style="max-width: 300px;">
+                                <i class="fas fa-search position-absolute top-50 translate-middle-y text-muted" style="left: 15px; {{ get_direction() == 'rtl' ? 'right: 15px; left: auto;' : '' }}"></i>
+                                <input type="text" name="search" class="form-control rounded-pill ps-5 bg-light border-0" placeholder="{{ __('messages.search') }}" value="{{ request('search') }}" style="{{ get_direction() == 'rtl' ? 'padding-right: 2.5rem !important; padding-left: 1rem !important;' : 'padding-left: 2.5rem !important;' }}">
                             </div>
-                            <div class="col-md-3">
-                                <select name="is_read" class="form-control">
-                                    <option value="">{{ __('messages.all_read_status') }}</option>
-                                    <option value="1" {{ request('is_read') === '1' ? 'selected' : '' }}>{{ __('messages.read') }}</option>
-                                    <option value="0" {{ request('is_read') === '0' ? 'selected' : '' }}>{{ __('messages.unread') }}</option>
-                                </select>
-                            </div>
-                            <div class="col-md-3">
-                                <select name="is_replied" class="form-control">
-                                    <option value="">{{ __('messages.all_reply_status') }}</option>
-                                    <option value="1" {{ request('is_replied') === '1' ? 'selected' : '' }}>{{ __('messages.replied') }}</option>
-                                    <option value="0" {{ request('is_replied') === '0' ? 'selected' : '' }}>{{ __('messages.unreplied') }}</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <button type="submit" class="btn btn-primary">{{ __('messages.filter') }}</button>
-                            </div>
+                            
+                            <select name="is_read" class="form-select rounded-pill w-auto bg-light border-0">
+                                <option value="">{{ __('messages.all_read_status') }}</option>
+                                <option value="1" {{ request('is_read') === '1' ? 'selected' : '' }}>{{ __('messages.read') }}</option>
+                                <option value="0" {{ request('is_read') === '0' ? 'selected' : '' }}>{{ __('messages.unread') }}</option>
+                            </select>
+
+                            <select name="is_replied" class="form-select rounded-pill w-auto bg-light border-0">
+                                <option value="">{{ __('messages.all_reply_status') }}</option>
+                                <option value="1" {{ request('is_replied') === '1' ? 'selected' : '' }}>{{ __('messages.replied') }}</option>
+                                <option value="0" {{ request('is_replied') === '0' ? 'selected' : '' }}>{{ __('messages.unreplied') }}</option>
+                            </select>
+
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">{{ __('messages.filter') }}</button>
                         </div>
                     </form>
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-striped">
-                            <thead>
-                                <tr>
-                                    <th>{{ __('messages.id') }}</th>
-                                    <th>{{ __('messages.title') }}</th>
-                                    <th>{{ __('messages.message') }}</th>
-                                    <th>{{ __('messages.user') }}</th>
-                                    <th>{{ __('messages.date') }}</th>
-                                    <th>{{ __('messages.read') }}</th>
-                                    <th>{{ __('messages.replied') }}</th>
-                                    <th>{{ __('messages.actions') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($contacts as $contact)
-                                <tr>
-                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ $contact->id }}</a></td>
-                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ $contact->title }}</a></td>
-                                    <td><a href="{{ route('contact.show', $contact->id) }}">{{ Str::limit($contact->message, 100) }}</a></td>
-                                    <td>{{ $contact->user ? $contact->user->name : __('messages.anonymous') }}</td>
-                                    <td>{{ $contact->date->format('Y-m-d H:i:s') }}</td>
-                                    <td>
-                                        <span class="{{ $contact->isRead ? 'text-success' : 'text-danger' }}">
-                                            {{ $contact->isRead ? __('messages.yes') : __('messages.no') }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="{{ $contact->isReplied ? 'text-success' : 'text-danger' }}">
-                                            {{ $contact->isReplied ? __('messages.yes') : __('messages.no') }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('contact.show', $contact->id) }}" class="btn btn-sm btn-info">{{ __('messages.view') }}</a>
-                                        <form action="{{ route('contact.markRead', $contact->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="btn btn-sm btn-primary">{{ $contact->isRead ? __('messages.mark_unread') : __('messages.mark_read') }}</button>
-                                        </form>
-                                        <form action="{{ route('contact.markReplied', $contact->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('PUT')
-                                            <button type="submit" class="btn btn-sm btn-success">{{ $contact->isReplied ? __('messages.mark_unreplied') : __('messages.mark_replied') }}</button>
-                                        </form>
-                                        <form action="{{ route('contact.destroy', $contact->id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('{{ __('messages.confirm_deletion') }}')">{{ __('messages.delete') }}</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="8">{{ __('messages.no_contact_messages') }}</td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+
+                    <div class="contact-inbox-wrap">
+                        @forelse ($contacts as $contact)
+                        <a href="{{ route('contact.show', $contact->id) }}" class="contact-card {{ !$contact->isRead ? 'unread' : '' }}">
+                            <div class="contact-avatar shadow-sm">
+                                @if($contact->user)
+                                    {{ mb_substr($contact->user->name, 0, 1) }}
+                                @else
+                                    <i class="fas fa-user-secret"></i>
+                                @endif
+                            </div>
+                            <div class="contact-body">
+                                <div class="contact-header">
+                                    <h3 class="contact-title">{{ $contact->title }}</h3>
+                                    <span class="contact-date">{{ $contact->date->diffForHumans() }}</span>
+                                </div>
+                                <div class="contact-preview">
+                                    {{ Str::limit($contact->message, 80) }}
+                                </div>
+                                <div class="contact-badges">
+                                    @if($contact->isReplied)
+                                        <span class="status-pill status-pill-good"><i class="fas fa-reply me-1"></i>{{ __('messages.replied') }}</span>
+                                    @endif
+                                    @if(!$contact->isRead)
+                                        <span class="status-pill status-pill-warning"><i class="fas fa-envelope me-1"></i>{{ __('messages.new_message') }}</span>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            @if(Auth::user()->user_type === 'admin')
+                            <div class="ms-auto" style="z-index: 2;" onclick="event.preventDefault();">
+                                <form action="{{ route('contact.destroy', $contact->id) }}" method="POST" class="d-inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-circle p-2" title="{{ __('messages.delete') }}" onclick="return confirm('{{ __('messages.confirm_deletion') }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            @endif
+                        </a>
+                        @empty
+                        <div class="empty-state">
+                            <i class="fas fa-inbox empty-icon"></i>
+                            <h4 class="fw-bold text-dark mb-2">{{ __('messages.no_contact_messages') }}</h4>
+                            @if(Auth::user()->user_type !== 'admin')
+                            <p class="text-muted mb-4">{{ __('messages.chat_with_support') }}</p>
+                            <a href="{{ route('contact.showForm') }}" class="btn btn-primary rounded-pill px-4">
+                                <i class="fas fa-paper-plane me-2"></i>{{ __('messages.send_message') }}
+                            </a>
+                            @endif
+                        </div>
+                        @endforelse
                     </div>
 
-                    <x-pagination :paginator="$contacts" />
+                    <div class="mt-4">
+                        <x-pagination :paginator="$contacts" />
+                    </div>
                 </div>
             </div>
         </div>

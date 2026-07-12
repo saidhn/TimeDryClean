@@ -1,0 +1,284 @@
+/* ==========================================================================
+   Contact Messaging System
+   Card-based inbox, chat bubbles, and premium send form
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   General Inbox Styles
+   -------------------------------------------------------------------------- */
+.contact-inbox-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.contact-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: #fff;
+    border: 1px solid rgba(11, 11, 11, 0.08);
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    position: relative;
+    gap: 1rem;
+}
+
+.contact-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    color: inherit;
+}
+
+.contact-card.unread {
+    background-color: #fcfcfd;
+    border-color: rgba(70, 70, 135, 0.15);
+}
+
+.contact-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #f0f1f3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    color: #464687;
+    position: relative;
+}
+
+.contact-card.unread .contact-avatar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: #1da58d;
+    border: 2px solid #fff;
+    border-radius: 50%;
+}
+
+html[dir="rtl"] .contact-card.unread .contact-avatar::after {
+    right: auto;
+    left: 0;
+}
+
+.contact-body {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.contact-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.35rem;
+}
+
+.contact-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--ink-primary);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contact-date {
+    font-size: 0.8rem;
+    color: var(--ink-secondary);
+    white-space: nowrap;
+    margin-left: 1rem;
+}
+
+html[dir="rtl"] .contact-date {
+    margin-left: 0;
+    margin-right: 1rem;
+}
+
+.contact-preview {
+    font-size: 0.9rem;
+    color: var(--ink-secondary);
+    margin-bottom: 0.75rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.contact-badges {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Chat Bubbles (show.blade.php)
+   -------------------------------------------------------------------------- */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: #fafafa;
+    border-radius: 12px;
+    border: 1px solid rgba(11, 11, 11, 0.08);
+}
+
+.chat-message {
+    display: flex;
+    gap: 1rem;
+    max-width: 85%;
+}
+
+.chat-message.is-user {
+    align-self: flex-start;
+}
+
+.chat-message.is-admin {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.chat-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    flex-shrink: 0;
+}
+
+.chat-message.is-user .chat-avatar {
+    background: #e6f7ec;
+    color: #0a7a3b;
+}
+
+.chat-message.is-admin .chat-avatar {
+    background: rgba(70, 70, 135, 0.1);
+    color: #464687;
+}
+
+.chat-bubble-wrap {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-message.is-user .chat-bubble-wrap {
+    align-items: flex-start;
+}
+
+.chat-message.is-admin .chat-bubble-wrap {
+    align-items: flex-end;
+}
+
+.chat-bubble {
+    padding: 1rem 1.25rem;
+    border-radius: 18px;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    position: relative;
+    white-space: pre-wrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.chat-message.is-user .chat-bubble {
+    background: #fff;
+    color: var(--ink-primary);
+    border: 1px solid rgba(11, 11, 11, 0.08);
+    border-top-left-radius: 4px;
+}
+
+.chat-message.is-admin .chat-bubble {
+    background: #464687;
+    color: #fff;
+    border-top-right-radius: 4px;
+}
+
+/* RTL Adjustments for Chat Bubbles */
+html[dir="rtl"] .chat-message.is-user .chat-bubble {
+    border-top-left-radius: 18px;
+    border-top-right-radius: 4px;
+}
+
+html[dir="rtl"] .chat-message.is-admin .chat-bubble {
+    border-top-right-radius: 18px;
+    border-top-left-radius: 4px;
+}
+
+.chat-meta {
+    font-size: 0.75rem;
+    color: var(--ink-secondary);
+    margin-top: 0.4rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Reply Bar & Forms
+   -------------------------------------------------------------------------- */
+.reply-bar {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(11, 11, 11, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    margin-top: 1.5rem;
+}
+
+.reply-bar textarea {
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    resize: none;
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    transition: border-color 0.15s ease;
+}
+
+.reply-bar textarea:focus {
+    border-color: #464687;
+    box-shadow: 0 0 0 3px rgba(70, 70, 135, 0.1);
+    outline: none;
+}
+
+.send-form-wrap {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.send-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.send-header-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+}
+
+.send-header h2 {
+    font-weight: 700;
+    color: var(--ink-primary);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon {
+    font-size: 3.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    color: var(--ink-secondary);
+    font-size: 1.1rem;
+}
