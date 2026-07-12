@@ -64,6 +64,9 @@ class DriverOrderAuthorizationTest extends TestCase
         $response->assertRedirect();
         $order->refresh();
         $this->assertSame(OrderStatus::DELIVERED, $order->status);
+
+        $assignedDriver->refresh();
+        $this->assertEquals(5.0, (float) $assignedDriver->balance);
     }
 
     public function test_invalid_status_value_is_rejected(): void

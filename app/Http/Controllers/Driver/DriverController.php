@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Driver;
 use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\User;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -68,14 +69,9 @@ class DriverController extends Controller
         $nowDelivered = $order->status === OrderStatus::DELIVERED;
 
         if ($wasDelivered && !$nowDelivered) {
-            $driver = Auth::user();
-            $driver->decrement('balance', $delivery->price);
-            $driver->save();
+            $driver = User::adjustBalance(Auth::id(), -$delivery->price);
         } elseif (!$wasDelivered && $nowDelivered) {
-            $driver = Auth::user();
-            $driver->increment('balance', $delivery->price);
-            $driver->save();
-            $driver->refresh();
+            $driver = User::adjustBalance(Auth::id(), $delivery->price);
             $this->notificationService->sendTransactionNotification($driver, 'driver_delivery_completed', [
                 'amount' => $delivery->price,
                 'balance' => $driver->balance,

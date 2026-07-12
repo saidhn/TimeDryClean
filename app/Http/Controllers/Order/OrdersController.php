@@ -654,6 +654,15 @@ class OrdersController extends Controller
             $originalPaymentMethod = $order->payment_method ?? 'money';
             $originalPointsUsed = (float) ($order->points_used ?? 0);
             $originalPrice = (float) $order->sum_price;
+            $originalIsPaid = (bool) $order->is_paid;
+            $originalRefundedAt = $order->refunded_at;
+
+            // Computed once and used both to skip the "apply new charge" step below
+            // and to pre-mark the order as refunded before the workflow service runs,
+            // so exactly one money movement happens for a cancel-while-editing request
+            // (the reversal of the original charge) instead of the reversal-then-recharge
+            // and the workflow service's own cancellation refund both firing.
+            $isCancelling = $request->input('order_status') === OrderStatus::CANCELLED;
 
             // 1. Update Order:
             $sum_price = 0;
@@ -732,7 +741,16 @@ class OrdersController extends Controller
                 $orderData['discount_applied_by'] = auth()->id();
                 $orderData['discount_applied_at'] = now();
             }
-            
+
+            // If this edit is cancelling a paid, not-yet-refunded order, the reversal
+            // step below (step 4) refunds the original pre-edit charge. Mark the order
+            // refunded here, in the same update() call, so that when the workflow
+            // service transitions the status to CANCELLED further down, it sees
+            // refunded_at already set and skips its own (would-be duplicate) refund.
+            if ($isCancelling && $originalIsPaid && !$originalRefundedAt) {
+                $orderData['refunded_at'] = now();
+            }
+
             $order->update($orderData);
             
             // Clear discount fields when no discount is provided
@@ -852,15 +870,22 @@ class OrdersController extends Controller
                 $user = User::adjustBalance($user->id, $originalPrice);
             }
 
-            if ($editPaymentMethod === 'points') {
-                try {
-                    $user = User::adjustPointsIfSufficient($user->id, -$total_points_edit);
-                } catch (InsufficientPointsException $e) {
-                    DB::rollBack();
-                    return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
+            // Skip re-applying a new charge when this edit cancels the order — a
+            // cancelled order has no new charge to collect, only the original charge
+            // reversed above. This keeps the cancellation refund to exactly one money
+            // movement instead of coincidentally netting out with the workflow
+            // service's own cancellation refund (see refunded_at pre-mark above).
+            if (!$isCancelling) {
+                if ($editPaymentMethod === 'points') {
+                    try {
+                        $user = User::adjustPointsIfSufficient($user->id, -$total_points_edit);
+                    } catch (InsufficientPointsException $e) {
+                        DB::rollBack();
+                        return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
+                    }
+                } else {
+                    $user = User::adjustBalance($user->id, -$orderCost);
                 }
-            } else {
-                $user = User::adjustBalance($user->id, -$orderCost);
             }
 
             // 5. Send WhatsApp notification with user's preferred language
