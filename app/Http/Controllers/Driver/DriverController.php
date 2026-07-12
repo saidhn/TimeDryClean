@@ -40,20 +40,42 @@ class DriverController extends Controller
         return view('driver.orders.details', compact('order'));
     }
 
-    public function updateOrderStatus(Order $order, $status)
+    public function updateOrderStatus(Order $order, string $status)
     {
+        $validStatuses = [
+            OrderStatus::PENDING,
+            OrderStatus::PROCESSING,
+            OrderStatus::SHIPPED,
+            OrderStatus::COMPLETED,
+            OrderStatus::CANCELLED,
+        ];
+
+        if (!in_array($status, $validStatuses, true)) {
+            abort(422, __('messages.validation_order_status_invalid'));
+        }
+
+        $delivery = $order->orderDelivery;
+
+        if (!$delivery) {
+            abort(404);
+        }
+
+        if ((int) $delivery->user_id !== (int) Auth::guard('driver')->id()) {
+            abort(403);
+        }
+
         //make a complete order Not complete (subtract from driver the delivery balance)
         if ($order->status == OrderStatus::COMPLETED && $status != OrderStatus::COMPLETED) {
             $driver = Auth::user();
-            $driver->decrement('balance', $order->orderDelivery->price);
+            $driver->decrement('balance', $delivery->price);
             $driver->save();
         } else if ($order->status != OrderStatus::COMPLETED && $status == OrderStatus::COMPLETED) { //make Not complete order be complete (add delivery balance to driver)
             $driver = Auth::user();
-            $driver->increment('balance', $order->orderDelivery->price);
+            $driver->increment('balance', $delivery->price);
             $driver->save();
             $driver->refresh();
             $this->notificationService->sendTransactionNotification($driver, 'driver_delivery_completed', [
-                'amount' => $order->orderDelivery->price,
+                'amount' => $delivery->price,
                 'balance' => $driver->balance,
             ]);
         }

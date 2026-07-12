@@ -170,7 +170,7 @@ Route::middleware(['set_locale'])->group(function () {
         Route::get('/delivery', [DriverController::class, 'deliveryOrders'])->name('driver.delivery');
         Route::get('/deliveryHistory', [DriverController::class, 'deliveryHistory'])->name('driver.deliveryHistory');
         Route::get('/orders/{order}', [DriverController::class, 'details'])->name('orders.details');
-        Route::put('driver/orders/{order}/{status}', [DriverController::class, 'updateOrderStatus'])->name('driver.orders.update');
+        Route::put('orders/{order}/{status}', [DriverController::class, 'updateOrderStatus'])->name('driver.orders.update');
 
     });
 
