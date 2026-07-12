@@ -347,8 +347,7 @@ class OrdersController extends Controller
                     DB::rollBack();
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
-                $user->points_balance -= $total_points;
-                $user->save();
+                $user = User::adjustPoints($user->id, -$total_points);
                 $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             } elseif ($paymentMethod === 'knet') {
@@ -371,8 +370,7 @@ class OrdersController extends Controller
 
                 return redirect($result['payment_uri']);
             } else {
-                $user->balance -= $orderCost;
-                $user->save();
+                $user = User::adjustBalance($user->id, -$orderCost);
                 $order->update(['status' => OrderStatus::COMPLETED, 'is_paid' => true]);
                 $this->notificationService->sendTransactionNotification($user, 'order_placed_balance', ['balance' => $user->balance]);
             }
@@ -469,8 +467,7 @@ class OrdersController extends Controller
             foreach ($order->orderProductServices as $line) {
                 $line->update(['points_at_order' => $linePoints[$line->id]]);
             }
-            $user->points_balance -= $totalPoints;
-            $user->save();
+            $user = User::adjustPoints($user->id, -$totalPoints);
             $order->update([
                 'payment_method' => 'points',
                 'points_used'    => $totalPoints,
@@ -494,8 +491,7 @@ class OrdersController extends Controller
 
         } else {
             // money / cash
-            $user->balance -= $order->sum_price;
-            $user->save();
+            $user = User::adjustBalance($user->id, -$order->sum_price);
             $order->update([
                 'payment_method' => 'money',
                 'is_paid'        => true,
@@ -837,24 +833,24 @@ class OrdersController extends Controller
             $originalPaymentMethod = $order->getOriginal('payment_method') ?? $order->payment_method ?? 'money';
             $originalPointsUsed = (float) ($order->getOriginal('points_used') ?? $order->points_used ?? 0);
 
-            // Reverse original charge
+            // Reverse original charge, then apply new charge — each step is its own
+            // atomic, locked operation so a concurrent request for the same user
+            // can't interleave and lose part of this adjustment.
             if ($originalPaymentMethod === 'points') {
-                $user->points_balance += $originalPointsUsed;
+                $user = User::adjustPoints($user->id, $originalPointsUsed);
             } else {
-                $user->balance += $originalPrice;
+                $user = User::adjustBalance($user->id, $originalPrice);
             }
 
-            // Apply new charge
             if ($editPaymentMethod === 'points') {
                 if ($user->points_balance < $total_points_edit) {
                     DB::rollBack();
                     return back()->withErrors(['message' => __('messages.insufficient_points')])->withInput();
                 }
-                $user->points_balance -= $total_points_edit;
+                $user = User::adjustPoints($user->id, -$total_points_edit);
             } else {
-                $user->balance -= $orderCost;
+                $user = User::adjustBalance($user->id, -$orderCost);
             }
-            $user->save();
 
             // 5. Send WhatsApp notification with user's preferred language
             $this->notificationService->sendTransactionNotification($user, 'order_update_balance', ['balance' => $user->balance]);
@@ -886,11 +882,10 @@ class OrdersController extends Controller
             $order->delete();
 
             if ($deletedPaymentMethod === 'points') {
-                $user->points_balance += $deletedPointsUsed;
+                $user = User::adjustPoints($user->id, $deletedPointsUsed);
             } else {
-                $user->balance += $orderCost;
+                $user = User::adjustBalance($user->id, $orderCost);
             }
-            $user->save();
 
             // Send WhatsApp notification with user's preferred language
             $this->notificationService->sendTransactionNotification($user, 'order_deleted_balance', ['balance' => $user->balance]);

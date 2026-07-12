@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Payment;
+use App\Models\User;
 use Illuminate\Support\Str;
 
 class KnetService
@@ -135,7 +136,7 @@ class KnetService
                         ->update(['status' => \App\Enums\OrderStatus::COMPLETED, 'is_paid' => true]);
                 }
             } else {
-                $payment->user->increment('balance', $payment->amount);
+                User::adjustBalance($payment->user_id, $payment->amount);
             }
         }
 

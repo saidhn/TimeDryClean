@@ -7,6 +7,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -52,6 +53,34 @@ class User extends Authenticatable
     public function user_type_translated()
     {
         return __('messages.' . $this->user_type);
+    }
+
+    /**
+     * Atomically adjust balance by $delta (positive to credit, negative to debit),
+     * taking a row lock so concurrent requests for the same user cannot lose an update.
+     */
+    public static function adjustBalance(int $userId, float|string $delta): self
+    {
+        return DB::transaction(function () use ($userId, $delta) {
+            $user = self::whereKey($userId)->lockForUpdate()->firstOrFail();
+            $user->balance = bcadd((string) $user->balance, (string) $delta, 2);
+            $user->save();
+            return $user;
+        });
+    }
+
+    /**
+     * Atomically adjust points_balance by $delta, taking a row lock so concurrent
+     * requests for the same user cannot lose an update.
+     */
+    public static function adjustPoints(int $userId, float|string $delta): self
+    {
+        return DB::transaction(function () use ($userId, $delta) {
+            $user = self::whereKey($userId)->lockForUpdate()->firstOrFail();
+            $user->points_balance = bcadd((string) $user->points_balance, (string) $delta, 2);
+            $user->save();
+            return $user;
+        });
     }
     public function payments()
     {
