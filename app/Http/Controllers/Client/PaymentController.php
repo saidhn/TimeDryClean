@@ -61,7 +61,10 @@ class PaymentController extends Controller
             abort(404, 'Payment not found');
         }
 
-        return view('client.payment.test-gateway', compact('payment', 'trackingId'));
+        $capturedSignature = $this->knetService->signCallback($trackingId, 'CAPTURED');
+        $failedSignature = $this->knetService->signCallback($trackingId, 'FAILED');
+
+        return view('client.payment.test-gateway', compact('payment', 'trackingId', 'capturedSignature', 'failedSignature'));
     }
 
     /**
@@ -70,6 +73,23 @@ class PaymentController extends Controller
     public function callback(Request $request)
     {
         $data = $request->all();
+
+        $trackingIdForSig = $data['tracking_id'] ?? '';
+        $resultForSig = $data['result'] ?? 'FAILED';
+        $providedSignature = (string) ($data['signature'] ?? '');
+        // TODO for production KNET integration: when the real KNET SDK is wired into
+        // KnetService::getKnetPaymentUrl(), replace this HMAC check with KNET's own
+        // signature/hash verification per their SDK documentation — this HMAC scheme
+        // only secures our own self-hosted `debug`-mode test gateway loop.
+        $expectedSignature = $this->knetService->signCallback($trackingIdForSig, $resultForSig);
+
+        if ($trackingIdForSig === '' || !hash_equals($expectedSignature, $providedSignature)) {
+            \Illuminate\Support\Facades\Log::warning('Rejected KNET callback with invalid signature', [
+                'tracking_id' => $trackingIdForSig,
+            ]);
+            abort(403, 'Invalid callback signature.');
+        }
+
         $result = $this->knetService->handleCallback($data);
 
         if (($result['status'] ?? '') === 'success' && ($result['payment_status'] ?? '') === 'completed') {

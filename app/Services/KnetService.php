@@ -16,6 +16,15 @@ class KnetService
     }
 
     /**
+     * Sign a callback payload so our own test gateway (and, later, real KNET
+     * verification per their SDK docs) can be authenticated by handleCallback().
+     */
+    public function signCallback(string $trackingId, string $result): string
+    {
+        return hash_hmac('sha256', "{$trackingId}|{$result}", (string) config('services.knet.secret'));
+    }
+
+    /**
      * Create a payment and get redirect URL
      */
     public function createPayment(float $amount, int $userId): array
@@ -87,6 +96,14 @@ class KnetService
             return [
                 'status' => 'error',
                 'description' => 'Payment not found',
+            ];
+        }
+
+        if ($payment->status !== 'pending') {
+            // Idempotency: a retried/duplicated webhook must not re-apply side effects.
+            return [
+                'status' => 'error',
+                'description' => 'Payment already processed',
             ];
         }
 

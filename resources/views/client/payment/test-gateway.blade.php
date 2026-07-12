@@ -47,6 +47,7 @@
                         <input type="hidden" name="result" value="CAPTURED">
                         <input type="hidden" name="paymentid" value="TEST-{{ time() }}">
                         <input type="hidden" name="tranid" value="TXN-{{ time() }}">
+                        <input type="hidden" name="signature" value="{{ $capturedSignature }}">
                         <button type="submit" class="btn btn-success btn-lg w-100 mb-2">
                             Confirm Payment (Success)
                         </button>
@@ -57,6 +58,7 @@
                         <input type="hidden" name="tracking_id" value="{{ $trackingId }}">
                         <input type="hidden" name="result" value="FAILED">
                         <input type="hidden" name="paymentid" value="TEST-{{ time() }}">
+                        <input type="hidden" name="signature" value="{{ $failedSignature }}">
                         <button type="submit" class="btn btn-outline-danger w-100">
                             Cancel / Decline
                         </button>

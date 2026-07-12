@@ -50,5 +50,6 @@ return [
         'decimals' => env('KNET_DECIMALS', '3'),
         'action' => env('KNET_ACTION', '1'),
         'debug' => env('KNET_DEBUG', true),
+        'secret' => env('KNET_CALLBACK_SECRET', 'change-me-in-production'),
     ],
 ];
