@@ -130,6 +130,7 @@ class KnetService
                     app(\App\Http\Controllers\Points\ClientPointsController::class)->completePurchase($purchase);
                 }
             } elseif ($type === 'order') {
+                // TODO(reprice): resolve requires_additional_payment on this order if repriced_amount is set
                 // Mark the order as paid now that payment is confirmed. Fulfillment
                 // status is independent of payment and only moves via OrderWorkflowService.
                 if (!empty($details['order_id'])) {

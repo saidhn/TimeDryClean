@@ -30,6 +30,10 @@ class Order extends Model
         'flag_reason',
         'flagged_at',
         'flagged_by',
+        'repriced_amount',
+        'repriced_at',
+        'repriced_by',
+        'requires_additional_payment',
     ];
 
     protected $casts = [
@@ -44,6 +48,9 @@ class Order extends Model
         'discount_applied_at' => 'datetime',
         'is_flagged' => 'boolean',
         'flagged_at' => 'datetime',
+        'repriced_amount' => 'decimal:2',
+        'repriced_at' => 'datetime',
+        'requires_additional_payment' => 'boolean',
     ];
 
     public function user()

@@ -532,4 +532,9 @@ return [
     'retry_payment' => 'حاول مجدداً',
     'payment_link_thank_you' => 'شكراً! تم استلام دفعتك.',
     'transaction_id' => 'رقم المعاملة',
+
+    // إعادة الوزن / إعادة التسعير
+    'reprice_only_at_facility' => 'لا يمكن إعادة تسعير الطلب إلا أثناء وجوده في المنشأة أو أثناء الفرز.',
+    'order_repriced_successfully' => 'تم إعادة تسعير الطلب بنجاح.',
+    'no_additional_payment_due' => 'لا يوجد مبلغ إضافي مستحق على هذا الطلب.',
 ];

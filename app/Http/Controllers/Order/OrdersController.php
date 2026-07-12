@@ -909,6 +909,112 @@ class OrdersController extends Controller
     }
 
     /**
+     * Re-weigh/re-price an order once it has physically arrived at the facility.
+     * If the recount is cheaper, refund the difference immediately. If it's more
+     * expensive, never silently charge more — flag the order as needing an
+     * additional payment and leave sum_price untouched until the customer
+     * completes a separate KNET charge for the delta via payRepriceDelta().
+     */
+    public function reprice(Request $request, Order $order)
+    {
+        if (!in_array($order->status, [OrderStatus::AT_FACILITY, OrderStatus::SORTING], true)) {
+            return back()->withErrors(['message' => __('messages.reprice_only_at_facility')]);
+        }
+
+        $request->validate([
+            'order_product_services' => 'required|array',
+            'order_product_services.*.product_id' => 'required|exists:products,id',
+            'order_product_services.*.product_service_id' => 'required|exists:product_services,id',
+            'order_product_services.*.quantity' => 'required|integer|min:1',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            $newTotal = 0;
+            $lines = [];
+            foreach ($request->order_product_services as $lineData) {
+                $productServicePrice = ProductServicePrice::where('product_id', $lineData['product_id'])
+                    ->where('product_service_id', $lineData['product_service_id'])
+                    ->first();
+
+                if (!$productServicePrice) {
+                    DB::rollBack();
+                    return back()->withErrors(['message' => __('messages.product_no_services_warning')]);
+                }
+
+                $newTotal += $productServicePrice->price * $lineData['quantity'];
+                $lines[] = array_merge($lineData, ['price_at_order' => $productServicePrice->price]);
+            }
+
+            $order->orderProductServices()->delete();
+            foreach ($lines as $line) {
+                $order->orderProductServices()->create($line);
+            }
+
+            $originalTotal = (float) $order->sum_price;
+            $delta = $newTotal - $originalTotal;
+
+            if ($delta <= 0) {
+                // New total is lower or equal — apply immediately and refund the difference.
+                if ($order->is_paid && $delta < 0) {
+                    if ($order->payment_method === 'points') {
+                        User::adjustPoints($order->user_id, -$delta); // -$delta is positive here
+                    } else {
+                        User::adjustBalance($order->user_id, -$delta);
+                    }
+                }
+                $order->update([
+                    'sum_price' => $newTotal,
+                    'repriced_amount' => null,
+                    'repriced_at' => now(),
+                    'repriced_by' => auth()->id(),
+                    'requires_additional_payment' => false,
+                ]);
+            } else {
+                // New total is higher — do not silently charge more. Flag for
+                // additional authorization; sum_price stays at the originally
+                // authorized amount until the customer completes the extra payment.
+                $order->update([
+                    'repriced_amount' => $newTotal,
+                    'repriced_at' => now(),
+                    'repriced_by' => auth()->id(),
+                    'requires_additional_payment' => true,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('orders.show', $order->id)->with('success', __('messages.order_repriced_successfully'));
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error repricing order: ' . $e->getMessage());
+            return back()->withErrors(['message' => __('messages.order_error_try_again')]);
+        }
+    }
+
+    /**
+     * Collect the additional payment for an order whose facility recount came in
+     * higher than the originally authorized amount. Reuses KnetService for the
+     * delta only — the original charge/authorization is untouched.
+     */
+    public function payRepriceDelta(Order $order)
+    {
+        if (!$order->requires_additional_payment || !$order->repriced_amount) {
+            return back()->withErrors(['message' => __('messages.no_additional_payment_due')]);
+        }
+
+        $delta = (float) $order->repriced_amount - (float) $order->sum_price;
+
+        $result = $this->knetService->createOrderPayment($delta, $order->user_id, $order->id);
+
+        if ($result['status'] !== 'success') {
+            return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')]);
+        }
+
+        return redirect($result['payment_uri']);
+    }
+
+    /**
      * Resolve which guard the currently authenticated user is logged in through,
      * for attribution on OrderStatusHistory rows written by OrderWorkflowService.
      */

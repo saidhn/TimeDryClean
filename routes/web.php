@@ -210,6 +210,8 @@ Route::middleware(['set_locale'])->group(function () {
         Route::delete('/orders/{order}', [OrdersController::class, 'destroy'])->name('orders.destroy');
         Route::get('/orders/{order}/edit', [OrdersController::class, 'edit'])->name('orders.edit');
         Route::put('/orders/{order}', [OrdersController::class, 'update'])->name('orders.update');
+        Route::put('/orders/{order}/reprice', [OrdersController::class, 'reprice'])->name('orders.reprice');
+        Route::get('/orders/{order}/reprice/pay', [OrdersController::class, 'payRepriceDelta'])->name('orders.reprice.pay');
         Route::get('/orders/{id}/check', [OrdersController::class, 'checkExists'])->name('orders.check');
     });
 

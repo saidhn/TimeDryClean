@@ -524,4 +524,9 @@ return [
     'retry_payment' => 'Try Again',
     'payment_link_thank_you' => 'Thank you! Your payment has been received.',
     'transaction_id' => 'Transaction ID',
+
+    // Re-weigh / re-price
+    'reprice_only_at_facility' => 'Orders can only be re-priced while at the facility or being sorted.',
+    'order_repriced_successfully' => 'Order re-priced successfully.',
+    'no_additional_payment_due' => 'This order has no additional payment due.',
 ];
