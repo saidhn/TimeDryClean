@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin\Client;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientSubscription;
+use App\Models\Payment;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\KnetService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +16,8 @@ use Illuminate\Support\Facades\DB;
 class ManageClientSubscriptionsController extends Controller
 {
     public function __construct(
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected KnetService $knetService
     ) {}
     /**
      * Display a listing of the resource.
@@ -38,14 +41,14 @@ class ManageClientSubscriptionsController extends Controller
         $statusFilter = $request->get('status', 'all');
 
         $counts = [
-            'total' => ClientSubscription::count(),
-            ClientSubscription::STATUS_ACTIVE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_ACTIVE)->count(),
-            ClientSubscription::STATUS_FAILED_ONCE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_FAILED_ONCE)->count(),
-            ClientSubscription::STATUS_FAILED_MULTIPLE => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::STATUS_FAILED_MULTIPLE)->count(),
+            'total'                                                => ClientSubscription::count(),
+            ClientSubscription::BILLING_STATUS_OK                 => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::BILLING_STATUS_OK)->count(),
+            ClientSubscription::BILLING_STATUS_FAILED_ONCE        => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::BILLING_STATUS_FAILED_ONCE)->count(),
+            ClientSubscription::BILLING_STATUS_FAILED_MULTIPLE    => (clone ClientSubscription::query())->withBillingStatus(ClientSubscription::BILLING_STATUS_FAILED_MULTIPLE)->count(),
         ];
 
         $query = ClientSubscription::with(['client', 'subscription'])->latest();
-        if (in_array($statusFilter, [ClientSubscription::STATUS_ACTIVE, ClientSubscription::STATUS_FAILED_ONCE, ClientSubscription::STATUS_FAILED_MULTIPLE], true)) {
+        if (in_array($statusFilter, [ClientSubscription::BILLING_STATUS_OK, ClientSubscription::BILLING_STATUS_FAILED_ONCE, ClientSubscription::BILLING_STATUS_FAILED_MULTIPLE], true)) {
             $query->withBillingStatus($statusFilter);
         }
         $clientSubscriptions = $query->paginate(15)->withQueryString();
@@ -94,22 +97,64 @@ class ManageClientSubscriptionsController extends Controller
             ],
         ]);
 
-        DB::transaction(function () use ($validatedData) {
-            $subscription = Subscription::findOrFail($validatedData['subscription_id']);
-            $activatedAt = now();
-            $clientSubscription = ClientSubscription::create([
-                'user_id' => $validatedData['user_id'],
-                'subscription_id' => $validatedData['subscription_id'],
-                'activated_at' => $activatedAt,
-                'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
-            ]);
-            $user = User::findOrFail($validatedData['user_id']);
-            $user->increment('balance', $subscription->benefit);
-            $user->refresh();
-            $this->notificationService->sendTransactionNotification($user, 'subscription_balance_added', ['balance' => $user->balance]);
-        });
+        $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+        $amount = (float) $subscription->paid;
+        $userId = $validatedData['user_id'];
 
-        return redirect()->route('client_subscriptions.index')->with('success', __('messages.created_successfully'));
+        // If the subscription is free (paid = 0) activate immediately without KNET.
+        if ($amount <= 0) {
+            DB::transaction(function () use ($userId, $subscription) {
+                $activatedAt = now();
+                $clientSubscription = ClientSubscription::create([
+                    'user_id'         => $userId,
+                    'subscription_id' => $subscription->id,
+                    'activated_at'    => $activatedAt,
+                    'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
+                    'status'          => ClientSubscription::STATUS_ACTIVE,
+                ]);
+
+                // Record a zero-cost "free grant" payment for audit purposes.
+                Payment::create([
+                    'user_id'        => $userId,
+                    'amount'         => 0,
+                    'payment_method' => 'Admin Grant',
+                    'status'         => 'completed',
+                    'payment_date'   => $activatedAt,
+                    'details'        => json_encode([
+                        'type'                   => 'subscription_grant',
+                        'client_subscription_id' => $clientSubscription->id,
+                        'subscription_id'        => $subscription->id,
+                        'granted_by'             => auth()->id(),
+                    ]),
+                ]);
+
+                $user = User::findOrFail($userId);
+                $user->increment('balance', $subscription->benefit);
+                $user->refresh();
+                $this->notificationService->sendTransactionNotification($user, 'subscription_balance_added', ['balance' => $user->balance]);
+            });
+
+            return redirect()->route('client_subscriptions.index')->with('success', __('messages.created_successfully'));
+        }
+
+        // Paid subscription — generate KNET gateway link and send to user.
+        // The subscription record is created in 'pending_payment' status and is
+        // activated only once KNET confirms a successful payment.
+        $result = $this->knetService->createSubscriptionPayment($amount, $userId, $subscription->id);
+
+        if (($result['status'] ?? '') !== 'success') {
+            return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')]);
+        }
+
+        // Send a WhatsApp message to the user asking them to pay the link.
+        $user = User::findOrFail($userId);
+        $this->notificationService->sendTransactionNotification(
+            $user,
+            'subscription_initial_payment_link',
+            ['amount' => $amount, 'payment_url' => $result['payment_uri']]
+        );
+
+        return redirect()->route('client_subscriptions.index')->with('success', __('messages.subscription_created_pending_payment'));
     }
 
     /**

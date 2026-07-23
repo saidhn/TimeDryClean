@@ -13,9 +13,9 @@
     </div>
 
     @php
-        $activeKey = \App\Models\ClientSubscription::STATUS_ACTIVE;
-        $failedOnceKey = \App\Models\ClientSubscription::STATUS_FAILED_ONCE;
-        $failedMultiKey = \App\Models\ClientSubscription::STATUS_FAILED_MULTIPLE;
+        $activeKey = \App\Models\ClientSubscription::BILLING_STATUS_OK;
+        $failedOnceKey = \App\Models\ClientSubscription::BILLING_STATUS_FAILED_ONCE;
+        $failedMultiKey = \App\Models\ClientSubscription::BILLING_STATUS_FAILED_MULTIPLE;
 
         $total = max((int) $counts['total'], 0);
         $activeCount = (int) $counts[$activeKey];

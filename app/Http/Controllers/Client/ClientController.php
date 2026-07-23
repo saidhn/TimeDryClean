@@ -8,6 +8,7 @@ use App\Models\ClientSubscription;
 use App\Models\Order;
 use App\Models\Subscription;
 use App\Models\User;
+use App\Services\KnetService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,8 @@ use Illuminate\Support\Facades\DB;
 class ClientController extends Controller
 {
     public function __construct(
-        protected NotificationService $notificationService
+        protected NotificationService $notificationService,
+        protected KnetService $knetService,
     ) {}
     public function showOrders()
     {
@@ -86,24 +88,42 @@ class ClientController extends Controller
                 },
             ],
         ]);
-        $validatedData['user_id'] = $userId;
 
-        DB::transaction(function () use ($validatedData) {
-            $subscription = Subscription::findOrFail($validatedData['subscription_id']);
-            $activatedAt = now();
-            ClientSubscription::create([
-                'user_id' => $validatedData['user_id'],
-                'subscription_id' => $validatedData['subscription_id'],
-                'activated_at' => $activatedAt,
-                'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
-            ]);
-            $user = User::findOrFail($validatedData['user_id']);
-            $user->increment('balance', $subscription->benefit);
-            $user->refresh();
-            $this->notificationService->sendTransactionNotification($user, 'subscription_balance_added', ['balance' => $user->balance]);
-        });
+        $subscription = Subscription::findOrFail($validatedData['subscription_id']);
+        $amount       = (float) $subscription->paid;
 
-        return redirect()->route('client.clientSubscription.index')->with('success', __('messages.created_successfully'));
+        // If the subscription is free (paid = 0) activate immediately without KNET.
+        if ($amount <= 0) {
+            DB::transaction(function () use ($userId, $subscription) {
+                $activatedAt = now();
+                ClientSubscription::create([
+                    'user_id'         => $userId,
+                    'subscription_id' => $subscription->id,
+                    'activated_at'    => $activatedAt,
+                    'next_billing_at' => $subscription->getPeriodEndFrom($activatedAt),
+                    'status'          => ClientSubscription::STATUS_ACTIVE,
+                ]);
+                $user = User::findOrFail($userId);
+                $user->increment('balance', $subscription->benefit);
+                $user->refresh();
+                $this->notificationService->sendTransactionNotification(
+                    $user, 'subscription_balance_added', ['balance' => $user->balance]
+                );
+            });
+            return redirect()->route('client.clientSubscription.index')
+                ->with('success', __('messages.created_successfully'));
+        }
+
+        // Paid subscription — redirect to KNET gateway.
+        // The subscription record is created in 'pending_payment' status and is
+        // activated only once KNET confirms a successful payment.
+        $result = $this->knetService->createSubscriptionPayment($amount, $userId, $subscription->id);
+
+        if (($result['status'] ?? '') !== 'success') {
+            return back()->withErrors(['message' => __('messages.knet_payment_initiation_failed')]);
+        }
+
+        return redirect($result['payment_uri']);
     }
     public function clientBillsIndex()
     {

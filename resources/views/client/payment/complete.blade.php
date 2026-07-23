@@ -5,9 +5,11 @@
     <div class="row justify-content-center">
         <div class="col-md-8">
             @php
-                $paymentDetails = json_decode($payment->details, true) ?? [];
-                $isOrderPayment = ($paymentDetails['type'] ?? null) === 'order';
-                $orderId = $paymentDetails['order_id'] ?? null;
+                $paymentDetails         = json_decode($payment->details, true) ?? [];
+                $isOrderPayment         = ($paymentDetails['type'] ?? null) === 'order';
+                $isSubscriptionPayment  = ($paymentDetails['type'] ?? null) === 'subscription';
+                $isRenewalPayment       = ($paymentDetails['type'] ?? null) === 'subscription_renewal';
+                $orderId                = $paymentDetails['order_id'] ?? null;
             @endphp
             <div class="card shadow">
                 @if($payment->status === 'completed')
@@ -42,6 +44,21 @@
                                 <a href="{{ route('orders.show', $orderId) }}" class="fw-bold text-success">#{{ $orderId }}</a>
                             </div>
                         </div>
+                        @elseif($isSubscriptionPayment || $isRenewalPayment)
+                        <div class="row mt-2">
+                            <div class="col-6 text-end"><strong>{{ __('messages.subscription') }}:</strong></div>
+                            <div class="col-6 text-start">
+                                <span class="fw-bold text-success">{{ __('messages.subscription_activated') }}</span>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-6 text-end"><strong>{{ __('messages.current_balance') }}:</strong></div>
+                            <div class="col-6 text-start">
+                                <span class="{{ $payment->user->balance >= 0 ? 'text-success' : 'text-danger' }} fw-bold">
+                                    {{ number_format($payment->user->balance, 3) }} {{ __('messages.currency_symbol') }}
+                                </span>
+                            </div>
+                        </div>
                         @else
                         <div class="row mt-2">
                             <div class="col-6 text-end"><strong>{{ __('messages.current_balance') }}:</strong></div>
@@ -71,6 +88,10 @@
                     <a href="{{ route('orders.show', $orderId) }}" class="btn btn-warning btn-lg">
                         <i class="fas fa-redo"></i> {{ __('messages.retry_order_payment') }}
                     </a>
+                    @elseif($isSubscriptionPayment || $isRenewalPayment)
+                    <a href="{{ route('client.clientSubscription.create') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-redo"></i> {{ __('messages.try_again') }}
+                    </a>
                     @else
                     <a href="{{ route('client.payment.create') }}" class="btn btn-warning btn-lg">
                         <i class="fas fa-redo"></i> {{ __('messages.try_again') }}
@@ -83,6 +104,10 @@
                     @if($isOrderPayment)
                     <a href="{{ route('orders.index') }}" class="btn btn-primary">
                         <i class="fas fa-list"></i> {{ __('messages.orders') }}
+                    </a>
+                    @elseif($isSubscriptionPayment || $isRenewalPayment)
+                    <a href="{{ route('client.clientSubscription.index') }}" class="btn btn-primary">
+                        <i class="fas fa-star"></i> {{ __('messages.manage_my_client_subscriptions') }}
                     </a>
                     @else
                     <a href="{{ route('client.bills.index') }}" class="btn btn-primary">

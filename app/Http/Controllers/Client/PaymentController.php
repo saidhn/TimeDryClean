@@ -94,11 +94,20 @@ class PaymentController extends Controller
             $payment = $this->knetService->getPaymentByTrackingId($result['tracking_id']);
             if ($payment) {
                 $payment->user->refresh();
-                \App\Jobs\SendTransactionNotificationJob::dispatch(
-                    $payment->user->id,
-                    'payment_completed',
-                    ['amount' => $payment->amount, 'balance' => $payment->user->balance]
-                );
+                $details     = json_decode($payment->details, true) ?? [];
+                $paymentType = $details['type'] ?? null;
+
+                if ($paymentType === 'subscription') {
+                    // Notification already sent inside KnetService::handleSubscriptionPaymentSuccess()
+                } elseif ($paymentType === 'subscription_renewal') {
+                    // Notification already sent inside KnetService::handleSubscriptionRenewalPaymentSuccess()
+                } else {
+                    \App\Jobs\SendTransactionNotificationJob::dispatch(
+                        $payment->user->id,
+                        'payment_completed',
+                        ['amount' => $payment->amount, 'balance' => $payment->user->balance]
+                    );
+                }
             }
         }
 
